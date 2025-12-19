@@ -5,12 +5,10 @@ on:
   schedule:
     - cron: "0 */6 * * *"
 
-permissions:
-  contents: write
-
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
 
@@ -19,7 +17,7 @@ jobs:
           node-version: 20
 
       - run: npm install
-
+      - run: node fetch.js
       - run: npm run build
 
       - uses: peaceiris/actions-gh-pages@v4
