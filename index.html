@@ -10,11 +10,7 @@ pagination:
 <head>
   <meta charset="UTF-8">
   <title>ReviewLab – Latest Reviews</title>
-
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Honest reviews of AI tools, software, and online money systems. Updated automatically.">
-
-  <link rel="canonical" href="https://justingerad05.github.io/reviewlab-static/">
 </head>
 <body>
 
@@ -23,13 +19,8 @@ pagination:
 <ul>
   {% for post in items %}
     <li>
-      <a href="{{ post.url }}">
-        {{ post.title }}
-      </a>
-      <br>
-      <small>
-        Published {{ post.published | date: "%B %d, %Y" }}
-      </small>
+      <a href="{{ post.url }}">{{ post.title }}</a><br>
+      <small>Published {{ post.published | date: "%B %d, %Y" }}</small>
     </li>
   {% endfor %}
 </ul>
