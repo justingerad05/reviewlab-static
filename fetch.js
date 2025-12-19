@@ -13,7 +13,12 @@ const parser = new XMLParser({
 });
 
 const data = parser.parse(xml);
-const entries = data.feed.entry || [];
+
+// 🔒 NORMALIZE: always make entry an array
+let entries = data.feed.entry || [];
+if (!Array.isArray(entries)) {
+  entries = [entries];
+}
 
 fs.mkdirSync("posts", { recursive: true });
 
