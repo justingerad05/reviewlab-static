@@ -9,7 +9,8 @@ pagination:
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>ReviewLab – Latest Reviews</title>
+  <title>ReviewLab – Honest Product Reviews</title>
+  <meta name="description" content="Independent and honest product reviews published by ReviewLab.">
   <meta name="viewport" content="width=device-width, initial-scale=1">
 </head>
 <body>
@@ -17,12 +18,12 @@ pagination:
 <h1>Latest Reviews</h1>
 
 <ul>
-  {% for post in items %}
-    <li>
-      <a href="{{ post.url }}">{{ post.title }}</a><br>
-      <small>Published {{ post.published | date: "%B %d, %Y" }}</small>
-    </li>
-  {% endfor %}
+{% for post in posts %}
+  <li>
+    <a href="{{ post.url }}">{{ post.title }}</a><br>
+    <small>Published {{ post.published | date: "%B %d, %Y" }}</small>
+  </li>
+{% endfor %}
 </ul>
 
 </body>
