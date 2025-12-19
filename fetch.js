@@ -14,34 +14,30 @@ const parser = new XMLParser({
 
 const data = parser.parse(xml);
 
-// Always normalize to array
+// Normalize entries
 let entries = data.feed.entry || [];
-if (!Array.isArray(entries)) {
-  entries = [entries];
-}
+if (!Array.isArray(entries)) entries = [entries];
 
-// Ensure Eleventy global data directory
+// Required directories
 fs.mkdirSync("_data", { recursive: true });
-
-// Ensure posts directory
 fs.mkdirSync("posts", { recursive: true });
 
 const posts = [];
 
-entries.forEach((entry, i) => {
+entries.forEach(entry => {
   const html = entry.content?.["#text"];
   if (!html) return;
 
-  const title = entry.title?.["#text"] || `Post ${i + 1}`;
+  const title = entry.title?.["#text"] || "Untitled Post";
   const published = entry.published || new Date().toISOString();
 
-  const slug =
-    title
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/(^-|-$)/g, "") || `post-${i + 1}`;
+  // 🔐 Blogger-stable ID (never changes)
+  const rawId = entry.id;
+  const id = rawId.split("post-").pop();
 
+  const slug = `blogger-${id}`;
   const dir = `posts/${slug}`;
+
   fs.mkdirSync(dir, { recursive: true });
 
   const page = `<!DOCTYPE html>
@@ -68,5 +64,5 @@ ${html}
   });
 });
 
-// 🔑 THIS IS WHAT ELEVENTY NEEDS
+// Global Eleventy data
 fs.writeFileSync("_data/posts.json", JSON.stringify(posts, null, 2));
