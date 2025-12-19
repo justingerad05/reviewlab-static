@@ -8,34 +8,30 @@ const FEED_URL =
 const res = await fetch(FEED_URL);
 const xml = await res.text();
 
-const parser = new XMLParser({
-  ignoreAttributes: false
-});
-
+const parser = new XMLParser({ ignoreAttributes: false });
 const data = parser.parse(xml);
 
-// Normalize entries
-let entries = data.feed.entry || [];
+// normalize entries
+let entries = data.feed?.entry || [];
 if (!Array.isArray(entries)) entries = [entries];
 
-// Required directories
-fs.mkdirSync("_data", { recursive: true });
+// reset posts directory
+fs.rmSync("posts", { recursive: true, force: true });
 fs.mkdirSync("posts", { recursive: true });
 
 const posts = [];
 
-entries.forEach(entry => {
+entries.forEach((entry, i) => {
   const html = entry.content?.["#text"];
   if (!html) return;
 
-  const title = entry.title?.["#text"] || "Untitled Post";
-  const published = entry.published || new Date().toISOString();
+  const title =
+    entry.title?.["#text"]?.trim() || "Untitled Post";
 
-  // 🔐 Blogger-stable ID (never changes)
-  const rawId = entry.id;
-  const id = rawId.split("post-").pop();
+  const published =
+    entry.published || entry.updated || new Date().toISOString();
 
-  const slug = `blogger-${id}`;
+  const slug = `post-${i + 1}`;
   const dir = `posts/${slug}`;
 
   fs.mkdirSync(dir, { recursive: true });
@@ -45,6 +41,7 @@ entries.forEach(entry => {
 <head>
   <meta charset="UTF-8">
   <title>${title}</title>
+  <link rel="canonical" href="https://justingerad05.github.io/reviewlab-static/posts/${slug}/">
   <meta name="viewport" content="width=device-width, initial-scale=1">
 </head>
 <body>
@@ -58,11 +55,11 @@ ${html}
 
   posts.push({
     title,
-    slug,
     url: `/reviewlab-static/posts/${slug}/`,
     published
   });
 });
 
-// Global Eleventy data
+// write data file for homepage + sitemap
+fs.mkdirSync("_data", { recursive: true });
 fs.writeFileSync("_data/posts.json", JSON.stringify(posts, null, 2));
