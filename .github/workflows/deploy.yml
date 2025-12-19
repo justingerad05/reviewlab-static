@@ -1,26 +1,41 @@
-name: Build Static Site
+name: Build and Deploy Static Site
 
 on:
-  push:
   schedule:
-    - cron: "0 */6 * * *"
+    - cron: "0 */6 * * *"  # every 6 hours
+  push:
+    branches:
+      - main
 
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: '20'
 
-      - run: npm install
-      - run: node fetch.js
-      - run: npm run build
+      - name: Install dependencies
+        run: npm install
 
-      - uses: peaceiris/actions-gh-pages@v4
+      - name: Fetch Blogger posts
+        run: node fetch.js
+
+      - name: Build Eleventy site
+        run: npm run build
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          # Use the PAT instead of default GITHUB_TOKEN
+          personal_token: ${{ secrets.GH_PAT }}
+          # This is your Eleventy build output folder
           publish_dir: _site
+          # Branch to deploy
+          publish_branch: gh-pages
+          # Optional: keep history
+          keep_files: false
