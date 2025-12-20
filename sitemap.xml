@@ -3,8 +3,8 @@
 
 {% for post in posts %}
   <url>
-    <loc>https://justingerad05.github.io{{ post.url }}</loc>
-    <lastmod>{{ post.published | date: "%Y-%m-%d" }}</lastmod>
+    <loc>{{ post.url }}</loc>
+    <lastmod>{{ post.date | date: "%Y-%m-%d" }}</lastmod>
   </url>
 {% endfor %}
 
