@@ -16,29 +16,36 @@ const data = parser.parse(xml);
 let entries = data.feed?.entry || [];
 if (!Array.isArray(entries)) entries = [entries];
 
-// Reset posts every run (prevents duplication)
+// Clean build
 fs.rmSync("posts", { recursive: true, force: true });
 fs.mkdirSync("posts", { recursive: true });
 
 const posts = [];
 
-function smartTitle(html) {
-  const h1 = html.match(/<h1[^>]*>(.*?)<\/h1>/i);
-  if (h1) return h1[1].replace(/<[^>]+>/g, "").trim();
+function extractCleanTitle(html) {
+  // Remove tags
+  const text = html.replace(/<[^>]+>/g, "").trim();
 
-  const firstSentence = html
-    .replace(/<[^>]+>/g, "")
-    .split(".")[0]
-    .trim();
+  // Take first line only
+  let line = text.split("\n")[0].trim();
 
-  return firstSentence || "ReviewLab Article";
+  // Stop at emojis or separators
+  line = line.split("🔥")[0];
+  line = line.split("📺")[0];
+  line = line.split("🎁")[0];
+  line = line.split("👉")[0];
+  line = line.split("Welcome")[0];
+
+  // Final cleanup
+  return line.length > 10 ? line : "ReviewLab Article";
 }
 
-function descriptionFromHTML(html) {
+function extractDescription(html) {
   return html
     .replace(/<script[\s\S]*?<\/script>/gi, "")
     .replace(/<style[\s\S]*?<\/style>/gi, "")
     .replace(/<[^>]+>/g, "")
+    .replace(/\s+/g, " ")
     .trim()
     .slice(0, 160);
 }
@@ -47,8 +54,8 @@ entries.forEach((entry, i) => {
   const html = entry.content?.["#text"];
   if (!html) return;
 
-  const title = smartTitle(html);
-  const description = descriptionFromHTML(html);
+  const title = extractCleanTitle(html);
+  const description = extractDescription(html);
   const date = entry.published || new Date().toISOString();
 
   const slug = `post-${i + 1}`;
@@ -66,13 +73,11 @@ entries.forEach((entry, i) => {
 <link rel="canonical" href="${url}">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<!-- Open Graph -->
 <meta property="og:title" content="${title}">
 <meta property="og:description" content="${description}">
 <meta property="og:type" content="article">
 <meta property="og:url" content="${url}">
 
-<!-- Twitter Card -->
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="${title}">
 <meta name="twitter:description" content="${description}">
