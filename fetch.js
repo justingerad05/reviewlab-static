@@ -9,9 +9,6 @@ const SITE_URL = "https://justingerad05.github.io/reviewlab-static";
 const DEFAULT_OG_IMAGE =
   "https://justingerad05.github.io/reviewlab-static/assets/og-default.jpg";
 
-/* ---------------------------
-   FETCH BLOGGER FEED
----------------------------- */
 const res = await fetch(FEED_URL);
 const xml = await res.text();
 
@@ -21,26 +18,19 @@ const data = parser.parse(xml);
 let entries = data.feed?.entry || [];
 if (!Array.isArray(entries)) entries = [entries];
 
-/* ---------------------------
-   CLEAN BUILD
----------------------------- */
+// Clean build
 fs.rmSync("posts", { recursive: true, force: true });
 fs.mkdirSync("posts", { recursive: true });
 
 const posts = [];
 
-/* ---------------------------
-   HELPERS
----------------------------- */
 function extractCleanTitle(html) {
   const text = html.replace(/<[^>]+>/g, "").trim();
   let line = text.split("\n")[0].trim();
 
   const stops = ["🔥", "📺", "🎁", "👉", "Welcome"];
   for (const s of stops) {
-    if (line.includes(s)) {
-      line = line.split(s)[0].trim();
-    }
+    if (line.includes(s)) line = line.split(s)[0].trim();
   }
 
   return line.length > 10 ? line : "ReviewLab Article";
@@ -56,9 +46,6 @@ function extractDescription(html) {
     .slice(0, 160);
 }
 
-/* ---------------------------
-   PROCESS POSTS
----------------------------- */
 entries.forEach((entry, i) => {
   const html = entry.content?.["#text"];
   if (!html) return;
@@ -77,15 +64,16 @@ entries.forEach((entry, i) => {
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+
 <title>${title}</title>
 <meta name="description" content="${description}">
 <link rel="canonical" href="${url}">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<!-- OpenGraph -->
-<meta property="og:type" content="article">
+<!-- Open Graph -->
 <meta property="og:title" content="${title}">
 <meta property="og:description" content="${description}">
+<meta property="og:type" content="article">
 <meta property="og:url" content="${url}">
 <meta property="og:image" content="${DEFAULT_OG_IMAGE}">
 <meta property="og:image:width" content="1200">
@@ -104,10 +92,8 @@ entries.forEach((entry, i) => {
   "@type": "Article",
   "headline": "${title}",
   "datePublished": "${date}",
-  "mainEntityOfPage": {
-    "@id": "${url}"
-  },
-  "image": "${DEFAULT_OG_IMAGE}",
+  "image": ["${DEFAULT_OG_IMAGE}"],
+  "mainEntityOfPage": { "@id": "${url}" },
   "publisher": {
     "@type": "Organization",
     "name": "ReviewLab"
@@ -126,8 +112,5 @@ ${html}
   posts.push({ title, url, date });
 });
 
-/* ---------------------------
-   WRITE DATA FOR ELEVENTY
----------------------------- */
 fs.mkdirSync("_data", { recursive: true });
 fs.writeFileSync("_data/posts.json", JSON.stringify(posts, null, 2));
