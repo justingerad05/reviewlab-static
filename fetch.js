@@ -14,35 +14,51 @@ const data = parser.parse(xml);
 let entries = data.feed.entry || [];
 if (!Array.isArray(entries)) entries = [entries];
 
-fs.rmSync("posts", { recursive: true, force: true });
 fs.mkdirSync("posts", { recursive: true });
 
 entries.forEach((entry, i) => {
-  const rawHtml = entry.content?.["#text"];
-  if (!rawHtml) return;
+  const html = entry.content?.["#text"];
+  if (!html) return;
 
-  const title =
-    entry.title?.["#text"]?.split("|")[0]?.trim() ||
-    `Review ${i + 1}`;
+  const rawTitle = entry.title?.["#text"] || "Review";
+  const title = rawTitle.split("🔥")[0].trim();
 
-  const date = entry.published || entry.updated;
-
-  const imageMatch = rawHtml.match(/<img[^>]+src="([^">]+)"/i);
-  const ogImage = imageMatch ? imageMatch[1] : "";
+  const imageMatch = html.match(/<img[^>]+src="([^">]+)"/);
+  const ogImage = imageMatch
+    ? imageMatch[1]
+    : "https://justingerad05.github.io/reviewlab-static/og-default.jpg";
 
   const slug = `post-${i + 1}`;
   const dir = `posts/${slug}`;
   fs.mkdirSync(dir, { recursive: true });
 
-  const page = `---
-title: "${title}"
-date: ${date}
-description: "${title} – Honest Product Review Lab"
-ogImage: "${ogImage}"
----
+  const page = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>${title}</title>
+  <meta name="description" content="${title}">
+  <link rel="canonical" href="https://justingerad05.github.io/reviewlab-static/posts/${slug}/">
 
-${rawHtml}
-`;
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="${title}">
+  <meta property="og:description" content="${title}">
+  <meta property="og:url" content="https://justingerad05.github.io/reviewlab-static/posts/${slug}/">
+  <meta property="og:image" content="${ogImage}">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="${title}">
+  <meta name="twitter:description" content="${title}">
+  <meta name="twitter:image" content="${ogImage}">
+
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+
+${html}
+
+</body>
+</html>`;
 
   fs.writeFileSync(`${dir}/index.html`, page);
 });
