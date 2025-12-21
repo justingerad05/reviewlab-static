@@ -33,7 +33,7 @@ function extractCleanTitle(html) {
   line = line.split("👉")[0];
   line = line.split("Welcome")[0];
 
-  return line.length > 10 ? line : "Honest Product Review";
+  return line.length > 10 ? line : "ReviewLab Article";
 }
 
 function extractDescription(html) {
@@ -69,30 +69,42 @@ entries.forEach((entry, i) => {
 <link rel="canonical" href="${url}">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
+<!-- Open Graph -->
 <meta property="og:type" content="article">
+<meta property="og:url" content="${url}">
 <meta property="og:title" content="${title}">
 <meta property="og:description" content="${description}">
-<meta property="og:url" content="${url}">
 <meta property="og:image" content="${OG_IMAGE}">
+<meta property="og:image:secure_url" content="${OG_IMAGE}">
+<meta property="og:image:type" content="image/jpeg">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="ReviewLab – Honest Product Reviews">
 
+<!-- Twitter -->
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="${title}">
 <meta name="twitter:description" content="${description}">
 <meta name="twitter:image" content="${OG_IMAGE}">
 
+<!-- Schema -->
 <script type="application/ld+json">
 {
-  "@context":"https://schema.org",
-  "@type":"Article",
-  "headline":"${title}",
-  "datePublished":"${date}",
-  "mainEntityOfPage":{"@id":"${url}"},
-  "publisher":{"@type":"Organization","name":"ReviewLab"}
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "${title}",
+  "datePublished": "${date}",
+  "mainEntityOfPage": { "@id": "${url}" },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ReviewLab",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "${OG_IMAGE}"
+    }
+  }
 }
 </script>
-
 </head>
 <body>
 ${html}
@@ -100,8 +112,10 @@ ${html}
 </html>`;
 
   fs.writeFileSync(`${dir}/index.html`, page);
+
   posts.push({ title, url, date });
 });
 
+// Data for homepage + sitemap
 fs.mkdirSync("_data", { recursive: true });
 fs.writeFileSync("_data/posts.json", JSON.stringify(posts, null, 2));
