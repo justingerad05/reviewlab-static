@@ -1,5 +1,6 @@
 module.exports = function (eleventyConfig) {
-  eleventyConfig.addPassthroughCopy("assets");
+  // Force static assets to be copied as-is
+  eleventyConfig.addPassthroughCopy({ "assets": "assets" });
 
   return {
     dir: {
