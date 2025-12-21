@@ -6,8 +6,7 @@ const FEED_URL =
   "https://honestproductreviewlab.blogspot.com/feeds/posts/default?alt=atom";
 
 const SITE_URL = "https://justingerad05.github.io/reviewlab-static";
-const DEFAULT_OG_IMAGE =
-  "https://justingerad05.github.io/reviewlab-static/assets/og-default.jpg";
+const OG_IMAGE = `${SITE_URL}/assets/og-default.jpg`;
 
 const res = await fetch(FEED_URL);
 const xml = await res.text();
@@ -28,12 +27,13 @@ function extractCleanTitle(html) {
   const text = html.replace(/<[^>]+>/g, "").trim();
   let line = text.split("\n")[0].trim();
 
-  const stops = ["🔥", "📺", "🎁", "👉", "Welcome"];
-  for (const s of stops) {
-    if (line.includes(s)) line = line.split(s)[0].trim();
-  }
+  line = line.split("🔥")[0];
+  line = line.split("📺")[0];
+  line = line.split("🎁")[0];
+  line = line.split("👉")[0];
+  line = line.split("Welcome")[0];
 
-  return line.length > 10 ? line : "ReviewLab Article";
+  return line.length > 10 ? line : "Honest Product Review";
 }
 
 function extractDescription(html) {
@@ -64,40 +64,32 @@ entries.forEach((entry, i) => {
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-
 <title>${title}</title>
 <meta name="description" content="${description}">
 <link rel="canonical" href="${url}">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<!-- Open Graph -->
+<meta property="og:type" content="article">
 <meta property="og:title" content="${title}">
 <meta property="og:description" content="${description}">
-<meta property="og:type" content="article">
 <meta property="og:url" content="${url}">
-<meta property="og:image" content="${DEFAULT_OG_IMAGE}">
+<meta property="og:image" content="${OG_IMAGE}">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 
-<!-- Twitter -->
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="${title}">
 <meta name="twitter:description" content="${description}">
-<meta name="twitter:image" content="${DEFAULT_OG_IMAGE}">
+<meta name="twitter:image" content="${OG_IMAGE}">
 
-<!-- Schema -->
 <script type="application/ld+json">
 {
-  "@context": "https://schema.org",
-  "@type": "Article",
-  "headline": "${title}",
-  "datePublished": "${date}",
-  "image": ["${DEFAULT_OG_IMAGE}"],
-  "mainEntityOfPage": { "@id": "${url}" },
-  "publisher": {
-    "@type": "Organization",
-    "name": "ReviewLab"
-  }
+  "@context":"https://schema.org",
+  "@type":"Article",
+  "headline":"${title}",
+  "datePublished":"${date}",
+  "mainEntityOfPage":{"@id":"${url}"},
+  "publisher":{"@type":"Organization","name":"ReviewLab"}
 }
 </script>
 
@@ -108,7 +100,6 @@ ${html}
 </html>`;
 
   fs.writeFileSync(`${dir}/index.html`, page);
-
   posts.push({ title, url, date });
 });
 
