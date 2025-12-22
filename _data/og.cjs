@@ -8,6 +8,5 @@ module.exports = function (content) {
   if (!match) return null;
 
   const videoId = match[1];
-
   return `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
 };
