@@ -4,18 +4,26 @@
   <meta charset="UTF-8">
   <title>{{ title }}</title>
 
-  {% set ogImg = content | ogImage %}
-{% if ogImg %}
-<meta property="og:image" content="{{ ogImg }}">
-<meta property="twitter:image" content="{{ ogImg }}">
-<meta name="twitter:card" content="summary_large_image">
-{% else %}
-<meta property="twitter:card" content="summary">
-{% endif %}
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="{{ title }}">
+  <meta property="og:description" content="{{ title }}">
+  <meta property="og:url" content="{{ page.url | url }}">
+
+  {% assign ogImage = content | extractYoutubeThumbnail %}
+  {% if ogImage != "" %}
+    <meta property="og:image" content="{{ ogImage }}">
+    <meta name="twitter:image" content="{{ ogImage }}">
+    <meta name="twitter:card" content="summary_large_image">
+  {% else %}
+    <meta name="twitter:card" content="summary">
+  {% endif %}
 
 </head>
-
 <body>
-  {{ content | safe }}
+
+<article>
+  {{ content }}
+</article>
+
 </body>
 </html>
