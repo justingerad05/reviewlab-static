@@ -1,14 +1,17 @@
+---
+permalink: posts.xml
+eleventyExcludeFromCollections: true
+---
 <?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0">
   <channel>
-    <title>ReviewLab – Honest Reviews</title>
-    <link>https://justingerad05.github.io/reviewlab-static</link>
-    <description>Automated honest product reviews</description>
-    <language>en-us</language>
+    <title>ReviewLab – Latest Reviews</title>
+    <link>https://justingerad05.github.io/reviewlab-static/</link>
+    <description>Automated, honest product reviews from ReviewLab.</description>
 
     {% for post in posts %}
     <item>
-      <title><![CDATA[{{ post.title }}]]></title>
+      <title>{{ post.title | escape }}</title>
       <link>{{ post.url }}</link>
       <guid>{{ post.url }}</guid>
       <pubDate>{{ post.date | date: "%a, %d %b %Y %H:%M:%S %z" }}</pubDate>
