@@ -1,14 +1,23 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Honest Product Review Lab</title>
+<meta charset="UTF-8">
+<title>ReviewLab – Honest Reviews</title>
+<meta name="description" content="Automated, honest product reviews published by ReviewLab.">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 </head>
 <body>
-  <h1>Welcome to Honest Product Review Lab</h1>
-  <p>Check out our latest reviews:</p>
-  <ul>
-    <li><a href="/posts/post-1/">PDF Cash Printer Review 2025</a></li>
-  </ul>
+
+<h1>Latest Reviews</h1>
+
+<ul>
+{% for post in posts %}
+  <li>
+    <a href="{{ post.url }}">{{ post.title }}</a><br>
+    <small>Published {{ post.date | date: "%B %d, %Y" }}</small>
+  </li>
+{% endfor %}
+</ul>
+
 </body>
 </html>
