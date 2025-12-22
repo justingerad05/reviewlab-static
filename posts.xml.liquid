@@ -9,14 +9,14 @@ eleventyExcludeFromCollections: true
     <link>https://justingerad05.github.io/reviewlab-static/</link>
     <description>Automated, honest product reviews.</description>
 
-    {% for post in posts %}
+{% for post in posts %}
     <item>
       <title>{{ post.title | escape }}</title>
       <link>{{ post.url }}</link>
       <guid>{{ post.url }}</guid>
       <pubDate>{{ post.date | date: "%a, %d %b %Y %H:%M:%S %z" }}</pubDate>
     </item>
-    {% endfor %}
+{% endfor %}
 
   </channel>
 </rss>
