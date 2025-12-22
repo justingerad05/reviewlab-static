@@ -1,6 +1,6 @@
 module.exports = function (eleventyConfig) {
 
-  eleventyConfig.addFilter("extractYoutubeThumbnail", function (content) {
+  eleventyConfig.addLiquidFilter("extractYoutubeThumbnail", function (content) {
     if (!content || typeof content !== "string") return "";
 
     const match = content.match(
