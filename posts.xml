@@ -7,7 +7,7 @@ eleventyExcludeFromCollections: true
   <channel>
     <title>ReviewLab – Latest Reviews</title>
     <link>https://justingerad05.github.io/reviewlab-static/</link>
-    <description>Automated, honest product reviews from ReviewLab.</description>
+    <description>Automated, honest product reviews.</description>
 
     {% for post in posts %}
     <item>
