@@ -37,12 +37,20 @@ function extractDescription(html) {
     .slice(0, 160);
 }
 
+// New function to create teaser for social platforms
+function createTeaser(title, description, url) {
+  // Use title + first 2 lines of description as teaser
+  const teaserDescription = description.length > 150 ? description.slice(0, 150) + "…" : description;
+  return `🔥 ${title}\n\n${teaserDescription}\n\nRead more: ${url}`;
+}
+
 entries.forEach((entry, i) => {
   const html = entry.content?.["#text"];
   if (!html) return;
 
   const title = extractCleanTitle(html);
   const description = extractDescription(html);
+  const teaser = createTeaser(title, description, `${SITE_URL}/posts/post-${i + 1}/`);
   const date = entry.published || new Date().toISOString();
 
   const slug = `post-${i + 1}`;
@@ -72,6 +80,9 @@ entries.forEach((entry, i) => {
 <meta name="twitter:title" content="${title}">
 <meta name="twitter:description" content="${description}">
 <meta name="twitter:image" content="${OG_IMAGE}">
+
+<!-- Custom meta for social automation -->
+<meta name="teaser" content="${teaser}">
 </head>
 <body>
 ${html}
@@ -79,8 +90,9 @@ ${html}
 </html>`;
 
   fs.writeFileSync(`${dir}/index.html`, page);
-  posts.push({ title, url, date });
+  posts.push({ title, url, date, teaser });
 });
 
+// Save posts JSON for Cloudflare Worker or other automation
 fs.mkdirSync("_data", { recursive: true });
 fs.writeFileSync("_data/posts.json", JSON.stringify(posts, null, 2));
