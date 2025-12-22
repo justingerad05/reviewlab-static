@@ -1,16 +1,19 @@
-<?xml version="1.0" encoding="UTF-8" ?>
+<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0">
   <channel>
-    <title>Honest Product Review Lab</title>
-    <link>https://justingerad05.github.io/reviewlab-static/</link>
-    <description>Latest product reviews</description>
+    <title>ReviewLab – Honest Reviews</title>
+    <link>https://justingerad05.github.io/reviewlab-static</link>
+    <description>Automated honest product reviews</description>
+    <language>en-us</language>
+
+    {% for post in posts %}
     <item>
-      <title>PDF Cash Printer Review 2025</title>
-      <link>https://justingerad05.github.io/reviewlab-static/posts/post-1/</link>
-      <description>Full review of PDF Cash Printer 2025</description>
-      <pubDate>Sun, 22 Dec 2025 15:32:07 +0000</pubDate>
-      <guid>https://justingerad05.github.io/reviewlab-static/posts/post-1/</guid>
+      <title><![CDATA[{{ post.title }}]]></title>
+      <link>{{ post.url }}</link>
+      <guid>{{ post.url }}</guid>
+      <pubDate>{{ post.date | date: "%a, %d %b %Y %H:%M:%S %z" }}</pubDate>
     </item>
-    <!-- Add more items as needed -->
+    {% endfor %}
+
   </channel>
 </rss>
