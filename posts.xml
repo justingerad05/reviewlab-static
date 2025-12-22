@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<rss version="2.0">
+  <channel>
+    <title>Honest Product Review Lab</title>
+    <link>https://justingerad05.github.io/reviewlab-static/</link>
+    <description>Latest product reviews</description>
+    <item>
+      <title>PDF Cash Printer Review 2025</title>
+      <link>https://justingerad05.github.io/reviewlab-static/posts/post-1/</link>
+      <description>Full review of PDF Cash Printer 2025</description>
+      <pubDate>Sun, 22 Dec 2025 15:32:07 +0000</pubDate>
+      <guid>https://justingerad05.github.io/reviewlab-static/posts/post-1/</guid>
+    </item>
+    <!-- Add more <item> blocks for other posts -->
+  </channel>
+</rss>
