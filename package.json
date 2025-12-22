@@ -1,15 +1,11 @@
 {
   "name": "reviewlab-static",
   "version": "1.0.0",
-  "private": true,
   "type": "module",
   "scripts": {
-  "build": "npx @11ty/eleventy && node generate-feed.js"
-}
+    "build": "npx @11ty/eleventy && node generate-feed.js"
   },
-  "dependencies": {
-    "@11ty/eleventy": "^2.0.1",
-    "fast-xml-parser": "^4.3.5",
-    "node-fetch": "^3.3.2"
+  "devDependencies": {
+    "@11ty/eleventy": "^2.0.1"
   }
 }
