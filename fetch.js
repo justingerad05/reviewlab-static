@@ -28,26 +28,36 @@ function strip(html) {
   return html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
 }
 
+function normalizeTitle(title) {
+  if (title.length >= 50) return title.slice(0, 70);
+  return `${title} – Full Review, Features, Pros & Verdict`.slice(0, 70);
+}
+
 function extractTitle(html) {
   const h1 = html.match(/<h1[^>]*>(.*?)<\/h1>/i);
-  if (h1) return strip(h1[1]).slice(0, 70);
+  if (h1) return normalizeTitle(strip(h1[1]));
 
   const strong = html.match(/<strong[^>]*>(.*?)<\/strong>/i);
-  if (strong) return strip(strong[1]).slice(0, 70);
+  if (strong) return normalizeTitle(strip(strong[1]));
 
   const text = strip(html);
   const sentence = text.split(".")[0];
-  return sentence.slice(0, 70);
+  return normalizeTitle(sentence);
 }
 
 function extractDescription(html) {
   return strip(html).slice(0, 160);
 }
 
+function extractYouTubeId(html) {
+  const m = html.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([A-Za-z0-9_-]{11})/);
+  return m ? m[1] : null;
+}
+
 function extractImage(html) {
-  const yt = html.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([A-Za-z0-9_-]{11})/);
-  if (yt) {
-    return `https://img.youtube.com/vi/${yt[1]}/hqdefault.jpg`;
+  const ytId = extractYouTubeId(html);
+  if (ytId) {
+    return `https://img.youtube.com/vi/${ytId}/hqdefault.jpg`;
   }
 
   const img = html.match(/<img[^>]+src=["']([^"']+)["']/i);
@@ -62,6 +72,7 @@ entries.forEach((entry, i) => {
 
   const title = extractTitle(html);
   const description = extractDescription(html);
+  const ytId = extractYouTubeId(html);
   const image = extractImage(html);
   const date = entry.published || new Date().toISOString();
 
@@ -70,6 +81,15 @@ entries.forEach((entry, i) => {
   fs.mkdirSync(dir, { recursive: true });
 
   const url = `${SITE_URL}/posts/${slug}/`;
+
+  const videoMeta = ytId
+    ? `
+<meta property="og:video" content="https://www.youtube.com/embed/${ytId}">
+<meta property="og:video:type" content="text/html">
+<meta property="og:video:width" content="1280">
+<meta property="og:video:height" content="720">
+`
+    : "";
 
   const page = `<!DOCTYPE html>
 <html lang="en">
@@ -88,6 +108,7 @@ entries.forEach((entry, i) => {
 <meta property="og:image" content="${image}">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
+${videoMeta}
 
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="${title}">
@@ -105,4 +126,3 @@ ${html}
 
 fs.mkdirSync("_data", { recursive: true });
 fs.writeFileSync("_data/posts.json", JSON.stringify(posts, null, 2));
-
