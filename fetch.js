@@ -6,6 +6,7 @@ const FEED_URL =
   "https://honestproductreviewlab.blogspot.com/feeds/posts/default?alt=atom";
 
 const SITE_URL = "https://justingerad05.github.io/reviewlab-static";
+const FALLBACK_IMAGE = `${SITE_URL}/og-default.jpg`;
 
 const parser = new XMLParser({ ignoreAttributes: false });
 
@@ -21,25 +22,46 @@ fs.mkdirSync("posts", { recursive: true });
 
 const posts = [];
 
+/* ================= UTILITIES ================= */
+
 function strip(html) {
   return html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
 }
 
-function extractImage(html) {
-  const yt = html.match(/youtu(?:\.be|be\.com).*?(?:v=|\/)([A-Za-z0-9_-]{11})/);
-  if (yt) {
-    return `https://img.youtube.com/vi/${yt[1]}/maxresdefault.jpg`;
-  }
-  const img = html.match(/<img[^>]+src=["']([^"']+)["']/i);
-  return img ? img[1] : `${SITE_URL}/og-default.jpg`;
+function extractTitle(html) {
+  const h1 = html.match(/<h1[^>]*>(.*?)<\/h1>/i);
+  if (h1) return strip(h1[1]).slice(0, 70);
+
+  const strong = html.match(/<strong[^>]*>(.*?)<\/strong>/i);
+  if (strong) return strip(strong[1]).slice(0, 70);
+
+  const text = strip(html);
+  const sentence = text.split(".")[0];
+  return sentence.slice(0, 70);
 }
+
+function extractDescription(html) {
+  return strip(html).slice(0, 160);
+}
+
+function extractImage(html) {
+  const yt = html.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([A-Za-z0-9_-]{11})/);
+  if (yt) {
+    return `https://img.youtube.com/vi/${yt[1]}/hqdefault.jpg`;
+  }
+
+  const img = html.match(/<img[^>]+src=["']([^"']+)["']/i);
+  return img ? img[1] : FALLBACK_IMAGE;
+}
+
+/* ================= BUILD POSTS ================= */
 
 entries.forEach((entry, i) => {
   const html = entry.content?.["#text"];
   if (!html) return;
 
-  const title = strip(html).split("\n")[0].slice(0, 90);
-  const description = strip(html).slice(0, 200);
+  const title = extractTitle(html);
+  const description = extractDescription(html);
   const image = extractImage(html);
   const date = entry.published || new Date().toISOString();
 
@@ -64,6 +86,8 @@ entries.forEach((entry, i) => {
 <meta property="og:title" content="${title}">
 <meta property="og:description" content="${description}">
 <meta property="og:image" content="${image}">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
 
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="${title}">
