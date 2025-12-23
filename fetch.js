@@ -105,3 +105,4 @@ ${html}
 
 fs.mkdirSync("_data", { recursive: true });
 fs.writeFileSync("_data/posts.json", JSON.stringify(posts, null, 2));
+
