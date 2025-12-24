@@ -28,32 +28,52 @@ function strip(html) {
   return html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
 }
 
-/* ---- FINAL OG TITLE (50–55 chars, no repetition) ---- */
-function normalizeOgTitle(text) {
-  let t = strip(text)
-    .replace(/\s*[–—-]\s*(Full Review.*|Review.*|Verdict.*)$/i, "")
-    .trim();
+/* ---- EXACT 55 CHAR TITLE (FROM CONTENT ONLY) ---- */
+function buildExactTitle(html) {
+  const clean = strip(html);
+  const words = clean.split(" ");
 
-  if (t.length > 55) {
-    return t.slice(0, 55).replace(/\s+\S*$/, "").trim();
+  let title = "";
+  for (let w of words) {
+    if ((title + " " + w).trim().length > 55) break;
+    title = (title + " " + w).trim();
   }
 
-  if (t.length < 50) {
-    const suffix = "In-Depth Review 2025";
-    return `${t} – ${suffix}`.slice(0, 55).trim();
+  // pad using remaining description words if short
+  let i = words.length;
+  while (title.length < 55 && i < clean.split(" ").length) {
+    title += " " + clean.split(" ")[i++];
+    title = title.trim();
   }
 
-  return t;
+  // final hard trim to EXACT 55
+  if (title.length > 55) {
+    title = title.slice(0, 55).replace(/\s+\S*$/, "").trim();
+  }
+
+  // enforce exact length by padding with next words
+  let cursor = title.length;
+  let descWords = clean.split(" ");
+  let idx = 0;
+  while (title.length < 55 && idx < descWords.length) {
+    if (!title.includes(descWords[idx])) {
+      title += " " + descWords[idx];
+      title = title.trim();
+    }
+    idx++;
+  }
+
+  return title.slice(0, 55);
 }
 
 function extractTitle(html) {
   const h1 = html.match(/<h1[^>]*>(.*?)<\/h1>/i);
-  if (h1) return normalizeOgTitle(h1[1]);
+  if (h1) return buildExactTitle(h1[1] + " " + html);
 
   const strong = html.match(/<strong[^>]*>(.*?)<\/strong>/i);
-  if (strong) return normalizeOgTitle(strong[1]);
+  if (strong) return buildExactTitle(strong[1] + " " + html);
 
-  return normalizeOgTitle(strip(html).split(".")[0]);
+  return buildExactTitle(html);
 }
 
 function extractDescription(html) {
