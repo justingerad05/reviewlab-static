@@ -28,47 +28,44 @@ function strip(html) {
   return html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
 }
 
+function smartTitle(text) {
+  const clean = strip(text);
+
+  if (clean.length >= 50 && clean.length <= 65) {
+    return clean;
+  }
+
+  if (clean.length > 65) {
+    return clean.slice(0, 62).replace(/\s+\S*$/, "") + "…";
+  }
+
+  return `${clean} – Full Review, Features, Pros & Verdict`.slice(0, 65);
+}
+
 function extractTitle(html) {
   const h1 = html.match(/<h1[^>]*>(.*?)<\/h1>/i);
-  if (h1) return strip(h1[1]).slice(0, 70);
+  if (h1) return smartTitle(h1[1]);
 
   const strong = html.match(/<strong[^>]*>(.*?)<\/strong>/i);
-  if (strong) return strip(strong[1]).slice(0, 70);
+  if (strong) return smartTitle(strong[1]);
 
-  return strip(html).split(".")[0].slice(0, 70);
+  return smartTitle(strip(html).split(".")[0]);
 }
 
 function extractDescription(html) {
-  return strip(html).slice(0, 160);
+  const text = strip(html);
+  const base = text.slice(0, 155);
+  return base.length < 120
+    ? `${base}. Learn what it does, how it works, and whether it is worth your money.`
+    : base;
 }
 
-/* --------- ROBUST YOUTUBE EXTRACTION --------- */
-function extractYouTubeId(html) {
-  const patterns = [
-    /youtube\.com\/watch\?v=([A-Za-z0-9_-]{11})/,
-    /youtu\.be\/([A-Za-z0-9_-]{11})/,
-    /youtube\.com\/embed\/([A-Za-z0-9_-]{11})/,
-  ];
-
-  for (const p of patterns) {
-    const m = html.match(p);
-    if (m) return m[1];
-  }
-  return null;
-}
-
-async function resolveYouTubeThumbnail(id) {
-  const max = `https://img.youtube.com/vi/${id}/maxresdefault.jpg`;
-  const test = await fetch(max, { method: "HEAD" });
-  return test.ok
-    ? max
-    : `https://img.youtube.com/vi/${id}/hqdefault.jpg`;
-}
-
-async function extractImage(html) {
-  const ytId = extractYouTubeId(html);
-  if (ytId) {
-    return await resolveYouTubeThumbnail(ytId);
+function extractImage(html) {
+  const yt = html.match(
+    /(?:youtube\.com\/watch\?v=|youtu\.be\/)([A-Za-z0-9_-]{11})/
+  );
+  if (yt) {
+    return `https://img.youtube.com/vi/${yt[1]}/hqdefault.jpg`;
   }
 
   const img = html.match(/<img[^>]+src=["']([^"']+)["']/i);
@@ -77,14 +74,13 @@ async function extractImage(html) {
 
 /* ================= BUILD POSTS ================= */
 
-for (let i = 0; i < entries.length; i++) {
-  const entry = entries[i];
+entries.forEach((entry, i) => {
   const html = entry.content?.["#text"];
-  if (!html) continue;
+  if (!html) return;
 
   const title = extractTitle(html);
   const description = extractDescription(html);
-  const image = await extractImage(html);
+  const image = extractImage(html);
   const date = entry.published || new Date().toISOString();
 
   const slug = `post-${i + 1}`;
@@ -123,7 +119,7 @@ ${html}
 
   fs.writeFileSync(`${dir}/index.html`, page);
   posts.push({ title, url, date, description });
-}
+});
 
 fs.mkdirSync("_data", { recursive: true });
 fs.writeFileSync("_data/posts.json", JSON.stringify(posts, null, 2));
