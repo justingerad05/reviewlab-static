@@ -28,45 +28,62 @@ function strip(html) {
   return html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
 }
 
-function smartTitle(text) {
-  const clean = strip(text);
+/* ---- STRICT 50–60 CHAR TITLE FOR OG ---- */
+function normalizeOgTitle(text) {
+  let t = strip(text);
 
-  if (clean.length >= 50 && clean.length <= 65) {
-    return clean;
+  if (t.length > 60) {
+    return t.slice(0, 60).replace(/\s+\S*$/, "").trim();
   }
 
-  if (clean.length > 65) {
-    return clean.slice(0, 62).replace(/\s+\S*$/, "") + "…";
+  if (t.length < 50) {
+    return `${t} – Full Review & Verdict`
+      .slice(0, 60)
+      .trim();
   }
 
-  return `${clean} – Full Review, Features, Pros & Verdict`.slice(0, 65);
+  return t;
 }
 
 function extractTitle(html) {
   const h1 = html.match(/<h1[^>]*>(.*?)<\/h1>/i);
-  if (h1) return smartTitle(h1[1]);
+  if (h1) return normalizeOgTitle(h1[1]);
 
   const strong = html.match(/<strong[^>]*>(.*?)<\/strong>/i);
-  if (strong) return smartTitle(strong[1]);
+  if (strong) return normalizeOgTitle(strong[1]);
 
-  return smartTitle(strip(html).split(".")[0]);
+  return normalizeOgTitle(strip(html).split(".")[0]);
 }
 
 function extractDescription(html) {
-  const text = strip(html);
-  const base = text.slice(0, 155);
-  return base.length < 120
-    ? `${base}. Learn what it does, how it works, and whether it is worth your money.`
-    : base;
+  return strip(html).slice(0, 160);
 }
 
-function extractImage(html) {
-  const yt = html.match(
-    /(?:youtube\.com\/watch\?v=|youtu\.be\/)([A-Za-z0-9_-]{11})/
-  );
-  if (yt) {
-    return `https://img.youtube.com/vi/${yt[1]}/hqdefault.jpg`;
+/* --------- ROBUST YOUTUBE EXTRACTION --------- */
+function extractYouTubeId(html) {
+  const patterns = [
+    /youtube\.com\/watch\?v=([A-Za-z0-9_-]{11})/,
+    /youtu\.be\/([A-Za-z0-9_-]{11})/,
+    /youtube\.com\/embed\/([A-Za-z0-9_-]{11})/,
+  ];
+  for (const p of patterns) {
+    const m = html.match(p);
+    if (m) return m[1];
   }
+  return null;
+}
+
+async function resolveYouTubeThumbnail(id) {
+  const max = `https://img.youtube.com/vi/${id}/maxresdefault.jpg`;
+  const test = await fetch(max, { method: "HEAD" });
+  return test.ok
+    ? max
+    : `https://img.youtube.com/vi/${id}/hqdefault.jpg`;
+}
+
+async function extractImage(html) {
+  const ytId = extractYouTubeId(html);
+  if (ytId) return await resolveYouTubeThumbnail(ytId);
 
   const img = html.match(/<img[^>]+src=["']([^"']+)["']/i);
   return img ? img[1] : FALLBACK_IMAGE;
@@ -74,13 +91,14 @@ function extractImage(html) {
 
 /* ================= BUILD POSTS ================= */
 
-entries.forEach((entry, i) => {
+for (let i = 0; i < entries.length; i++) {
+  const entry = entries[i];
   const html = entry.content?.["#text"];
-  if (!html) return;
+  if (!html) continue;
 
   const title = extractTitle(html);
   const description = extractDescription(html);
-  const image = extractImage(html);
+  const image = await extractImage(html);
   const date = entry.published || new Date().toISOString();
 
   const slug = `post-${i + 1}`;
@@ -119,7 +137,7 @@ ${html}
 
   fs.writeFileSync(`${dir}/index.html`, page);
   posts.push({ title, url, date, description });
-});
+}
 
 fs.mkdirSync("_data", { recursive: true });
 fs.writeFileSync("_data/posts.json", JSON.stringify(posts, null, 2));
