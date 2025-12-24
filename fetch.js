@@ -28,18 +28,19 @@ function strip(html) {
   return html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
 }
 
-/* ---- STRICT 50–60 CHAR TITLE FOR OG ---- */
+/* ---- FINAL OG TITLE (50–55 chars, no repetition) ---- */
 function normalizeOgTitle(text) {
-  let t = strip(text);
+  let t = strip(text)
+    .replace(/\s*[–—-]\s*(Full Review.*|Review.*|Verdict.*)$/i, "")
+    .trim();
 
-  if (t.length > 60) {
-    return t.slice(0, 60).replace(/\s+\S*$/, "").trim();
+  if (t.length > 55) {
+    return t.slice(0, 55).replace(/\s+\S*$/, "").trim();
   }
 
   if (t.length < 50) {
-    return `${t} – Full Review & Verdict`
-      .slice(0, 60)
-      .trim();
+    const suffix = "In-Depth Review 2025";
+    return `${t} – ${suffix}`.slice(0, 55).trim();
   }
 
   return t;
@@ -59,7 +60,7 @@ function extractDescription(html) {
   return strip(html).slice(0, 160);
 }
 
-/* --------- ROBUST YOUTUBE EXTRACTION --------- */
+/* --------- YOUTUBE EXTRACTION --------- */
 function extractYouTubeId(html) {
   const patterns = [
     /youtube\.com\/watch\?v=([A-Za-z0-9_-]{11})/,
