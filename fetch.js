@@ -2,25 +2,20 @@ import fs from "fs";
 import fetch from "node-fetch";
 import { XMLParser } from "fast-xml-parser";
 
-/* ================= CONFIG ================= */
+/* ================= CORE CONFIG ================= */
 
 const FEED_URL =
   "https://honestproductreviewlab.blogspot.com/feeds/posts/default?alt=atom";
 
 const SITE_URL = "https://justingerad05.github.io/reviewlab-static";
 
-/* 🔒 PERMANENT CTA OG IMAGES (ROOT LEVEL) */
-const CTA_IMAGES = [
-  "https://raw.githubusercontent.com/justingerad05/reviewlab-static/main/cta-1.jpg",
-  "https://raw.githubusercontent.com/justingerad05/reviewlab-static/main/cta-2.jpg",
-  "https://raw.githubusercontent.com/justingerad05/reviewlab-static/main/cta-3.jpg",
-  "https://raw.githubusercontent.com/justingerad05/reviewlab-static/main/cta-4.jpg",
-  "https://raw.githubusercontent.com/justingerad05/reviewlab-static/main/cta-5.jpg"
-];
-
-/* ========================================== */
+/* 🔒 LOCKED CTA FALLBACK OG IMAGE */
+const FALLBACK_IMAGE =
+  "https://raw.githubusercontent.com/justingerad05/reviewlab-static/main/assets/og-cta-review.jpg";
 
 const parser = new XMLParser({ ignoreAttributes: false });
+
+/* ================= FETCH FEED ================= */
 
 const res = await fetch(FEED_URL);
 const xml = await res.text();
@@ -28,6 +23,8 @@ const data = parser.parse(xml);
 
 let entries = data.feed?.entry || [];
 if (!Array.isArray(entries)) entries = [entries];
+
+/* ================= RESET OUTPUT ================= */
 
 fs.rmSync("posts", { recursive: true, force: true });
 fs.mkdirSync("posts", { recursive: true });
@@ -40,7 +37,7 @@ function strip(html) {
   return html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
 }
 
-/* ---- EXACT 55 CHARACTER TITLE ---- */
+/* ---- EXACT 55-CHAR TITLE (HARD GUARANTEE) ---- */
 function buildExact55Title(text) {
   let clean = strip(text)
     .replace(/\s+/g, " ")
@@ -48,22 +45,24 @@ function buildExact55Title(text) {
     .trim();
 
   const suffix = " – Full Review & Verdict";
+  let result = clean + suffix;
 
-  let base = clean;
-  if ((base + suffix).length < 55) {
-    base = (base + suffix).slice(0, 55);
+  if (result.length > 55) {
+    result = result.slice(0, 55);
   }
 
-  if (base.length > 55) base = base.slice(0, 55);
-  if (base.length < 55) base = base.padEnd(55, " ");
+  if (result.length < 55) {
+    result = result.padEnd(55, " ");
+  }
 
-  return base.trim();
+  return result.trim();
 }
 
-/* ---- TITLE FROM HTML ---- */
+/* ---- TITLE EXTRACTION ---- */
 function extractTitle(html) {
   const h1 = html.match(/<h1[^>]*>(.*?)<\/h1>/i);
   if (h1) return buildExact55Title(h1[1]);
+
   return buildExact55Title(strip(html).split(".")[0]);
 }
 
@@ -72,9 +71,22 @@ function extractDescription(html) {
   return strip(html).slice(0, 160);
 }
 
-/* ---- PERMANENT CTA IMAGE SELECTION ---- */
-function selectCtaImage(index) {
-  return CTA_IMAGES[index % CTA_IMAGES.length];
+/* ---- IMAGE RESOLUTION PRIORITY ---- */
+function extractYouTubeId(html) {
+  const m = html.match(/(?:v=|\/)([0-9A-Za-z_-]{11})/);
+  return m ? m[1] : null;
+}
+
+async function extractImage(html) {
+  const yt = extractYouTubeId(html);
+  if (yt) {
+    return `https://img.youtube.com/vi/${yt}/hqdefault.jpg`;
+  }
+
+  const img = html.match(/<img[^>]+src=["']([^"']+)["']/i);
+  if (img) return img[1];
+
+  return FALLBACK_IMAGE;
 }
 
 /* ================= BUILD POSTS ================= */
@@ -86,7 +98,7 @@ for (let i = 0; i < entries.length; i++) {
 
   const title = extractTitle(html);
   const description = extractDescription(html);
-  const image = selectCtaImage(i);
+  const image = await extractImage(html);
   const date = entry.published || new Date().toISOString();
 
   const slug = `post-${i + 1}`;
@@ -110,11 +122,8 @@ for (let i = 0; i < entries.length; i++) {
 <meta property="og:title" content="${title}">
 <meta property="og:description" content="${description}">
 <meta property="og:image" content="${image}">
-<meta property="og:image:secure_url" content="${image}">
-<meta property="og:image:type" content="image/jpeg">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
-<meta property="og:image:alt" content="Read the full review and verdict">
 
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="${title}">
@@ -127,16 +136,10 @@ ${html}
 </html>`;
 
   fs.writeFileSync(`${dir}/index.html`, page);
-
-  posts.push({
-    title,
-    url,
-    date,
-    description
-  });
+  posts.push({ title, url, date, description });
 }
 
-/* ================= INDEX DATA ================= */
+/* ================= DATA OUTPUT ================= */
 
 fs.mkdirSync("_data", { recursive: true });
 fs.writeFileSync("_data/posts.json", JSON.stringify(posts, null, 2));
