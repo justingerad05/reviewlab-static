@@ -9,9 +9,23 @@ const FEED_URL =
 
 const SITE_URL = "https://justingerad05.github.io/reviewlab-static";
 
-/* 🔒 LOCKED CTA FALLBACK OG IMAGE */
 const FALLBACK_IMAGE =
   "https://raw.githubusercontent.com/justingerad05/reviewlab-static/main/assets/og-cta-review.jpg";
+
+/* ================= TAG POOL (LOCKED) ================= */
+
+const TAG_POOL = [
+  "review",
+  "honest review",
+  "product review",
+  "full review",
+  "pros and cons",
+  "verdict",
+  "scam or legit",
+  "worth it",
+  "online income",
+  "digital product",
+];
 
 const parser = new XMLParser({ ignoreAttributes: false });
 
@@ -37,7 +51,7 @@ function strip(html) {
   return html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
 }
 
-/* ---- EXACT 55-CHAR TITLE (HARD GUARANTEE) ---- */
+/* ---- EXACT 55-CHAR TITLE ---- */
 function buildExact55Title(text) {
   let clean = strip(text)
     .replace(/\s+/g, " ")
@@ -47,22 +61,16 @@ function buildExact55Title(text) {
   const suffix = " – Full Review & Verdict";
   let result = clean + suffix;
 
-  if (result.length > 55) {
-    result = result.slice(0, 55);
-  }
-
-  if (result.length < 55) {
-    result = result.padEnd(55, " ");
-  }
+  if (result.length > 55) result = result.slice(0, 55);
+  if (result.length < 55) result = result.padEnd(55, " ");
 
   return result.trim();
 }
 
-/* ---- TITLE EXTRACTION ---- */
+/* ---- TITLE FROM HTML ---- */
 function extractTitle(html) {
   const h1 = html.match(/<h1[^>]*>(.*?)<\/h1>/i);
   if (h1) return buildExact55Title(h1[1]);
-
   return buildExact55Title(strip(html).split(".")[0]);
 }
 
@@ -71,7 +79,7 @@ function extractDescription(html) {
   return strip(html).slice(0, 160);
 }
 
-/* ---- IMAGE RESOLUTION PRIORITY ---- */
+/* ---- IMAGE RESOLUTION ---- */
 function extractYouTubeId(html) {
   const m = html.match(/(?:v=|\/)([0-9A-Za-z_-]{11})/);
   return m ? m[1] : null;
@@ -79,14 +87,24 @@ function extractYouTubeId(html) {
 
 async function extractImage(html) {
   const yt = extractYouTubeId(html);
-  if (yt) {
-    return `https://img.youtube.com/vi/${yt}/hqdefault.jpg`;
-  }
+  if (yt) return `https://img.youtube.com/vi/${yt}/hqdefault.jpg`;
 
   const img = html.match(/<img[^>]+src=["']([^"']+)["']/i);
   if (img) return img[1];
 
   return FALLBACK_IMAGE;
+}
+
+/* ---- TAG ROTATION (3–4 TAGS) ---- */
+function getRotatingTags(index) {
+  const count = index % 2 === 0 ? 3 : 4;
+  const tags = [];
+
+  for (let i = 0; i < count; i++) {
+    tags.push(TAG_POOL[(index + i) % TAG_POOL.length]);
+  }
+
+  return [...new Set(tags)];
 }
 
 /* ================= BUILD POSTS ================= */
@@ -100,6 +118,7 @@ for (let i = 0; i < entries.length; i++) {
   const description = extractDescription(html);
   const image = await extractImage(html);
   const date = entry.published || new Date().toISOString();
+  const tags = getRotatingTags(i);
 
   const slug = `post-${i + 1}`;
   const dir = `posts/${slug}`;
@@ -114,6 +133,7 @@ for (let i = 0; i < entries.length; i++) {
 <title>${title}</title>
 
 <meta name="description" content="${description}">
+<meta name="keywords" content="${tags.join(", ")}">
 <link rel="canonical" href="${url}">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
@@ -136,7 +156,14 @@ ${html}
 </html>`;
 
   fs.writeFileSync(`${dir}/index.html`, page);
-  posts.push({ title, url, date, description });
+
+  posts.push({
+    title,
+    url,
+    date,
+    description,
+    tags,
+  });
 }
 
 /* ================= DATA OUTPUT ================= */
