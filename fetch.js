@@ -6,15 +6,14 @@ const FEED_URL =
   "https://honestproductreviewlab.blogspot.com/feeds/posts/default?alt=atom";
 
 const SITE_URL = "https://justingerad05.github.io/reviewlab-static";
-const FALLBACK_IMAGE = `${SITE_URL}/og-default.jpg`;
 
-/* CTA images (already uploaded by you) */
+/* CTA images with baked-in text (Meta-safe) */
 const CTA_IMAGES = [
-  "/og-cta-review.jpg",
-  "/og-cta-tested.jpg",
-  "/og-cta-verdict.jpg",
-  "/og-cta-analysis.jpg",
-  "/og-cta-features.jpg",
+  `${SITE_URL}/og/og-cta-review.jpg`,
+  `${SITE_URL}/og/og-cta-tested.jpg`,
+  `${SITE_URL}/og/og-cta-verdict.jpg`,
+  `${SITE_URL}/og/og-cta-analysis.jpg`,
+  `${SITE_URL}/og/og-cta-features.jpg`,
 ];
 
 const parser = new XMLParser({ ignoreAttributes: false });
@@ -37,55 +36,42 @@ function strip(html) {
   return html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
 }
 
-/* ---- EXACT 55 CHAR TITLE (HARD GUARANTEE) ---- */
-function buildExact55Title(text) {
-  let clean = strip(text)
-    .replace(/\s+/g, " ")
+/* ---- PREFIX + EXACT 55 CHAR TITLE (HARD GUARANTEE) ---- */
+function buildExact55Title(text, index) {
+  let base = strip(text)
     .replace(/[-–|].*$/, "")
+    .replace(/\s+/g, " ")
     .trim();
 
-  const suffix = " – Full Review & Verdict";
-  let base = clean;
-
-  if ((base + suffix).length < 55) {
-    base = (base + suffix).slice(0, 55);
-  }
-
-  if (base.length > 55) {
-    base = base.slice(0, 55);
-  }
+  const prefixes = [
+    "Review:",
+    "Tested:",
+    "Explained:",
+    "Analysis:",
+    "Hands-On:",
+  ];
 
   if (base.length < 55) {
-    base = base.padEnd(55, " ");
+    const prefix = prefixes[index % prefixes.length];
+    base = `${prefix} ${base}`;
   }
 
-  return base.trim();
+  if (base.length > 55) base = base.slice(0, 55);
+  while (base.length < 55) base += " ";
+
+  return base;
 }
 
 /* ---- TITLE FROM HTML ONLY ---- */
-function extractTitle(html) {
+function extractTitle(html, index) {
   const h1 = html.match(/<h1[^>]*>(.*?)<\/h1>/i);
-  if (h1) return buildExact55Title(h1[1]);
-  return buildExact55Title(strip(html).split(".")[0]);
+  if (h1) return buildExact55Title(h1[1], index);
+  return buildExact55Title(strip(html).split(".")[0], index);
 }
 
 /* ---- DESCRIPTION ---- */
 function extractDescription(html) {
   return strip(html).slice(0, 160);
-}
-
-/* ---- IMAGE ---- */
-function extractYouTubeId(html) {
-  const m = html.match(/(?:v=|\/)([0-9A-Za-z_-]{11})/);
-  return m ? m[1] : null;
-}
-
-async function extractImage(html) {
-  const id = extractYouTubeId(html);
-  if (id) return `https://img.youtube.com/vi/${id}/hqdefault.jpg`;
-
-  const img = html.match(/<img[^>]+src=["']([^"']+)["']/i);
-  return img ? img[1] : FALLBACK_IMAGE;
 }
 
 /* ================= BUILD POSTS ================= */
@@ -95,57 +81,17 @@ for (let i = 0; i < entries.length; i++) {
   const html = entry.content?.["#text"];
   if (!html) continue;
 
-  const title = extractTitle(html);
+  const title = extractTitle(html, i);
   const description = extractDescription(html);
-  const image = await extractImage(html);
-  const date = entry.published || new Date().toISOString();
+
+  /* IMPORTANT: OG image is ALWAYS CTA */
+  const ogImage = CTA_IMAGES[i % CTA_IMAGES.length];
 
   const slug = `post-${i + 1}`;
   const dir = `posts/${slug}`;
   fs.mkdirSync(dir, { recursive: true });
 
   const url = `${SITE_URL}/posts/${slug}/`;
-
-  /* Per-post CTA rotation index */
-  const startIndex = i % CTA_IMAGES.length;
-
-  const ctaHtml = `
-<style>
-.cta-rotator {
-  position: relative;
-  width: 100%;
-  aspect-ratio: 1200 / 630;
-  overflow: hidden;
-  margin-bottom: 20px;
-}
-.cta-rotator img {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  opacity: 0;
-  animation: ctaRotate 25s infinite;
-}
-${CTA_IMAGES.map(
-  (_, idx) =>
-    `.cta-rotator img:nth-child(${idx + 1}){animation-delay:${idx * 5}s}`
-).join("\n")}
-@keyframes ctaRotate {
-  0%{opacity:0}
-  5%{opacity:1}
-  20%{opacity:1}
-  25%{opacity:0}
-}
-</style>
-
-<div class="cta-rotator">
-${CTA_IMAGES.map(
-  (img, idx) =>
-    `<img src="${img}" alt="CTA ${idx + 1}">`
-).join("\n")}
-</div>
-`;
 
   const page = `<!DOCTYPE html>
 <html lang="en">
@@ -161,25 +107,22 @@ ${CTA_IMAGES.map(
 <meta property="og:url" content="${url}">
 <meta property="og:title" content="${title}">
 <meta property="og:description" content="${description}">
-<meta property="og:image" content="${image}">
+<meta property="og:image" content="${ogImage}">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="${title}">
 <meta name="twitter:description" content="${description}">
-<meta name="twitter:image" content="${image}">
+<meta name="twitter:image" content="${ogImage}">
 </head>
 <body>
-
-${ctaHtml}
 ${html}
-
 </body>
 </html>`;
 
   fs.writeFileSync(`${dir}/index.html`, page);
-  posts.push({ title, url, date, description });
+  posts.push({ title, url, description });
 }
 
 fs.mkdirSync("_data", { recursive: true });
