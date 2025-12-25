@@ -8,6 +8,15 @@ const FEED_URL =
 const SITE_URL = "https://justingerad05.github.io/reviewlab-static";
 const FALLBACK_IMAGE = `${SITE_URL}/og-default.jpg`;
 
+/* CTA images (already uploaded by you) */
+const CTA_IMAGES = [
+  "/og-cta-review.jpg",
+  "/og-cta-tested.jpg",
+  "/og-cta-verdict.jpg",
+  "/og-cta-analysis.jpg",
+  "/og-cta-features.jpg",
+];
+
 const parser = new XMLParser({ ignoreAttributes: false });
 
 const res = await fetch(FEED_URL);
@@ -57,14 +66,10 @@ function buildExact55Title(text) {
 function extractTitle(html) {
   const h1 = html.match(/<h1[^>]*>(.*?)<\/h1>/i);
   if (h1) return buildExact55Title(h1[1]);
-
-  const yt = html.match(/youtube\.com\/watch\?v=.*?title=([^"&]+)/i);
-  if (yt) return buildExact55Title(decodeURIComponent(yt[1]));
-
   return buildExact55Title(strip(html).split(".")[0]);
 }
 
-/* ---- TEASER SOURCE ---- */
+/* ---- DESCRIPTION ---- */
 function extractDescription(html) {
   return strip(html).slice(0, 160);
 }
@@ -101,6 +106,47 @@ for (let i = 0; i < entries.length; i++) {
 
   const url = `${SITE_URL}/posts/${slug}/`;
 
+  /* Per-post CTA rotation index */
+  const startIndex = i % CTA_IMAGES.length;
+
+  const ctaHtml = `
+<style>
+.cta-rotator {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1200 / 630;
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+.cta-rotator img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  animation: ctaRotate 25s infinite;
+}
+${CTA_IMAGES.map(
+  (_, idx) =>
+    `.cta-rotator img:nth-child(${idx + 1}){animation-delay:${idx * 5}s}`
+).join("\n")}
+@keyframes ctaRotate {
+  0%{opacity:0}
+  5%{opacity:1}
+  20%{opacity:1}
+  25%{opacity:0}
+}
+</style>
+
+<div class="cta-rotator">
+${CTA_IMAGES.map(
+  (img, idx) =>
+    `<img src="${img}" alt="CTA ${idx + 1}">`
+).join("\n")}
+</div>
+`;
+
   const page = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -125,7 +171,10 @@ for (let i = 0; i < entries.length; i++) {
 <meta name="twitter:image" content="${image}">
 </head>
 <body>
+
+${ctaHtml}
 ${html}
+
 </body>
 </html>`;
 
