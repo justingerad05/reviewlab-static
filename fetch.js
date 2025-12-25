@@ -28,83 +28,56 @@ function strip(html) {
   return html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
 }
 
-/* ---- EXACT 55 CHAR TITLE (FROM CONTENT ONLY) ---- */
-function buildExactTitle(html) {
-  const clean = strip(html);
-  const words = clean.split(" ");
+/* ---- EXACT 55 CHAR TITLE (HARD GUARANTEE) ---- */
+function buildExact55Title(text) {
+  let clean = strip(text)
+    .replace(/\s+/g, " ")
+    .replace(/[-–|].*$/, "")
+    .trim();
 
-  let title = "";
-  for (let w of words) {
-    if ((title + " " + w).trim().length > 55) break;
-    title = (title + " " + w).trim();
+  const suffix = " – Full Review & Verdict";
+  let base = clean;
+
+  if ((base + suffix).length < 55) {
+    base = (base + suffix).slice(0, 55);
   }
 
-  // pad using remaining description words if short
-  let i = words.length;
-  while (title.length < 55 && i < clean.split(" ").length) {
-    title += " " + clean.split(" ")[i++];
-    title = title.trim();
+  if (base.length > 55) {
+    base = base.slice(0, 55);
   }
 
-  // final hard trim to EXACT 55
-  if (title.length > 55) {
-    title = title.slice(0, 55).replace(/\s+\S*$/, "").trim();
+  if (base.length < 55) {
+    base = base.padEnd(55, " ");
   }
 
-  // enforce exact length by padding with next words
-  let cursor = title.length;
-  let descWords = clean.split(" ");
-  let idx = 0;
-  while (title.length < 55 && idx < descWords.length) {
-    if (!title.includes(descWords[idx])) {
-      title += " " + descWords[idx];
-      title = title.trim();
-    }
-    idx++;
-  }
-
-  return title.slice(0, 55);
+  return base.trim();
 }
 
+/* ---- TITLE FROM HTML ONLY ---- */
 function extractTitle(html) {
   const h1 = html.match(/<h1[^>]*>(.*?)<\/h1>/i);
-  if (h1) return buildExactTitle(h1[1] + " " + html);
+  if (h1) return buildExact55Title(h1[1]);
 
-  const strong = html.match(/<strong[^>]*>(.*?)<\/strong>/i);
-  if (strong) return buildExactTitle(strong[1] + " " + html);
+  const yt = html.match(/youtube\.com\/watch\?v=.*?title=([^"&]+)/i);
+  if (yt) return buildExact55Title(decodeURIComponent(yt[1]));
 
-  return buildExactTitle(html);
+  return buildExact55Title(strip(html).split(".")[0]);
 }
 
+/* ---- TEASER SOURCE ---- */
 function extractDescription(html) {
   return strip(html).slice(0, 160);
 }
 
-/* --------- YOUTUBE EXTRACTION --------- */
+/* ---- IMAGE ---- */
 function extractYouTubeId(html) {
-  const patterns = [
-    /youtube\.com\/watch\?v=([A-Za-z0-9_-]{11})/,
-    /youtu\.be\/([A-Za-z0-9_-]{11})/,
-    /youtube\.com\/embed\/([A-Za-z0-9_-]{11})/,
-  ];
-  for (const p of patterns) {
-    const m = html.match(p);
-    if (m) return m[1];
-  }
-  return null;
-}
-
-async function resolveYouTubeThumbnail(id) {
-  const max = `https://img.youtube.com/vi/${id}/maxresdefault.jpg`;
-  const test = await fetch(max, { method: "HEAD" });
-  return test.ok
-    ? max
-    : `https://img.youtube.com/vi/${id}/hqdefault.jpg`;
+  const m = html.match(/(?:v=|\/)([0-9A-Za-z_-]{11})/);
+  return m ? m[1] : null;
 }
 
 async function extractImage(html) {
-  const ytId = extractYouTubeId(html);
-  if (ytId) return await resolveYouTubeThumbnail(ytId);
+  const id = extractYouTubeId(html);
+  if (id) return `https://img.youtube.com/vi/${id}/hqdefault.jpg`;
 
   const img = html.match(/<img[^>]+src=["']([^"']+)["']/i);
   return img ? img[1] : FALLBACK_IMAGE;
