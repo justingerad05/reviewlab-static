@@ -41,6 +41,8 @@ if (!Array.isArray(entries)) entries = [entries];
 fs.rmSync("posts", { recursive: true, force: true });
 fs.mkdirSync("posts", { recursive: true });
 
+const posts = []; // ✅ RESTORED
+
 /* ================= UTILITIES ================= */
 
 function strip(html) {
@@ -85,7 +87,7 @@ function rotateTags(html, index) {
   return tags.slice(0, 4);
 }
 
-/* ---------- IMAGE EXTRACTION (SAFE & PRIORITIZED) ---------- */
+/* ---------- IMAGE EXTRACTION (UNCHANGED, SAFE) ---------- */
 
 function extractYouTubeId(html) {
   const match = html.match(
@@ -101,9 +103,7 @@ function extractFirstImage(html) {
 
 function extractOgImage(html) {
   const ytId = extractYouTubeId(html);
-  if (ytId) {
-    return `https://img.youtube.com/vi/${ytId}/hqdefault.jpg`;
-  }
+  if (ytId) return `https://img.youtube.com/vi/${ytId}/hqdefault.jpg`;
 
   const firstImg = extractFirstImage(html);
   if (firstImg) return firstImg;
@@ -121,6 +121,7 @@ for (let i = 0; i < entries.length; i++) {
   const description = buildTeaser(html);
   const tags = rotateTags(html, i);
   const image = extractOgImage(html);
+  const date = entries[i].published || new Date().toISOString();
 
   const slug = `post-${i + 1}`;
   const dir = `posts/${slug}`;
@@ -136,13 +137,12 @@ for (let i = 0; i < entries.length; i++) {
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-
 <title>${title}</title>
+
 <meta name="description" content="${description}">
 <link rel="canonical" href="${url}">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<!-- OPEN GRAPH -->
 <meta property="og:type" content="article">
 <meta property="og:url" content="${url}">
 <meta property="og:title" content="${title}">
@@ -150,20 +150,31 @@ for (let i = 0; i < entries.length; i++) {
 <meta property="og:image" content="${image}">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
-
 ${ogTags}
 
-<!-- TWITTER -->
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="${title}">
 <meta name="twitter:description" content="${description}">
 <meta name="twitter:image" content="${image}">
 </head>
-
 <body>
 ${html}
 </body>
 </html>`;
 
   fs.writeFileSync(`${dir}/index.html`, page);
+
+  // ✅ RESTORED
+  posts.push({
+    title,
+    url,
+    date,
+    description,
+    tags,
+  });
 }
+
+/* ================= DATA FOR HOMEPAGE ================= */
+
+fs.mkdirSync("_data", { recursive: true });
+fs.writeFileSync("_data/posts.json", JSON.stringify(posts, null, 2));
