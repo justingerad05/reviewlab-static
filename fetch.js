@@ -10,6 +10,8 @@ const FEED_URL =
 const SITE_URL = "https://justingerad05.github.io/reviewlab-static";
 const FALLBACK_IMAGE = `${SITE_URL}/og-default.jpg`;
 
+const TITLE_PREFIXES = ["🚀", "🔥", "✅", "📌", "💡"];
+
 const TAG_POOL = [
   "AI Tools",
   "Online Income",
@@ -21,10 +23,17 @@ const TAG_POOL = [
   "Automation Tools",
 ];
 
+const TEASER_VARIANTS = [
+  t => t,
+  t => `${t} Full breakdown inside.`,
+  t => `${t} Honest review and verdict.`,
+  t => `${t} See if it is worth it.`,
+  t => `${t} Features, pros, and cons explained.`,
+];
+
 /* ================= SETUP ================= */
 
 const parser = new XMLParser({ ignoreAttributes: false });
-
 const res = await fetch(FEED_URL);
 const xml = await res.text();
 const data = parser.parse(xml);
@@ -43,52 +52,25 @@ function strip(html) {
   return html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
 }
 
-/* ---- EXACT 55 CHAR TITLE (HARD GUARANTEE) ---- */
-function buildExact55Title(text) {
-  let clean = strip(text)
-    .replace(/\s+/g, " ")
-    .replace(/[-–|].*$/, "")
-    .trim();
-
-  const suffix = " – Full Review & Verdict";
-  let base = clean;
-
-  if ((base + suffix).length < 55) {
-    base = (base + suffix).slice(0, 55);
-  }
-
-  if (base.length > 55) {
-    base = base.slice(0, 55);
-  }
-
-  if (base.length < 55) {
-    base = base.padEnd(55, " ");
-  }
-
-  return base.trim();
+function buildTitle(html, index) {
+  const prefix = TITLE_PREFIXES[index % TITLE_PREFIXES.length];
+  const base = strip(html).replace(/[-–|].*$/, "").slice(0, 40);
+  const title = `${prefix} ${base} – Full Review & Verdict`;
+  return title.slice(0, 55).trim();
 }
 
-/* ---- TITLE FROM HTML ONLY ---- */
-function extractTitle(html) {
-  const h1 = html.match(/<h1[^>]*>(.*?)<\/h1>/i);
-  if (h1) return buildExact55Title(h1[1]);
-
-  return buildExact55Title(strip(html).split(".")[0]);
+function buildTeaser(html, index) {
+  const base = strip(html).slice(0, 120);
+  return TEASER_VARIANTS[index % TEASER_VARIANTS.length](base).slice(0, 160);
 }
 
-/* ---- TEASER ---- */
-function extractDescription(html) {
-  return strip(html).slice(0, 160);
-}
-
-/* ---- TAG ROTATION (3–4 TAGS, STABLE) ---- */
-function extractTags(text, index) {
+function rotateTags(html, index) {
   const tags = [];
-  const lower = text.toLowerCase();
+  const lower = html.toLowerCase();
 
-  for (const tag of TAG_POOL) {
-    if (lower.includes(tag.toLowerCase().split(" ")[0])) {
-      tags.push(tag);
+  for (const t of TAG_POOL) {
+    if (lower.includes(t.toLowerCase().split(" ")[0])) {
+      tags.push(t);
     }
   }
 
@@ -103,32 +85,21 @@ function extractTags(text, index) {
   return tags.slice(0, 4);
 }
 
-/* ---- IMAGE ---- */
-function extractYouTubeId(html) {
-  const m = html.match(/(?:v=|\/)([0-9A-Za-z_-]{11})/);
-  return m ? m[1] : null;
-}
-
 async function extractImage(html) {
-  const id = extractYouTubeId(html);
-  if (id) return `https://img.youtube.com/vi/${id}/hqdefault.jpg`;
-
   const img = html.match(/<img[^>]+src=["']([^"']+)["']/i);
   return img ? img[1] : FALLBACK_IMAGE;
 }
 
-/* ================= BUILD POSTS ================= */
+/* ================= BUILD ================= */
 
 for (let i = 0; i < entries.length; i++) {
-  const entry = entries[i];
-  const html = entry.content?.["#text"];
+  const html = entries[i].content?.["#text"];
   if (!html) continue;
 
-  const title = extractTitle(html);
-  const description = extractDescription(html);
+  const title = buildTitle(html, i);
+  const description = buildTeaser(html, i);
   const image = await extractImage(html);
-  const date = entry.published || new Date().toISOString();
-  const tags = extractTags(html, i);
+  const tags = rotateTags(html, i);
 
   const slug = `post-${i + 1}`;
   const dir = `posts/${slug}`;
@@ -137,7 +108,7 @@ for (let i = 0; i < entries.length; i++) {
   const url = `${SITE_URL}/posts/${slug}/`;
 
   const ogTags = tags
-    .map((t) => `<meta property="article:tag" content="${t}">`)
+    .map(t => `<meta property="article:tag" content="${t}">`)
     .join("\n");
 
   const page = `<!DOCTYPE html>
@@ -171,13 +142,7 @@ ${html}
 
   fs.writeFileSync(`${dir}/index.html`, page);
 
-  posts.push({
-    title,
-    url,
-    date,
-    description,
-    tags,
-  });
+  posts.push({ title, url, description, tags });
 }
 
 fs.mkdirSync("_data", { recursive: true });
