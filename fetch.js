@@ -55,8 +55,7 @@ function strip(html) {
 function buildTitle(html, index) {
   const prefix = TITLE_PREFIXES[index % TITLE_PREFIXES.length];
   const base = strip(html).replace(/[-–|].*$/, "").slice(0, 40);
-  const title = `${prefix} ${base} – Full Review & Verdict`;
-  return title.slice(0, 55).trim();
+  return `${prefix} ${base} – Full Review & Verdict`.slice(0, 55).trim();
 }
 
 function buildTeaser(html, index) {
@@ -85,9 +84,25 @@ function rotateTags(html, index) {
   return tags.slice(0, 4);
 }
 
+/* ================= IMAGE (RESTORED & GUARANTEED) ================= */
+
+function extractYouTubeId(html) {
+  const m = html.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([A-Za-z0-9_-]{11})/);
+  return m ? m[1] : null;
+}
+
 async function extractImage(html) {
+  const yt = extractYouTubeId(html);
+  if (yt) {
+    return `https://img.youtube.com/vi/${yt}/hqdefault.jpg`;
+  }
+
   const img = html.match(/<img[^>]+src=["']([^"']+)["']/i);
-  return img ? img[1] : FALLBACK_IMAGE;
+  if (img && img[1].startsWith("http")) {
+    return img[1];
+  }
+
+  return FALLBACK_IMAGE;
 }
 
 /* ================= BUILD ================= */
@@ -128,6 +143,7 @@ for (let i = 0; i < entries.length; i++) {
 <meta property="og:image" content="${image}">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
+
 ${ogTags}
 
 <meta name="twitter:card" content="summary_large_image">
@@ -142,7 +158,7 @@ ${html}
 
   fs.writeFileSync(`${dir}/index.html`, page);
 
-  posts.push({ title, url, description, tags });
+  posts.push({ title, url, description, tags, image });
 }
 
 fs.mkdirSync("_data", { recursive: true });
