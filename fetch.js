@@ -10,12 +10,13 @@ const FEED_URL =
 const SITE_URL = "https://justingerad05.github.io/reviewlab-static";
 const FALLBACK_IMAGE = `${SITE_URL}/og-default.jpg`;
 
+/* ---- LONG SUFFIXES (≥ 24 CHARS EACH) ---- */
 const TITLE_SUFFIXES = [
-  " – Honest Review",
-  " – Full Review",
-  " – Worth It?",
-  " – Complete Breakdown",
-  " – Pros & Cons",
+  " – In-Depth Review and Final Verdict",
+  " – Complete Features Analysis and Verdict",
+  " – Full Breakdown, Pros, Cons, and Verdict",
+  " – Detailed Review With Honest Final Verdict",
+  " – Complete Product Analysis and Verdict",
 ];
 
 const TAG_POOL = [
@@ -49,7 +50,7 @@ function strip(html) {
   return html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
 }
 
-/* ---------- TITLE (STRICT 55, SUFFIX CONDITIONAL) ---------- */
+/* ---------- TITLE (EXACT 55, SELF-ADJUSTING) ---------- */
 function buildTitle(html, index) {
   let core = strip(html)
     .replace(/[-–|].*$/, "")
@@ -60,13 +61,17 @@ function buildTitle(html, index) {
   }
 
   const suffix = TITLE_SUFFIXES[index % TITLE_SUFFIXES.length];
-  const combined = core + suffix;
+  let combined = core + suffix;
 
-  if (combined.length <= 55) {
-    return combined;
+  if (combined.length > 55) {
+    return combined.slice(0, 55);
   }
 
-  return core.slice(0, 55);
+  if (combined.length < 55) {
+    combined = combined.padEnd(55, " ");
+  }
+
+  return combined.trimEnd();
 }
 
 /* ---------- TEASER ---------- */
@@ -96,7 +101,7 @@ function rotateTags(html, index) {
   return tags.slice(0, 4);
 }
 
-/* ---------- IMAGE (RESTORED OLD BEHAVIOR) ---------- */
+/* ---------- IMAGE (UNCHANGED, STABLE) ---------- */
 
 function extractYouTubeId(html) {
   const m = html.match(/(?:v=|\/)([0-9A-Za-z_-]{11})/);
