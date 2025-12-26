@@ -8,13 +8,7 @@ const FEED_URL =
   "https://honestproductreviewlab.blogspot.com/feeds/posts/default?alt=atom";
 
 const SITE_URL = "https://justingerad05.github.io/reviewlab-static";
-
-/*
-⚠️ THIS IMAGE MUST EXIST AT ROOT AND BE PUBLIC
-Example:
-https://justingerad05.github.io/reviewlab-static/og-image.jpg
-*/
-const OG_IMAGE = `${SITE_URL}/og-image.jpg`;
+const FALLBACK_IMAGE = `${SITE_URL}/og-default.jpg`;
 
 const TITLE_SUFFIXES = [
   "– Honest Review",
@@ -26,20 +20,12 @@ const TITLE_SUFFIXES = [
 
 const TAG_POOL = [
   "AI Tools",
-  "Product Review",
   "Online Income",
+  "Product Review",
   "Digital Business",
   "Software Review",
   "Automation Tools",
   "Make Money Online",
-];
-
-const TEASER_VARIANTS = [
-  t => t,
-  t => `${t} Read the full breakdown.`,
-  t => `${t} Honest insights inside.`,
-  t => `${t} See the full verdict.`,
-  t => `${t} Details explained clearly.`,
 ];
 
 /* ================= SETUP ================= */
@@ -61,6 +47,7 @@ function strip(html) {
   return html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
 }
 
+/* ---------- TITLE (NO PREFIX, ROTATING SUFFIX) ---------- */
 function buildTitle(html, index) {
   const core = strip(html)
     .replace(/[-–|].*$/, "")
@@ -71,11 +58,12 @@ function buildTitle(html, index) {
   return `${core} ${suffix}`.slice(0, 70).trim();
 }
 
-function buildTeaser(html, index) {
-  const base = strip(html).slice(0, 120);
-  return TEASER_VARIANTS[index % TEASER_VARIANTS.length](base).slice(0, 160);
+/* ---------- TEASER ---------- */
+function buildTeaser(html) {
+  return strip(html).slice(0, 160);
 }
 
+/* ---------- TAG ROTATION ---------- */
 function rotateTags(html, index) {
   const tags = [];
   const lower = html.toLowerCase();
@@ -97,15 +85,42 @@ function rotateTags(html, index) {
   return tags.slice(0, 4);
 }
 
-/* ================= BUILD ================= */
+/* ---------- IMAGE EXTRACTION (SAFE & PRIORITIZED) ---------- */
+
+function extractYouTubeId(html) {
+  const match = html.match(
+    /(?:youtube\.com\/.*v=|youtu\.be\/)([A-Za-z0-9_-]{11})/
+  );
+  return match ? match[1] : null;
+}
+
+function extractFirstImage(html) {
+  const match = html.match(/<img[^>]+src=["']([^"']+)["']/i);
+  return match ? match[1] : null;
+}
+
+function extractOgImage(html) {
+  const ytId = extractYouTubeId(html);
+  if (ytId) {
+    return `https://img.youtube.com/vi/${ytId}/hqdefault.jpg`;
+  }
+
+  const firstImg = extractFirstImage(html);
+  if (firstImg) return firstImg;
+
+  return FALLBACK_IMAGE;
+}
+
+/* ================= BUILD POSTS ================= */
 
 for (let i = 0; i < entries.length; i++) {
   const html = entries[i].content?.["#text"];
   if (!html) continue;
 
   const title = buildTitle(html, i);
-  const description = buildTeaser(html, i);
+  const description = buildTeaser(html);
   const tags = rotateTags(html, i);
+  const image = extractOgImage(html);
 
   const slug = `post-${i + 1}`;
   const dir = `posts/${slug}`;
@@ -132,7 +147,7 @@ for (let i = 0; i < entries.length; i++) {
 <meta property="og:url" content="${url}">
 <meta property="og:title" content="${title}">
 <meta property="og:description" content="${description}">
-<meta property="og:image" content="${OG_IMAGE}">
+<meta property="og:image" content="${image}">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 
@@ -142,7 +157,7 @@ ${ogTags}
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="${title}">
 <meta name="twitter:description" content="${description}">
-<meta name="twitter:image" content="${OG_IMAGE}">
+<meta name="twitter:image" content="${image}">
 </head>
 
 <body>
