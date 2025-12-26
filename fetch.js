@@ -11,11 +11,11 @@ const SITE_URL = "https://justingerad05.github.io/reviewlab-static";
 const FALLBACK_IMAGE = `${SITE_URL}/og-default.jpg`;
 
 const TITLE_SUFFIXES = [
-  "– Honest Review",
-  "– Full Review & Verdict",
-  "– Features, Pros & Cons",
-  "– Is It Worth It?",
-  "– Complete Breakdown",
+  " – Honest Review",
+  " – Full Review",
+  " – Worth It?",
+  " – Complete Breakdown",
+  " – Pros & Cons",
 ];
 
 const TAG_POOL = [
@@ -41,7 +41,7 @@ if (!Array.isArray(entries)) entries = [entries];
 fs.rmSync("posts", { recursive: true, force: true });
 fs.mkdirSync("posts", { recursive: true });
 
-const posts = []; // ✅ RESTORED
+const posts = [];
 
 /* ================= UTILITIES ================= */
 
@@ -49,15 +49,24 @@ function strip(html) {
   return html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
 }
 
-/* ---------- TITLE (NO PREFIX, ROTATING SUFFIX) ---------- */
+/* ---------- TITLE (STRICT 55, SUFFIX CONDITIONAL) ---------- */
 function buildTitle(html, index) {
-  const core = strip(html)
+  let core = strip(html)
     .replace(/[-–|].*$/, "")
-    .slice(0, 55)
     .trim();
 
+  if (core.length >= 55) {
+    return core.slice(0, 55);
+  }
+
   const suffix = TITLE_SUFFIXES[index % TITLE_SUFFIXES.length];
-  return `${core} ${suffix}`.slice(0, 70).trim();
+  const combined = core + suffix;
+
+  if (combined.length <= 55) {
+    return combined;
+  }
+
+  return core.slice(0, 55);
 }
 
 /* ---------- TEASER ---------- */
@@ -87,28 +96,19 @@ function rotateTags(html, index) {
   return tags.slice(0, 4);
 }
 
-/* ---------- IMAGE EXTRACTION (UNCHANGED, SAFE) ---------- */
+/* ---------- IMAGE (RESTORED OLD BEHAVIOR) ---------- */
 
 function extractYouTubeId(html) {
-  const match = html.match(
-    /(?:youtube\.com\/.*v=|youtu\.be\/)([A-Za-z0-9_-]{11})/
-  );
-  return match ? match[1] : null;
+  const m = html.match(/(?:v=|\/)([0-9A-Za-z_-]{11})/);
+  return m ? m[1] : null;
 }
 
-function extractFirstImage(html) {
-  const match = html.match(/<img[^>]+src=["']([^"']+)["']/i);
-  return match ? match[1] : null;
-}
+async function extractImage(html) {
+  const id = extractYouTubeId(html);
+  if (id) return `https://img.youtube.com/vi/${id}/hqdefault.jpg`;
 
-function extractOgImage(html) {
-  const ytId = extractYouTubeId(html);
-  if (ytId) return `https://img.youtube.com/vi/${ytId}/hqdefault.jpg`;
-
-  const firstImg = extractFirstImage(html);
-  if (firstImg) return firstImg;
-
-  return FALLBACK_IMAGE;
+  const img = html.match(/<img[^>]+src=["']([^"']+)["']/i);
+  return img ? img[1] : FALLBACK_IMAGE;
 }
 
 /* ================= BUILD POSTS ================= */
@@ -120,7 +120,7 @@ for (let i = 0; i < entries.length; i++) {
   const title = buildTitle(html, i);
   const description = buildTeaser(html);
   const tags = rotateTags(html, i);
-  const image = extractOgImage(html);
+  const image = await extractImage(html);
   const date = entries[i].published || new Date().toISOString();
 
   const slug = `post-${i + 1}`;
@@ -164,7 +164,6 @@ ${html}
 
   fs.writeFileSync(`${dir}/index.html`, page);
 
-  // ✅ RESTORED
   posts.push({
     title,
     url,
@@ -174,7 +173,7 @@ ${html}
   });
 }
 
-/* ================= DATA FOR HOMEPAGE ================= */
+/* ================= DATA ================= */
 
 fs.mkdirSync("_data", { recursive: true });
 fs.writeFileSync("_data/posts.json", JSON.stringify(posts, null, 2));
