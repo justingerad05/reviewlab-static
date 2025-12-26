@@ -8,27 +8,38 @@ const FEED_URL =
   "https://honestproductreviewlab.blogspot.com/feeds/posts/default?alt=atom";
 
 const SITE_URL = "https://justingerad05.github.io/reviewlab-static";
-const FALLBACK_IMAGE = `${SITE_URL}/og-default.jpg`;
 
-const TITLE_PREFIXES = ["🚀", "🔥", "✅", "📌", "💡"];
+/*
+⚠️ THIS IMAGE MUST EXIST AT ROOT AND BE PUBLIC
+Example:
+https://justingerad05.github.io/reviewlab-static/og-image.jpg
+*/
+const OG_IMAGE = `${SITE_URL}/og-image.jpg`;
+
+const TITLE_SUFFIXES = [
+  "– Honest Review",
+  "– Full Review & Verdict",
+  "– Features, Pros & Cons",
+  "– Is It Worth It?",
+  "– Complete Breakdown",
+];
 
 const TAG_POOL = [
   "AI Tools",
-  "Online Income",
   "Product Review",
+  "Online Income",
   "Digital Business",
   "Software Review",
-  "Passive Income",
-  "Make Money Online",
   "Automation Tools",
+  "Make Money Online",
 ];
 
 const TEASER_VARIANTS = [
   t => t,
-  t => `${t} Full breakdown inside.`,
-  t => `${t} Honest review and verdict.`,
-  t => `${t} See if it is worth it.`,
-  t => `${t} Features, pros, and cons explained.`,
+  t => `${t} Read the full breakdown.`,
+  t => `${t} Honest insights inside.`,
+  t => `${t} See the full verdict.`,
+  t => `${t} Details explained clearly.`,
 ];
 
 /* ================= SETUP ================= */
@@ -44,8 +55,6 @@ if (!Array.isArray(entries)) entries = [entries];
 fs.rmSync("posts", { recursive: true, force: true });
 fs.mkdirSync("posts", { recursive: true });
 
-const posts = [];
-
 /* ================= UTILITIES ================= */
 
 function strip(html) {
@@ -53,9 +62,13 @@ function strip(html) {
 }
 
 function buildTitle(html, index) {
-  const prefix = TITLE_PREFIXES[index % TITLE_PREFIXES.length];
-  const base = strip(html).replace(/[-–|].*$/, "").slice(0, 40);
-  return `${prefix} ${base} – Full Review & Verdict`.slice(0, 55).trim();
+  const core = strip(html)
+    .replace(/[-–|].*$/, "")
+    .slice(0, 55)
+    .trim();
+
+  const suffix = TITLE_SUFFIXES[index % TITLE_SUFFIXES.length];
+  return `${core} ${suffix}`.slice(0, 70).trim();
 }
 
 function buildTeaser(html, index) {
@@ -84,27 +97,6 @@ function rotateTags(html, index) {
   return tags.slice(0, 4);
 }
 
-/* ================= IMAGE (RESTORED & GUARANTEED) ================= */
-
-function extractYouTubeId(html) {
-  const m = html.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([A-Za-z0-9_-]{11})/);
-  return m ? m[1] : null;
-}
-
-async function extractImage(html) {
-  const yt = extractYouTubeId(html);
-  if (yt) {
-    return `https://img.youtube.com/vi/${yt}/hqdefault.jpg`;
-  }
-
-  const img = html.match(/<img[^>]+src=["']([^"']+)["']/i);
-  if (img && img[1].startsWith("http")) {
-    return img[1];
-  }
-
-  return FALLBACK_IMAGE;
-}
-
 /* ================= BUILD ================= */
 
 for (let i = 0; i < entries.length; i++) {
@@ -113,7 +105,6 @@ for (let i = 0; i < entries.length; i++) {
 
   const title = buildTitle(html, i);
   const description = buildTeaser(html, i);
-  const image = await extractImage(html);
   const tags = rotateTags(html, i);
 
   const slug = `post-${i + 1}`;
@@ -130,36 +121,34 @@ for (let i = 0; i < entries.length; i++) {
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>${title}</title>
 
+<title>${title}</title>
 <meta name="description" content="${description}">
 <link rel="canonical" href="${url}">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
+<!-- OPEN GRAPH -->
 <meta property="og:type" content="article">
 <meta property="og:url" content="${url}">
 <meta property="og:title" content="${title}">
 <meta property="og:description" content="${description}">
-<meta property="og:image" content="${image}">
+<meta property="og:image" content="${OG_IMAGE}">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 
 ${ogTags}
 
+<!-- TWITTER -->
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="${title}">
 <meta name="twitter:description" content="${description}">
-<meta name="twitter:image" content="${image}">
+<meta name="twitter:image" content="${OG_IMAGE}">
 </head>
+
 <body>
 ${html}
 </body>
 </html>`;
 
   fs.writeFileSync(`${dir}/index.html`, page);
-
-  posts.push({ title, url, description, tags, image });
 }
-
-fs.mkdirSync("_data", { recursive: true });
-fs.writeFileSync("_data/posts.json", JSON.stringify(posts, null, 2));
