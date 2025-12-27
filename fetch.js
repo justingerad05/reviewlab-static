@@ -10,7 +10,7 @@ const FEED_URL =
 const SITE_URL = "https://justingerad05.github.io/reviewlab-static";
 const FALLBACK_IMAGE = `${SITE_URL}/og-default.jpg`;
 
-/* ---- LONG SUFFIXES (≥ 24 CHARS EACH) ---- */
+/* ---- ROTATING SUFFIXES (PURPOSE-BUILT FOR OG) ---- */
 const TITLE_SUFFIXES = [
   " – In-Depth Review and Final Verdict",
   " – Complete Features Analysis and Verdict",
@@ -50,37 +50,37 @@ function strip(html) {
   return html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
 }
 
-/* ---- STABLE HASH FOR ROTATION ---- */
+/* ---- STABLE HASH ---- */
 function stableHash(str) {
-  let hash = 0;
+  let h = 0;
   for (let i = 0; i < str.length; i++) {
-    hash = (hash << 5) - hash + str.charCodeAt(i);
-    hash |= 0;
+    h = (h << 5) - h + str.charCodeAt(i);
+    h |= 0;
   }
-  return Math.abs(hash);
+  return Math.abs(h);
 }
 
-/* ---------- TITLE (EXACT 55, ROTATING SUFFIX) ---------- */
+/* ---------- TITLE (SUFFIX ROTATION ONLY) ---------- */
 function buildTitle(html) {
   let core = strip(html)
     .replace(/[-–|].*$/, "")
     .trim();
 
-  if (core.length >= 55) {
-    return core.slice(0, 55);
+  if (core.length >= 60) {
+    return core.slice(0, 60);
   }
 
-  const hash = stableHash(core);
-  const suffix = TITLE_SUFFIXES[hash % TITLE_SUFFIXES.length];
+  const suffix =
+    TITLE_SUFFIXES[stableHash(core) % TITLE_SUFFIXES.length];
 
   let combined = core + suffix;
 
-  if (combined.length > 55) {
-    return combined.slice(0, 55);
+  if (combined.length > 60) {
+    combined = combined.slice(0, 60);
   }
 
-  if (combined.length < 55) {
-    combined = combined.padEnd(55, " ");
+  if (combined.length < 50) {
+    combined = combined.padEnd(50, " ");
   }
 
   return combined.trimEnd();
@@ -113,7 +113,7 @@ function rotateTags(html, index) {
   return tags.slice(0, 4);
 }
 
-/* ---------- IMAGE (UNCHANGED & SAFE) ---------- */
+/* ---------- IMAGE ---------- */
 function extractYouTubeId(html) {
   const m = html.match(/(?:v=|\/)([0-9A-Za-z_-]{11})/);
   return m ? m[1] : null;
@@ -174,7 +174,19 @@ ${ogTags}
 <meta name="twitter:image" content="${image}">
 </head>
 <body>
+
 ${html}
+
+<!-- EMAIL CAPTURE -->
+<section class="email-capture">
+  <h3>Get Honest AI Tool Reviews</h3>
+  <p>No hype. No fluff. Only tools that actually work.</p>
+  <form action="https://YOUR_EMAIL_PROVIDER_URL" method="post">
+    <input type="email" name="email" placeholder="Enter your email" required>
+    <button type="submit">Get Reviews</button>
+  </form>
+</section>
+
 </body>
 </html>`;
 
