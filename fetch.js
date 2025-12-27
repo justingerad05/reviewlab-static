@@ -10,15 +10,6 @@ const FEED_URL =
 const SITE_URL = "https://justingerad05.github.io/reviewlab-static";
 const FALLBACK_IMAGE = `${SITE_URL}/og-default.jpg`;
 
-/* ---- LONG SUFFIXES (≥ 24 CHARS EACH) ---- */
-const TITLE_SUFFIXES = [
-  " – In-Depth Review and Final Verdict",
-  " – Complete Features Analysis and Verdict",
-  " – Full Breakdown, Pros, Cons, and Verdict",
-  " – Detailed Review With Honest Final Verdict",
-  " – Complete Product Analysis and Verdict",
-];
-
 const TAG_POOL = [
   "AI Tools",
   "Online Income",
@@ -50,55 +41,26 @@ function strip(html) {
   return html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
 }
 
-/* ---- STABLE HASH FOR ROTATION ---- */
-function stableHash(str) {
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    hash = (hash << 5) - hash + str.charCodeAt(i);
-    hash |= 0;
-  }
-  return Math.abs(hash);
-}
-
-/* ---------- TITLE (EXACT 55, ROTATING SUFFIX) ---------- */
-function buildTitle(html) {
-  let core = strip(html)
-    .replace(/[-–|].*$/, "")
-    .trim();
-
-  if (core.length >= 55) {
-    return core.slice(0, 55);
-  }
-
-  const hash = stableHash(core);
-  const suffix = TITLE_SUFFIXES[hash % TITLE_SUFFIXES.length];
-
-  let combined = core + suffix;
-
-  if (combined.length > 55) {
-    return combined.slice(0, 55);
-  }
-
-  if (combined.length < 55) {
-    combined = combined.padEnd(55, " ");
-  }
-
-  return combined.trimEnd();
+/* ---------- BASE TITLE (NO PREFIX / NO SUFFIX) ---------- */
+function extractBaseTitle(html) {
+  const h1 = html.match(/<h1[^>]*>(.*?)<\/h1>/i);
+  const base = h1 ? h1[1] : strip(html).split(".")[0];
+  return strip(base).replace(/[-–|].*$/, "").trim();
 }
 
 /* ---------- TEASER ---------- */
-function buildTeaser(html) {
+function extractDescription(html) {
   return strip(html).slice(0, 160);
 }
 
 /* ---------- TAG ROTATION ---------- */
-function rotateTags(html, index) {
+function extractTags(text, index) {
   const tags = [];
-  const lower = html.toLowerCase();
+  const lower = text.toLowerCase();
 
-  for (const t of TAG_POOL) {
-    if (lower.includes(t.toLowerCase().split(" ")[0])) {
-      tags.push(t);
+  for (const tag of TAG_POOL) {
+    if (lower.includes(tag.toLowerCase().split(" ")[0])) {
+      tags.push(tag);
     }
   }
 
@@ -113,15 +75,17 @@ function rotateTags(html, index) {
   return tags.slice(0, 4);
 }
 
-/* ---------- IMAGE (UNCHANGED & SAFE) ---------- */
+/* ---------- IMAGE PRIORITY ---------- */
 function extractYouTubeId(html) {
-  const m = html.match(/(?:v=|\/)([0-9A-Za-z_-]{11})/);
+  const m = html.match(
+    /(?:youtube\.com\/.*v=|youtu\.be\/)([A-Za-z0-9_-]{11})/
+  );
   return m ? m[1] : null;
 }
 
-async function extractImage(html) {
-  const id = extractYouTubeId(html);
-  if (id) return `https://img.youtube.com/vi/${id}/hqdefault.jpg`;
+function extractImage(html) {
+  const yt = extractYouTubeId(html);
+  if (yt) return `https://img.youtube.com/vi/${yt}/hqdefault.jpg`;
 
   const img = html.match(/<img[^>]+src=["']([^"']+)["']/i);
   return img ? img[1] : FALLBACK_IMAGE;
@@ -130,14 +94,15 @@ async function extractImage(html) {
 /* ================= BUILD POSTS ================= */
 
 for (let i = 0; i < entries.length; i++) {
-  const html = entries[i].content?.["#text"];
+  const entry = entries[i];
+  const html = entry.content?.["#text"];
   if (!html) continue;
 
-  const title = buildTitle(html);
-  const description = buildTeaser(html);
-  const tags = rotateTags(html, i);
-  const image = await extractImage(html);
-  const date = entries[i].published || new Date().toISOString();
+  const title = extractBaseTitle(html);
+  const description = extractDescription(html);
+  const image = extractImage(html);
+  const date = entry.published || new Date().toISOString();
+  const tags = extractTags(html, i);
 
   const slug = `post-${i + 1}`;
   const dir = `posts/${slug}`;
