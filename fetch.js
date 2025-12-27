@@ -50,8 +50,18 @@ function strip(html) {
   return html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
 }
 
-/* ---------- TITLE (EXACT 55, SELF-ADJUSTING) ---------- */
-function buildTitle(html, index) {
+/* ---- STABLE HASH FOR ROTATION ---- */
+function stableHash(str) {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = (hash << 5) - hash + str.charCodeAt(i);
+    hash |= 0;
+  }
+  return Math.abs(hash);
+}
+
+/* ---------- TITLE (EXACT 55, ROTATING SUFFIX) ---------- */
+function buildTitle(html) {
   let core = strip(html)
     .replace(/[-–|].*$/, "")
     .trim();
@@ -60,7 +70,9 @@ function buildTitle(html, index) {
     return core.slice(0, 55);
   }
 
-  const suffix = TITLE_SUFFIXES[index % TITLE_SUFFIXES.length];
+  const hash = stableHash(core);
+  const suffix = TITLE_SUFFIXES[hash % TITLE_SUFFIXES.length];
+
   let combined = core + suffix;
 
   if (combined.length > 55) {
@@ -101,8 +113,7 @@ function rotateTags(html, index) {
   return tags.slice(0, 4);
 }
 
-/* ---------- IMAGE (UNCHANGED, STABLE) ---------- */
-
+/* ---------- IMAGE (UNCHANGED & SAFE) ---------- */
 function extractYouTubeId(html) {
   const m = html.match(/(?:v=|\/)([0-9A-Za-z_-]{11})/);
   return m ? m[1] : null;
@@ -122,7 +133,7 @@ for (let i = 0; i < entries.length; i++) {
   const html = entries[i].content?.["#text"];
   if (!html) continue;
 
-  const title = buildTitle(html, i);
+  const title = buildTitle(html);
   const description = buildTeaser(html);
   const tags = rotateTags(html, i);
   const image = await extractImage(html);
@@ -169,16 +180,8 @@ ${html}
 
   fs.writeFileSync(`${dir}/index.html`, page);
 
-  posts.push({
-    title,
-    url,
-    date,
-    description,
-    tags,
-  });
+  posts.push({ title, url, date, description, tags });
 }
-
-/* ================= DATA ================= */
 
 fs.mkdirSync("_data", { recursive: true });
 fs.writeFileSync("_data/posts.json", JSON.stringify(posts, null, 2));
