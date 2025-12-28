@@ -181,7 +181,7 @@ ${html}
 <section class="email-capture">
   <h3>Get Honest AI Tool Reviews</h3>
   <p>No hype. No fluff. Only tools that actually work.</p>
-  <form action="https://YOUR_EMAIL_PROVIDER_URL" method="post">
+  <form action="https://honest-product-review-lab.justingerad05.workers.dev/api/subscribe" method="post">
     <input type="email" name="email" placeholder="Enter your email" required>
     <button type="submit">Get Reviews</button>
   </form>
