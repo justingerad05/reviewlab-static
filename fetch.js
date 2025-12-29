@@ -10,7 +10,6 @@ const FEED_URL =
 const SITE_URL = "https://justingerad05.github.io/reviewlab-static";
 const FALLBACK_IMAGE = `${SITE_URL}/og-default.jpg`;
 
-/* ---- ROTATING SUFFIXES (PURPOSE-BUILT FOR OG) ---- */
 const TITLE_SUFFIXES = [
   " – In-Depth Review and Final Verdict",
   " – Complete Features Analysis and Verdict",
@@ -166,7 +165,12 @@ ${html}
     method="POST"
     target="_blank"
   >
-    <input type="email" name="entry.364499249" required>
+    <input
+      type="email"
+      name="entry.364499249"
+      placeholder="Enter your email"
+      required
+    >
     <input type="hidden" name="fvv" value="1">
     <input type="hidden" name="pageHistory" value="0">
     <button type="submit">Get Reviews</button>
