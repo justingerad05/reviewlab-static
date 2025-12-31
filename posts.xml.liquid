@@ -24,6 +24,7 @@ eleventyExcludeFromCollections: true
       <link>{{ post.url }}</link>
       <guid isPermaLink="true">{{ post.url }}</guid>
       <pubDate>{{ post.date | date: "%a, %d %b %Y %H:%M:%S %z" }}</pubDate>
+      <description><![CDATA[{{ post.description }}]]></description>
     </item>
     {% endfor %}
 
