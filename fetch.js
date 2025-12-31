@@ -1,4 +1,4 @@
-import fs from "fs";
+"import fs from "fs";
 import fetch from "node-fetch";
 import { XMLParser } from "fast-xml-parser";
 
@@ -9,6 +9,14 @@ const FEED_URL =
 
 const SITE_URL = "https://justingerad05.github.io/reviewlab-static";
 const FALLBACK_IMAGE = `${SITE_URL}/og-default.jpg`;
+
+const TITLE_SUFFIXES = [
+  " – In-Depth Review and Final Verdict",
+  " – Complete Features Analysis and Verdict",
+  " – Full Breakdown, Pros, Cons, and Verdict",
+  " – Detailed Review With Honest Final Verdict",
+  " – Complete Product Analysis and Verdict",
+];
 
 const TAG_POOL = [
   "AI Tools",
@@ -50,23 +58,17 @@ function stableHash(str) {
   return Math.abs(h);
 }
 
-/* ===== TITLE: ROTATED, NO SUFFIX, 50–60 CHARS ===== */
-
 function buildTitle(html) {
-  const base = strip(html);
+  let core = strip(html).replace(/[-–|].*$/, "").trim();
+  if (core.length >= 60) return core.slice(0, 60);
 
-  const variants = [
-    base,
-    base.slice(0, 55),
-    base.slice(0, 52),
-    base.split(".")[0],
-    base.split(",")[0],
-  ];
+  const suffix = TITLE_SUFFIXES[stableHash(core) % TITLE_SUFFIXES.length];
+  let combined = core + suffix;
 
-  const chosen =
-    variants[stableHash(base) % variants.length] || base;
+  if (combined.length > 60) combined = combined.slice(0, 60);
+  if (combined.length < 50) combined = combined.padEnd(50, " ");
 
-  return chosen.slice(0, 60);
+  return combined.trimEnd();
 }
 
 function buildTeaser(html) {
@@ -117,7 +119,7 @@ for (let i = 0; i < entries.length; i++) {
   const image = await extractImage(html);
   const date = entries[i].published || new Date().toISOString();
 
-  const slug = stableHash(html).toString(36);
+  const slug = `post-${i + 1}`;
   const dir = `posts/${slug}`;
   fs.mkdirSync(dir, { recursive: true });
 
@@ -163,7 +165,14 @@ ${html}
     method="POST"
     target="_blank"
   >
-    <input type="email" name="entry.364499249" placeholder="Enter your email" required>
+    <input
+      type="email"
+      name="entry.364499249"
+      placeholder="Enter your email"
+      required
+    >
+    <input type="hidden" name="fvv" value="1">
+    <input type="hidden" name="pageHistory" value="0">
     <button type="submit">Get Reviews</button>
   </form>
 </section>
@@ -176,4 +185,4 @@ ${html}
 }
 
 fs.mkdirSync("_data", { recursive: true });
-fs.writeFileSync("_data/posts.json", JSON.stringify(posts, null, 2));
+fs.writeFileSync("_data/posts.json", JSON.stringify(posts, null, 2));"
