@@ -1,7 +1,3 @@
-"---
-permalink: posts.xml
-eleventyExcludeFromCollections: true
----
 <?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0"
      xmlns:atom="http://www.w3.org/2005/Atom">
@@ -11,7 +7,7 @@ eleventyExcludeFromCollections: true
     <link>https://justingerad05.github.io/reviewlab-static/</link>
     <description>Automated, honest product reviews.</description>
     <language>en-us</language>
-    <lastBuildDate>Wed, 31 Dec 2025 22:49:05 +0000</lastBuildDate>
+    <lastBuildDate>Wed, 31 Dec 2025 22:49:34 +0000</lastBuildDate>
 
     <atom:link
       href="https://justingerad05.github.io/reviewlab-static/posts.xml"
@@ -28,4 +24,4 @@ eleventyExcludeFromCollections: true
     
 
   </channel>
-</rss>"
+</rss>
