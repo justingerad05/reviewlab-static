@@ -11,13 +11,15 @@ eleventyExcludeFromCollections: true
     <priority>1.0</priority>
   </url>
 
-  {% for post in posts %}
-  <url>
-    <loc>{{ post.url }}</loc>
-    <lastmod>{{ post.date | date: "%Y-%m-%d" }}</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  {% endfor %}
+  {% if posts and posts.length > 0 %}
+    {% for post in posts %}
+    <url>
+      <loc>{{ post.url | url }}</loc>
+      <lastmod>{{ post.date | date: "%Y-%m-%d" }}</lastmod>
+      <changefreq>weekly</changefreq>
+      <priority>0.8</priority>
+    </url>
+    {% endfor %}
+  {% endif %}
 
 </urlset>
