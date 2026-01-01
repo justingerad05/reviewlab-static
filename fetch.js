@@ -10,14 +10,6 @@ const FEED_URL =
 const SITE_URL = "https://justingerad05.github.io/reviewlab-static";
 const FALLBACK_IMAGE = `${SITE_URL}/og-default.jpg`;
 
-const TITLE_SUFFIXES = [
-  " – In-Depth Review and Final Verdict",
-  " – Complete Features Analysis and Verdict",
-  " – Full Breakdown, Pros, Cons, and Verdict",
-  " – Detailed Review With Honest Final Verdict",
-  " – Complete Product Analysis and Verdict",
-];
-
 const TAG_POOL = [
   "AI Tools",
   "Online Income",
@@ -58,17 +50,23 @@ function stableHash(str) {
   return Math.abs(h);
 }
 
+/* ===== TITLE: ROTATED, NO SUFFIX, 50–60 CHARS ===== */
+
 function buildTitle(html) {
-  let core = strip(html).replace(/[-–|].*$/, "").trim();
-  if (core.length >= 60) return core.slice(0, 60);
+  const base = strip(html);
 
-  const suffix = TITLE_SUFFIXES[stableHash(core) % TITLE_SUFFIXES.length];
-  let combined = core + suffix;
+  const variants = [
+    base,
+    base.slice(0, 55),
+    base.slice(0, 52),
+    base.split(".")[0],
+    base.split(",")[0],
+  ];
 
-  if (combined.length > 60) combined = combined.slice(0, 60);
-  if (combined.length < 50) combined = combined.padEnd(50, " ");
+  const chosen =
+    variants[stableHash(base) % variants.length] || base;
 
-  return combined.trimEnd();
+  return chosen.slice(0, 60);
 }
 
 function buildTeaser(html) {
@@ -119,7 +117,7 @@ for (let i = 0; i < entries.length; i++) {
   const image = await extractImage(html);
   const date = entries[i].published || new Date().toISOString();
 
-  const slug = `post-${i + 1}`;
+  const slug = stableHash(html).toString(36);
   const dir = `posts/${slug}`;
   fs.mkdirSync(dir, { recursive: true });
 
@@ -165,14 +163,7 @@ ${html}
     method="POST"
     target="_blank"
   >
-    <input
-      type="email"
-      name="entry.364499249"
-      placeholder="Enter your email"
-      required
-    >
-    <input type="hidden" name="fvv" value="1">
-    <input type="hidden" name="pageHistory" value="0">
+    <input type="email" name="entry.364499249" placeholder="Enter your email" required>
     <button type="submit">Get Reviews</button>
   </form>
 </section>
