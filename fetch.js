@@ -100,11 +100,15 @@ function extractYouTubeId(html) {
 }
 
 async function extractImage(html) {
-  const id = extractYouTubeId(html);
-  if (id) return `https://img.youtube.com/vi/${id}/hqdefault.jpg`;
+  const yt = extractYouTubeId(html);
+  if (yt) return `https://img.youtube.com/vi/${yt}/hqdefault.jpg`;
 
-  const img = html.match(/<img[^>]+src=["']([^"']+)["']/i);
-  return img ? img[1] : FALLBACK_IMAGE;
+  const src =
+    html.match(/<img[^>]+src=["']([^"']+)["']/i) ||
+    html.match(/<img[^>]+data-src=["']([^"']+)["']/i) ||
+    html.match(/<img[^>]+srcset=["']([^"'\s,]+)/i);
+
+  return src ? src[1] : FALLBACK_IMAGE;
 }
 
 /* ================= BUILD POSTS ================= */
@@ -119,7 +123,7 @@ for (let i = 0; i < entries.length; i++) {
   const image = await extractImage(html);
   const date = entries[i].published || new Date().toISOString();
 
-  const slug = `post-${i + 1}`;
+  const slug = `post-${stableHash(title)}`;
   const dir = `posts/${slug}`;
   fs.mkdirSync(dir, { recursive: true });
 
@@ -134,11 +138,14 @@ for (let i = 0; i < entries.length; i++) {
 <head>
 <meta charset="UTF-8">
 <title>${title}</title>
+
 <meta name="description" content="${description}">
-<link rel="canonical" href="${url}">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
+<link rel="canonical" href="${url}">
+
 <meta property="og:type" content="article">
+<meta property="og:site_name" content="ReviewLab">
 <meta property="og:url" content="${url}">
 <meta property="og:title" content="${title}">
 <meta property="og:description" content="${description}">
@@ -148,9 +155,11 @@ for (let i = 0; i < entries.length; i++) {
 ${ogTags}
 
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@ReviewLab">
 <meta name="twitter:title" content="${title}">
 <meta name="twitter:description" content="${description}">
 <meta name="twitter:image" content="${image}">
+
 </head>
 <body>
 
@@ -171,8 +180,6 @@ ${html}
       placeholder="Enter your email"
       required
     >
-    <input type="hidden" name="fvv" value="1">
-    <input type="hidden" name="pageHistory" value="0">
     <button type="submit">Get Reviews</button>
   </form>
 </section>
