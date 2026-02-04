@@ -10,23 +10,9 @@ const FEED_URL =
 const SITE_URL = "https://justingerad05.github.io/reviewlab-static";
 const FALLBACK_IMAGE = `${SITE_URL}/og-default.jpg`;
 
-const TITLE_SUFFIXES = [
-  " – In-Depth Review and Final Verdict",
-  " – Complete Features Analysis and Verdict",
-  " – Full Breakdown, Pros, Cons, and Verdict",
-  " – Detailed Review With Honest Final Verdict",
-  " – Complete Product Analysis and Verdict",
-];
-
-const TAG_POOL = [
-  "AI Tools",
-  "Online Income",
-  "Product Review",
-  "Digital Business",
-  "Software Review",
-  "Automation Tools",
-  "Make Money Online",
-];
+const SITE_NAME = "ReviewLab";
+const AUTHOR_NAME = "ReviewLab Editorial";
+const TWITTER = "@ReviewLab";
 
 /* ================= SETUP ================= */
 
@@ -49,85 +35,114 @@ function strip(html) {
   return html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
 }
 
-function stableHash(str) {
-  let h = 0;
-  for (let i = 0; i < str.length; i++) {
-    h = (h << 5) - h + str.charCodeAt(i);
-    h |= 0;
-  }
-  return Math.abs(h);
+/* ---------- USE BLOGGER TITLE (CRITICAL FIX) ---------- */
+
+function extractTitle(entry) {
+  return entry.title?.["#text"]?.trim() || "Untitled Review";
 }
 
-function buildTitle(html) {
-  let core = strip(html).replace(/[-–|].*$/, "").trim();
-  if (core.length >= 60) return core.slice(0, 60);
+/* ---------- SEO SLUG ---------- */
 
-  const suffix = TITLE_SUFFIXES[stableHash(core) % TITLE_SUFFIXES.length];
-  let combined = core + suffix;
-
-  if (combined.length > 60) combined = combined.slice(0, 60);
-  if (combined.length < 50) combined = combined.padEnd(50, " ");
-
-  return combined.trimEnd();
+function slugify(str) {
+  return str
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 70);
 }
 
-function buildTeaser(html) {
-  return strip(html).slice(0, 160);
+/* ---------- DESCRIPTION ---------- */
+
+function buildDescription(html) {
+  return strip(html).slice(0, 155);
 }
 
-function rotateTags(html, index) {
-  const tags = [];
+/* ---------- TAGS ---------- */
+
+function buildTags(html) {
+  const pool = [
+    "AI Tools",
+    "Software Reviews",
+    "Automation",
+    "Online Business",
+    "Digital Marketing",
+  ];
+
   const lower = html.toLowerCase();
-
-  for (const t of TAG_POOL) {
-    if (lower.includes(t.toLowerCase().split(" ")[0])) tags.push(t);
-  }
-
-  if (tags.length < 3) {
-    const start = index % TAG_POOL.length;
-    for (let i = 0; i < TAG_POOL.length && tags.length < 4; i++) {
-      const t = TAG_POOL[(start + i) % TAG_POOL.length];
-      if (!tags.includes(t)) tags.push(t);
-    }
-  }
-
-  return tags.slice(0, 4);
+  return pool.filter(t =>
+    lower.includes(t.toLowerCase().split(" ")[0])
+  ).slice(0, 4);
 }
+
+/* ---------- YOUTUBE EXTRACTION (HARDENED) ---------- */
 
 function extractYouTubeId(html) {
-  const m = html.match(/(?:v=|\/)([0-9A-Za-z_-]{11})/);
-  return m ? m[1] : null;
+  const patterns = [
+    /youtube\.com\/watch\?v=([0-9A-Za-z_-]{11})/,
+    /youtu\.be\/([0-9A-Za-z_-]{11})/,
+    /youtube\.com\/embed\/([0-9A-Za-z_-]{11})/
+  ];
+
+  for (const p of patterns) {
+    const m = html.match(p);
+    if (m) return m[1];
+  }
+  return null;
 }
 
-async function extractImage(html) {
+/* ---------- IMAGE ---------- */
+
+function extractImage(html) {
   const yt = extractYouTubeId(html);
-  if (yt) return `https://img.youtube.com/vi/${yt}/hqdefault.jpg`;
+  if (yt) return `https://img.youtube.com/vi/${yt}/maxresdefault.jpg`;
 
-  const src =
-    html.match(/<img[^>]+src=["']([^"']+)["']/i) ||
-    html.match(/<img[^>]+data-src=["']([^"']+)["']/i) ||
-    html.match(/<img[^>]+srcset=["']([^"'\s,]+)/i);
+  const img =
+    html.match(/<img[^>]+src=["']([^"']+)["']/i);
 
-  return src ? src[1] : FALLBACK_IMAGE;
+  return img ? img[1] : FALLBACK_IMAGE;
 }
 
-/* ================= BUILD POSTS ================= */
+/* ================= BUILD ================= */
 
-for (let i = 0; i < entries.length; i++) {
-  const html = entries[i].content?.["#text"];
+for (let entry of entries) {
+
+  const html = entry.content?.["#text"];
   if (!html) continue;
 
-  const title = buildTitle(html);
-  const description = buildTeaser(html);
-  const tags = rotateTags(html, i);
-  const image = await extractImage(html);
-  const date = entries[i].published || new Date().toISOString();
+  const rawTitle = extractTitle(entry);
+  const slug = slugify(rawTitle);
 
-  const slug = `post-${stableHash(title)}`;
+  const url = `${SITE_URL}/posts/${slug}/`;
+
+  const description = buildDescription(html);
+  const image = extractImage(html);
+  const tags = buildTags(html);
+  const date = entry.published || new Date().toISOString();
+
   const dir = `posts/${slug}`;
   fs.mkdirSync(dir, { recursive: true });
 
-  const url = `${SITE_URL}/posts/${slug}/`;
+  const schema = {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline: rawTitle,
+    description,
+    image,
+    author: {
+      "@type": "Organization",
+      name: AUTHOR_NAME
+    },
+    publisher: {
+      "@type": "Organization",
+      name: SITE_NAME,
+      logo: {
+        "@type": "ImageObject",
+        url: FALLBACK_IMAGE
+      }
+    },
+    datePublished: date,
+    mainEntityOfPage: url
+  };
 
   const ogTags = tags
     .map(t => `<meta property="article:tag" content="${t}">`)
@@ -136,8 +151,9 @@ for (let i = 0; i < entries.length; i++) {
   const page = `<!DOCTYPE html>
 <html lang="en">
 <head>
+
 <meta charset="UTF-8">
-<title>${title}</title>
+<title>${rawTitle}</title>
 
 <meta name="description" content="${description}">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -145,9 +161,9 @@ for (let i = 0; i < entries.length; i++) {
 <link rel="canonical" href="${url}">
 
 <meta property="og:type" content="article">
-<meta property="og:site_name" content="ReviewLab">
+<meta property="og:site_name" content="${SITE_NAME}">
 <meta property="og:url" content="${url}">
-<meta property="og:title" content="${title}">
+<meta property="og:title" content="${rawTitle}">
 <meta property="og:description" content="${description}">
 <meta property="og:image" content="${image}">
 <meta property="og:image:width" content="1200">
@@ -155,10 +171,14 @@ for (let i = 0; i < entries.length; i++) {
 ${ogTags}
 
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:site" content="@ReviewLab">
-<meta name="twitter:title" content="${title}">
+<meta name="twitter:site" content="${TWITTER}">
+<meta name="twitter:title" content="${rawTitle}">
 <meta name="twitter:description" content="${description}">
 <meta name="twitter:image" content="${image}">
+
+<script type="application/ld+json">
+${JSON.stringify(schema)}
+</script>
 
 </head>
 <body>
@@ -166,30 +186,38 @@ ${ogTags}
 ${html}
 
 <section class="email-capture">
-  <h3>Get Honest AI Tool Reviews</h3>
-  <p>No hype. No fluff. Only tools that actually work.</p>
+<h3>Get Honest AI Tool Reviews</h3>
+<p>No hype. No fluff. Only tools that actually work.</p>
 
-  <form
-    action="https://docs.google.com/forms/d/e/1FAIpQLSchzs0bE9se3YCR2TTiFl3Ohi0nbx0XPBjvK_dbANuI_eI1Aw/formResponse"
-    method="POST"
-    target="_blank"
-  >
-    <input
-      type="email"
-      name="entry.364499249"
-      placeholder="Enter your email"
-      required
-    >
-    <button type="submit">Get Reviews</button>
-  </form>
+<form
+action="https://docs.google.com/forms/d/e/1FAIpQLSchzs0bE9se3YCR2TTiFl3Ohi0nbx0XPBjvK_dbANuI_eI1Aw/formResponse"
+method="POST"
+target="_blank"
+>
+<input
+type="email"
+name="entry.364499249"
+placeholder="Enter your email"
+required
+>
+<button type="submit">Get Reviews</button>
+</form>
 </section>
 
 </body>
 </html>`;
 
   fs.writeFileSync(`${dir}/index.html`, page);
-  posts.push({ title, url, date, description, tags });
+
+  posts.push({
+    title: rawTitle,
+    url,
+    date,
+    description
+  });
 }
+
+/* ---------- POSTS DATA ---------- */
 
 fs.mkdirSync("_data", { recursive: true });
 fs.writeFileSync("_data/posts.json", JSON.stringify(posts, null, 2));
