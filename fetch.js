@@ -118,7 +118,7 @@ function extractImage(html, slug) {
 
   const yt = extractYouTubeId(html);
   if (yt) {
-    return `https://img.youtube.com/vi/${yt}/maxresdefault.jpg`;
+    return `https://img.youtube.com/vi/${yt}/hqdefault.jpg`;
   }
 
   const img =
