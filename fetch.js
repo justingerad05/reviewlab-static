@@ -11,13 +11,13 @@ const SITE_URL = "https://justingerad05.github.io/reviewlab-static";
 
 /* 🔥 MULTI CTA FALLBACK SYSTEM */
 const FALLBACK_IMAGES = [
-  `${SITE_URL}/og-cta-analysis.jpg?v=1`,
-  `${SITE_URL}/og-cta-features.jpg?v=1`,
-  `${SITE_URL}/og-cta-tested.jpg?v=1`,
-  `${SITE_URL}/og-cta-verdict.jpg?v=1`
+  `${SITE_URL}/og-cta-analysis.jpg?v=2`,
+  `${SITE_URL}/og-cta-features.jpg?v=2`,
+  `${SITE_URL}/og-cta-tested.jpg?v=2`,
+  `${SITE_URL}/og-cta-verdict.jpg?v=2`
 ];
 
-const DEFAULT_IMAGE = `${SITE_URL}/og-default.jpg?v=1`;
+const DEFAULT_IMAGE = `${SITE_URL}/og-default.jpg?v=2`;
 
 const SITE_NAME = "ReviewLab";
 const AUTHOR_NAME = "ReviewLab Editorial";
@@ -78,12 +78,16 @@ function buildTags(html) {
   ];
 
   const lower = html.toLowerCase();
-  return pool.filter(t =>
-    lower.includes(t.toLowerCase().split(" ")[0])
-  ).slice(0, 4);
+
+  const tags = pool.filter(t =>
+    lower.includes(t.toLowerCase().split("")[0])
+  );
+
+  return tags.length ? tags.slice(0, 4) : ["Software Reviews", "AI Tools"];
 }
 
-/* ---------- YOUTUBE ---------- */
+/* ---------- YOUTUBE SAFE THUMBNAIL ---------- */
+/* Avoid maxresdefault.jpg because many videos don't have it */
 
 function extractYouTubeId(html) {
   const patterns = [
@@ -99,7 +103,7 @@ function extractYouTubeId(html) {
   return null;
 }
 
-/* 🔥 DETERMINISTIC IMAGE ROTATION */
+/* 🔥 DETERMINISTIC CTA ROTATION */
 
 function pickFallback(slug) {
 
@@ -112,19 +116,37 @@ function pickFallback(slug) {
   return FALLBACK_IMAGES[index] || DEFAULT_IMAGE;
 }
 
-/* ---------- IMAGE ---------- */
+/* ---------- SMART IMAGE EXTRACTION ---------- */
+/* Ignores emojis, pixels, icons, spacers, logos */
 
 function extractImage(html, slug) {
 
   const yt = extractYouTubeId(html);
+
   if (yt) {
+    // hqdefault NEVER 404s
     return `https://img.youtube.com/vi/${yt}/hqdefault.jpg`;
   }
 
-  const img =
-    html.match(/<img[^>]+src=["']([^"']+)["']/i);
+  const matches = [...html.matchAll(/<img[^>]+src=["']([^"']+)["']/gi)];
 
-  if (img) return img[1];
+  for (const m of matches) {
+
+    const url = m[1].toLowerCase();
+
+    if (
+      !url.includes("emoji") &&
+      !url.includes("icon") &&
+      !url.includes("logo") &&
+      !url.includes("avatar") &&
+      !url.includes("pixel") &&
+      !url.includes("1x1") &&
+      !url.includes("spacer") &&
+      !url.includes("blank")
+    ) {
+      return m[1];
+    }
+  }
 
   return pickFallback(slug);
 }
@@ -149,12 +171,14 @@ for (let entry of entries) {
   const dir = `posts/${slug}`;
   fs.mkdirSync(dir, { recursive: true });
 
+  /* 🔥 HIGH-TRUST SCHEMA */
+
   const schema = {
     "@context": "https://schema.org",
     "@type": "Article",
     headline: rawTitle,
     description,
-    image,
+    image: [image],
     author: {
       "@type": "Organization",
       name: AUTHOR_NAME
