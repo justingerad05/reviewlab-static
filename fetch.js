@@ -11,13 +11,13 @@ const SITE_URL = "https://justingerad05.github.io/reviewlab-static";
 
 /* 🔥 MULTI CTA FALLBACK SYSTEM */
 const FALLBACK_IMAGES = [
-  `${SITE_URL}/og-cta-analysis.jpg?v=2`,
-  `${SITE_URL}/og-cta-features.jpg?v=2`,
-  `${SITE_URL}/og-cta-tested.jpg?v=2`,
-  `${SITE_URL}/og-cta-verdict.jpg?v=2`
+  `${SITE_URL}/og-cta-analysis.jpg?v=3`,
+  `${SITE_URL}/og-cta-features.jpg?v=3`,
+  `${SITE_URL}/og-cta-tested.jpg?v=3`,
+  `${SITE_URL}/og-cta-verdict.jpg?v=3`
 ];
 
-const DEFAULT_IMAGE = `${SITE_URL}/og-default.jpg?v=2`;
+const DEFAULT_IMAGE = `${SITE_URL}/og-default.jpg?v=3`;
 
 const SITE_NAME = "ReviewLab";
 const AUTHOR_NAME = "ReviewLab Editorial";
@@ -66,28 +66,27 @@ function buildDescription(html) {
   return strip(html).slice(0, 155);
 }
 
-/* ---------- TAGS ---------- */
+/* ---------- TAGS (FIXED SEMANTICS) ---------- */
 
 function buildTags(html) {
   const pool = [
-    "AI Tools",
-    "Software Reviews",
-    "Automation",
-    "Online Business",
-    "Digital Marketing",
+    "ai tools",
+    "software review",
+    "automation",
+    "digital marketing",
+    "online business"
   ];
 
   const lower = html.toLowerCase();
 
-  const tags = pool.filter(t =>
-    lower.includes(t.toLowerCase().split("")[0])
-  );
+  const tags = pool.filter(t => lower.includes(t));
 
-  return tags.length ? tags.slice(0, 4) : ["Software Reviews", "AI Tools"];
+  return tags.length
+    ? tags.slice(0, 4)
+    : ["software reviews", "ai tools"];
 }
 
 /* ---------- YOUTUBE SAFE THUMBNAIL ---------- */
-/* Avoid maxresdefault.jpg because many videos don't have it */
 
 function extractYouTubeId(html) {
   const patterns = [
@@ -117,14 +116,12 @@ function pickFallback(slug) {
 }
 
 /* ---------- SMART IMAGE EXTRACTION ---------- */
-/* Ignores emojis, pixels, icons, spacers, logos */
 
 function extractImage(html, slug) {
 
   const yt = extractYouTubeId(html);
 
   if (yt) {
-    // hqdefault NEVER 404s
     return `https://img.youtube.com/vi/${yt}/hqdefault.jpg`;
   }
 
@@ -151,7 +148,31 @@ function extractImage(html, slug) {
   return pickFallback(slug);
 }
 
-/* ================= BUILD ================= */
+/* ---------- RELATED POSTS ENGINE ---------- */
+
+function buildRelatedPosts(currentSlug, posts) {
+
+  const others = posts
+    .filter(p => p.slug !== currentSlug)
+    .slice(0, 4);
+
+  if (!others.length) return "";
+
+  const links = others.map(p => `
+    <li>
+      <a href="${p.url}">${p.title}</a>
+    </li>
+  `).join("");
+
+  return `
+<section class="related-posts">
+<h2>Related Reviews</h2>
+<ul>${links}</ul>
+</section>
+`;
+}
+
+/* ================= PASS 1 — COLLECT ================= */
 
 for (let entry of entries) {
 
@@ -160,22 +181,36 @@ for (let entry of entries) {
 
   const rawTitle = extractTitle(entry);
   const slug = slugify(rawTitle);
-
   const url = `${SITE_URL}/posts/${slug}/`;
+
+  posts.push({
+    title: rawTitle,
+    slug,
+    url,
+    html,
+    date: entry.published || new Date().toISOString()
+  });
+}
+
+/* ================= PASS 2 — GENERATE ================= */
+
+for (let post of posts) {
+
+  const { title: rawTitle, slug, html, url, date } = post;
 
   const description = buildDescription(html);
   const image = extractImage(html, slug);
   const tags = buildTags(html);
-  const date = entry.published || new Date().toISOString();
+  const related = buildRelatedPosts(slug, posts);
 
   const dir = `posts/${slug}`;
   fs.mkdirSync(dir, { recursive: true });
 
-  /* 🔥 HIGH-TRUST SCHEMA */
+  /* 🔥 TECHARTICLE SCHEMA */
 
   const schema = {
     "@context": "https://schema.org",
-    "@type": "Article",
+    "@type": "TechArticle",
     headline: rawTitle,
     description,
     image: [image],
@@ -195,6 +230,27 @@ for (let entry of entries) {
     mainEntityOfPage: url
   };
 
+  /* 🔥 BREADCRUMB SCHEMA */
+
+  const breadcrumb = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Home",
+        item: SITE_URL
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: rawTitle,
+        item: url
+      }
+    ]
+  };
+
   const ogTags = tags
     .map(t => `<meta property="article:tag" content="${t}">`)
     .join("\n");
@@ -210,6 +266,8 @@ for (let entry of entries) {
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <link rel="canonical" href="${url}">
+
+<meta name="robots" content="index,follow,max-image-preview:large">
 
 <meta property="og:type" content="article">
 <meta property="og:site_name" content="${SITE_NAME}">
@@ -232,6 +290,10 @@ ${ogTags}
 
 <script type="application/ld+json">
 ${JSON.stringify(schema)}
+</script>
+
+<script type="application/ld+json">
+${JSON.stringify(breadcrumb)}
 </script>
 
 </head>
@@ -258,20 +320,27 @@ required
 </form>
 </section>
 
+${related}
+
 </body>
 </html>`;
 
   fs.writeFileSync(`${dir}/index.html`, page);
-
-  posts.push({
-    title: rawTitle,
-    url,
-    date,
-    description
-  });
 }
 
 /* ---------- POSTS DATA ---------- */
 
 fs.mkdirSync("_data", { recursive: true });
-fs.writeFileSync("_data/posts.json", JSON.stringify(posts, null, 2));
+
+fs.writeFileSync(
+  "_data/posts.json",
+  JSON.stringify(
+    posts.map(p => ({
+      title: p.title,
+      url: p.url,
+      date: p.date
+    })),
+    null,
+    2
+  )
+);
