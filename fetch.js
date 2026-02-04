@@ -8,7 +8,16 @@ const FEED_URL =
   "https://honestproductreviewlab.blogspot.com/feeds/posts/default?alt=atom";
 
 const SITE_URL = "https://justingerad05.github.io/reviewlab-static";
-const FALLBACK_IMAGE = `${SITE_URL}/og-default.jpg`;
+
+/* 🔥 MULTI CTA FALLBACK SYSTEM */
+const FALLBACK_IMAGES = [
+  `${SITE_URL}/og-cta-analysis.jpg?v=1`,
+  `${SITE_URL}/og-cta-features.jpg?v=1`,
+  `${SITE_URL}/og-cta-tested.jpg?v=1`,
+  `${SITE_URL}/og-cta-verdict.jpg?v=1`
+];
+
+const DEFAULT_IMAGE = `${SITE_URL}/og-default.jpg?v=1`;
 
 const SITE_NAME = "ReviewLab";
 const AUTHOR_NAME = "ReviewLab Editorial";
@@ -35,13 +44,13 @@ function strip(html) {
   return html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
 }
 
-/* ---------- USE BLOGGER TITLE (CRITICAL FIX) ---------- */
+/* ---------- TITLE ---------- */
 
 function extractTitle(entry) {
   return entry.title?.["#text"]?.trim() || "Untitled Review";
 }
 
-/* ---------- SEO SLUG ---------- */
+/* ---------- SLUG ---------- */
 
 function slugify(str) {
   return str
@@ -74,7 +83,7 @@ function buildTags(html) {
   ).slice(0, 4);
 }
 
-/* ---------- YOUTUBE EXTRACTION (HARDENED) ---------- */
+/* ---------- YOUTUBE ---------- */
 
 function extractYouTubeId(html) {
   const patterns = [
@@ -90,16 +99,34 @@ function extractYouTubeId(html) {
   return null;
 }
 
+/* 🔥 DETERMINISTIC IMAGE ROTATION */
+
+function pickFallback(slug) {
+
+  let hash = 0;
+  for (let i = 0; i < slug.length; i++) {
+    hash = slug.charCodeAt(i) + ((hash << 5) - hash);
+  }
+
+  const index = Math.abs(hash) % FALLBACK_IMAGES.length;
+  return FALLBACK_IMAGES[index] || DEFAULT_IMAGE;
+}
+
 /* ---------- IMAGE ---------- */
 
-function extractImage(html) {
+function extractImage(html, slug) {
+
   const yt = extractYouTubeId(html);
-  if (yt) return `https://img.youtube.com/vi/${yt}/maxresdefault.jpg`;
+  if (yt) {
+    return `https://img.youtube.com/vi/${yt}/maxresdefault.jpg`;
+  }
 
   const img =
     html.match(/<img[^>]+src=["']([^"']+)["']/i);
 
-  return img ? img[1] : FALLBACK_IMAGE;
+  if (img) return img[1];
+
+  return pickFallback(slug);
 }
 
 /* ================= BUILD ================= */
@@ -115,7 +142,7 @@ for (let entry of entries) {
   const url = `${SITE_URL}/posts/${slug}/`;
 
   const description = buildDescription(html);
-  const image = extractImage(html);
+  const image = extractImage(html, slug);
   const tags = buildTags(html);
   const date = entry.published || new Date().toISOString();
 
@@ -137,7 +164,7 @@ for (let entry of entries) {
       name: SITE_NAME,
       logo: {
         "@type": "ImageObject",
-        url: FALLBACK_IMAGE
+        url: DEFAULT_IMAGE
       }
     },
     datePublished: date,
@@ -166,8 +193,10 @@ for (let entry of entries) {
 <meta property="og:title" content="${rawTitle}">
 <meta property="og:description" content="${description}">
 <meta property="og:image" content="${image}">
+<meta property="og:image:secure_url" content="${image}">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
+
 ${ogTags}
 
 <meta name="twitter:card" content="summary_large_image">
@@ -175,6 +204,7 @@ ${ogTags}
 <meta name="twitter:title" content="${rawTitle}">
 <meta name="twitter:description" content="${description}">
 <meta name="twitter:image" content="${image}">
+<meta name="twitter:image:alt" content="${rawTitle}">
 
 <script type="application/ld+json">
 ${JSON.stringify(schema)}
