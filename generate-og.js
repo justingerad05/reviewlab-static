@@ -114,7 +114,15 @@ export async function generateOG(slug, title) {
       width,
       height,
       ]
-    }
+    fonts: [
+  {
+    name: "Inter",
+    data: fontData,
+    weight: 700,
+    style: "normal"
+  }
+]
+}
   );
 
   const resvg = new Resvg(svg);
