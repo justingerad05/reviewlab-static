@@ -1,6 +1,7 @@
 import fs from "fs";
 import fetch from "node-fetch";
 import { XMLParser } from "fast-xml-parser";
+import { generateOG } from "./generate-og.js";
 
 /* ================= CONFIG ================= */
 
@@ -8,6 +9,8 @@ const FEED_URL =
   "https://honestproductreviewlab.blogspot.com/feeds/posts/default?alt=atom";
 
 const SITE_URL = "https://justingerad05.github.io/reviewlab-static";
+const SITE_NAME = "ReviewLab";
+const AUTHOR_NAME = "ReviewLab Editorial";
 
 const FALLBACK_IMAGES = [
   `${SITE_URL}/og-cta-analysis.jpg`,
@@ -18,10 +21,18 @@ const FALLBACK_IMAGES = [
 
 const DEFAULT_IMAGE = `${SITE_URL}/og-default.jpg`;
 
-const SITE_NAME = "ReviewLab";
-const AUTHOR_NAME = "ReviewLab Editorial";
+/* ================= INIT ================= */
 
-/* ================= FETCH ================= */
+fs.rmSync("posts", { recursive: true, force: true });
+fs.rmSync("tags", { recursive: true, force: true });
+fs.rmSync("_data", { recursive: true, force: true });
+
+fs.mkdirSync("posts", { recursive: true });
+fs.mkdirSync("tags", { recursive: true });
+fs.mkdirSync("og-images", { recursive: true });
+fs.mkdirSync("_data", { recursive: true });
+
+/* ================= FETCH FEED ================= */
 
 const parser = new XMLParser({ ignoreAttributes: false });
 const res = await fetch(FEED_URL);
@@ -30,14 +41,6 @@ const data = parser.parse(xml);
 
 let entries = data.feed?.entry || [];
 if (!Array.isArray(entries)) entries = [entries];
-
-/* CLEAN BUILD */
-
-fs.rmSync("posts", { recursive: true, force: true });
-fs.rmSync("tags", { recursive: true, force: true });
-
-fs.mkdirSync("posts", { recursive: true });
-fs.mkdirSync("tags", { recursive: true });
 
 const posts = [];
 const tagMap = {};
@@ -59,7 +62,7 @@ const extractTitle = entry =>
 const buildDescription = html =>
   strip(html).slice(0, 155);
 
-/* IMAGE ENGINE */
+/* ================= IMAGE ENGINE (v4) ================= */
 
 function extractYouTubeId(html) {
   const m = html.match(/(?:v=|youtu\.be\/)([0-9A-Za-z_-]{11})/);
@@ -76,19 +79,16 @@ function pickFallback(slug) {
 }
 
 function extractImage(html, slug) {
-
   const yt = extractYouTubeId(html);
-  if (yt) return `https://img.youtube.com/vi/${yt}/maxresdefault.jpg`;
+  if (yt) return `https://img.youtube.com/vi/${yt}/hqdefault.jpg`;
 
   const match = html.match(/<img[^>]+src=["']([^"']+)["']/i);
-
   return match ? match[1] : pickFallback(slug);
 }
 
-/* TAG ENGINE */
+/* ================= TAG ENGINE (v5) ================= */
 
 function buildTags(html) {
-
   const pool = [
     "ai tools",
     "automation",
@@ -98,15 +98,14 @@ function buildTags(html) {
   ];
 
   const lower = html.toLowerCase();
-
   const tags = pool.filter(t => lower.includes(t));
 
-  return tags.length ? tags : ["ai tools"];
+  return tags.length ? tags.slice(0, 3) : ["ai tools"];
 }
 
-/* ================= PASS 1 ================= */
+/* ================= PASS 1 – COLLECT POSTS ================= */
 
-for (let entry of entries) {
+for (const entry of entries) {
 
   const html = entry.content?.["#text"];
   if (!html) continue;
@@ -132,7 +131,7 @@ for (let entry of entries) {
   });
 }
 
-/* RELATED ENGINE */
+/* ================= RELATED ENGINE (v7) ================= */
 
 const related = slug =>
   posts
@@ -141,34 +140,40 @@ const related = slug =>
     .map(p => `<li><a href="${p.url}">${p.title}</a></li>`)
     .join("");
 
-/* ================= PASS 2 ================= */
+/* ================= PASS 2 – BUILD POSTS ================= */
 
-for (let post of posts) {
+for (const post of posts) {
 
-  const { title, slug, html, url, date, tags } = post;
+  const { title, slug, html, url, date } = post;
 
   const description = buildDescription(html);
-  const image = extractImage(html, slug);
+
+  /* v8 – Generate Branded OG */
+  await generateOG(slug, title);
+
+  /* v9 – Priority OG Stack */
+  const ogImage = `${SITE_URL}/og-images/${slug}.png`;
 
   const dir = `posts/${slug}`;
   fs.mkdirSync(dir, { recursive: true });
-
-  const breadcrumbSchema = {
-    "@context": "https://schema.org",
-    "@type": "BreadcrumbList",
-    itemListElement: [
-      { "@type": "ListItem", position: 1, name: "Home", item: SITE_URL },
-      { "@type": "ListItem", position: 2, name: title, item: url }
-    ]
-  };
 
   const articleSchema = {
     "@context": "https://schema.org",
     "@type": "TechArticle",
     headline: title,
-    image: [image],
+    description,
+    image: [ogImage],
+    author: { "@type": "Organization", name: AUTHOR_NAME },
+    publisher: {
+      "@type": "Organization",
+      name: SITE_NAME,
+      logo: {
+        "@type": "ImageObject",
+        url: DEFAULT_IMAGE
+      }
+    },
     datePublished: date,
-    author: { "@type": "Organization", name: AUTHOR_NAME }
+    mainEntityOfPage: url
   };
 
   const page = `<!DOCTYPE html>
@@ -180,39 +185,36 @@ for (let post of posts) {
 
 <meta name="description" content="${description}">
 <meta name="robots" content="index,follow,max-image-preview:large">
-
 <link rel="canonical" href="${url}">
 
 <meta property="og:type" content="article">
 <meta property="og:title" content="${title}">
 <meta property="og:description" content="${description}">
-<meta property="og:image" content="${image}">
+<meta property="og:image" content="${ogImage}">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:url" content="${url}">
 
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="${image}">
+<meta name="twitter:image" content="${ogImage}">
 
 <script type="application/ld+json">
 ${JSON.stringify(articleSchema)}
 </script>
 
-<script type="application/ld+json">
-${JSON.stringify(breadcrumbSchema)}
-</script>
-
 </head>
 <body>
 
-<img src="${image}" style="display:none;" alt="">
+<img src="${ogImage}" alt="" style="display:none">
 
 <h1>${title}</h1>
 
 ${html}
 
-<h2>Related Articles</h2>
+<section>
+<h2>Related Reviews</h2>
 <ul>${related(slug)}</ul>
+</section>
 
 </body>
 </html>`;
@@ -220,16 +222,15 @@ ${html}
   fs.writeFileSync(`${dir}/index.html`, page);
 }
 
-/* ================= TAG PAGES (Authority v5) ================= */
+/* ================= TAG PAGES (v5) ================= */
 
 for (const tag in tagMap) {
 
-  const postsHtml = tagMap[tag]
+  const list = tagMap[tag]
     .map(p => `<li><a href="${p.url}">${p.title}</a></li>`)
     .join("");
 
-  const tagPage = `
-<!DOCTYPE html>
+  const page = `<!DOCTYPE html>
 <html>
 <head>
 <title>${tag} | ${SITE_NAME}</title>
@@ -239,30 +240,51 @@ for (const tag in tagMap) {
 <body>
 
 <h1>${tag}</h1>
-<ul>${postsHtml}</ul>
+<ul>${list}</ul>
 
 </body>
 </html>`;
 
   fs.mkdirSync(`tags/${tag}`, { recursive: true });
-  fs.writeFileSync(`tags/${tag}/index.html`, tagPage);
+  fs.writeFileSync(`tags/${tag}/index.html`, page);
 }
 
-/* ================= ELITE SITEMAP (Authority v6) ================= */
+/* ================= AUTHORITY SITEMAP (v6 + v9) ================= */
 
 const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="https://www.sitemaps.org/schemas/sitemap/0.9">
 
+<url>
+  <loc>${SITE_URL}/</loc>
+  <changefreq>daily</changefreq>
+  <priority>1.0</priority>
+</url>
+
 ${posts.map(p => `
 <url>
-<loc>${p.url}</loc>
-<lastmod>${new Date(p.date).toISOString()}</lastmod>
-<changefreq>weekly</changefreq>
-<priority>0.85</priority>
+  <loc>${p.url}</loc>
+  <lastmod>${new Date(p.date).toISOString()}</lastmod>
+  <changefreq>weekly</changefreq>
+  <priority>0.9</priority>
 </url>`).join("")}
 
 </urlset>`;
 
 fs.writeFileSync("sitemap.xml", sitemap);
 
-console.log("AUTHORITY ENGINE v6 DEPLOYED SUCCESSFULLY");
+/* ================= DATA FEED (v9 – TRAFFIC MULTIPLIER) ================= */
+
+fs.writeFileSync(
+  "_data/posts.json",
+  JSON.stringify(
+    posts.map(p => ({
+      title: p.title,
+      url: p.url,
+      date: p.date
+    })),
+    null,
+    2
+  )
+);
+
+console.log("✅ AUTHORITY ENGINE v9 DEPLOYED");
