@@ -2,97 +2,107 @@ import fs from "fs";
 import satori from "satori";
 import { Resvg } from "@resvg/resvg-js";
 
-/* LOAD FONT */
-const fontData = fs.readFileSync("./fonts/Inter-Regular.ttf");
+/* SAFE FONT LOAD */
+
+let fontData;
+
+try{
+  fontData = fs.readFileSync("./fonts/Inter-Regular.ttf");
+}catch{
+  console.log("⚠️ Font missing — OG fallback activated");
+}
 
 /* ENSURE DIR */
-if (!fs.existsSync("./og-images")) {
-  fs.mkdirSync("./og-images");
+
+if (!fs.existsSync("./og-images")){
+  fs.mkdirSync("./og-images",{recursive:true});
 }
 
-function cleanTitle(title) {
-  return title.replace(/\|.*$/, "").slice(0, 90);
+function cleanTitle(title){
+  return title.replace(/\|.*$/,"").slice(0,85);
 }
 
-export async function generateOG(slug, title) {
+export async function generateOG(slug,title){
 
-  const width = 1200;
-  const height = 630;
+  try{
 
-  const svg = await satori(
-    {
-      type: "div",
-      props: {
-        style: {
+    const width=1200;
+    const height=630;
+
+    const svg = await satori({
+      type:"div",
+      props:{
+        style:{
           width,
           height,
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "space-between",
-          background: "#020617",
-          padding: "60px",
-          color: "#ffffff"
+          display:"flex",
+          flexDirection:"column",
+          justifyContent:"space-between",
+          background:"#020617",
+          padding:"70px",
+          color:"#fff"
         },
-
-        children: [
+        children:[
 
           {
-            type: "div",
-            props: {
-              style: {
-                fontSize: 46,
-                fontWeight: 700,
-                color: "#38bdf8"
+            type:"div",
+            props:{
+              style:{
+                fontSize:44,
+                fontWeight:700,
+                color:"#38bdf8"
               },
-              children: "HONEST AI TOOL REVIEW"
+              children:"REVIEWLAB VERIFIED"
             }
           },
 
           {
-            type: "div",
-            props: {
-              style: {
-                fontSize: 72,
-                fontWeight: 800,
-                lineHeight: 1.1
+            type:"div",
+            props:{
+              style:{
+                fontSize:68,
+                fontWeight:800,
+                lineHeight:1.1
               },
-              children: cleanTitle(title)
+              children:cleanTitle(title)
             }
           },
 
           {
-            type: "div",
-            props: {
-              style: {
-                fontSize: 32,
-                fontWeight: 600,
-                color: "#22c55e"
+            type:"div",
+            props:{
+              style:{
+                fontSize:30,
+                color:"#22c55e"
               },
-              children: "Features • Pros • Cons • Verdict"
+              children:"Real Test • Real Verdict • No Hype"
             }
           }
 
         ]
       }
     },
-
     {
       width,
       height,
+      fonts: fontData ? [{
+        name:"Inter",
+        data:fontData,
+        weight:400,
+        style:"normal"
+      }] : []
+    });
 
-      fonts: [
-        {
-          name: "Inter",
-          data: fontData,
-          weight: 400,
-          style: "normal"
-        }
-      ]
-    }
-  );
+    const resvg=new Resvg(svg);
+    const png=resvg.render();
 
-  const resvg = new Resvg(svg);
-  const png = resvg.render();
+    fs.writeFileSync(`./og-images/${slug}.png`,png.asPng());
 
-  fs.writeFileSync(`./og-images/${slug}.png`, png.asPng());
+    console.log("✅ OG created:",slug);
+
+  }catch(err){
+
+    console.log("❌ OG FAILED:",slug,err);
+
+  }
 }
