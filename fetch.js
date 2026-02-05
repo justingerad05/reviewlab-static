@@ -94,7 +94,13 @@ bestRating:"5"
 }
 };
 
-const page=`<!DOCTYPE html>
+const page = `---
+title: "${title.replace(/"/g, '\\"')}"
+date: "${new Date(date).toISOString()}"
+layout: null
+---
+
+<!DOCTYPE html>
 <html>
 <head>
 
