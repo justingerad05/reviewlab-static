@@ -211,6 +211,37 @@ ${JSON.stringify(articleSchema)}
 
 ${html}
 
+<section style="margin-top:60px;padding:32px;border-radius:16px;background:#020617;border:1px solid #1e293b;text-align:center">
+
+<h2 style="margin-bottom:10px">Get Future AI Reviews</h2>
+<p style="color:#94a3b8;margin-bottom:20px">
+Join readers who discover winning software early.
+</p>
+
+<form 
+action="https://docs.google.com/forms/d/e/1FAIpQLSchzs0bE9se3YCR2TTiFl3Ohi0nbx0XPBjvK_dbANuI_eI1Aw/formResponse"
+method="POST"
+target="_blank"
+>
+
+<input
+type="email"
+name="entry.364499249"
+placeholder="Enter your email"
+required
+style="padding:12px;border-radius:8px;border:1px solid #334155;background:#020617;color:white"
+>
+
+<button
+style="padding:12px 16px;border-radius:8px;border:none;background:#22c55e;font-weight:700;margin-left:6px"
+>
+Subscribe
+</button>
+
+</form>
+
+</section>
+
 <section>
 <h2>Related Reviews</h2>
 <ul>${related(slug)}</ul>
