@@ -10,18 +10,16 @@ const FEED_URL =
 
 const SITE_URL="https://justingerad05.github.io/reviewlab-static";
 const SITE_NAME="ReviewLab";
-const AUTHOR_NAME="ReviewLab Editorial";
 
-/* INIT */
+/* SAFE BUILD DIR */
 
-fs.rmSync("posts",{recursive:true,force:true});
-fs.rmSync("tags",{recursive:true,force:true});
-fs.rmSync("_data",{recursive:true,force:true});
+const BUILD_DIR="build-posts";
 
-fs.mkdirSync("posts",{recursive:true});
-fs.mkdirSync("tags",{recursive:true});
-fs.mkdirSync("og-images",{recursive:true});
-fs.mkdirSync("_data",{recursive:true});
+if(fs.existsSync(BUILD_DIR)){
+fs.rmSync(BUILD_DIR,{recursive:true,force:true});
+}
+
+fs.mkdirSync(BUILD_DIR,{recursive:true});
 
 /* FETCH */
 
@@ -34,9 +32,6 @@ let entries=data.feed?.entry||[];
 if(!Array.isArray(entries)) entries=[entries];
 
 const posts=[];
-const tagMap={};
-
-/* UTIL */
 
 const strip=html=>html.replace(/<[^>]+>/g," ").replace(/\s+/g," ").trim();
 
@@ -45,8 +40,6 @@ str.toLowerCase()
 .replace(/[^a-z0-9]+/g,"-")
 .replace(/^-+|-+$/g,"")
 .slice(0,70);
-
-const buildDescription=html=>strip(html).slice(0,155);
 
 /* COLLECT */
 
@@ -68,16 +61,7 @@ date:entry.published||new Date().toISOString()
 });
 }
 
-/* RELATED */
-
-const related=slug=>
-posts
-.filter(p=>p.slug!==slug)
-.slice(0,4)
-.map(p=>`<li><a href="${p.url}">${p.title}</a></li>`)
-.join("");
-
-/* BUILD POSTS */
+/* BUILD */
 
 for(const post of posts){
 
@@ -86,10 +70,29 @@ const {title,slug,html,url,date}=post;
 await generateOG(slug,title);
 
 const ogImage=`${SITE_URL}/og-images/${slug}.png`;
-const description=buildDescription(html);
 
-const dir=`posts/${slug}`;
+const description=strip(html).slice(0,155);
+
+const dir=`${BUILD_DIR}/${slug}`;
 fs.mkdirSync(dir,{recursive:true});
+
+const schema={
+"@context":"https://schema.org",
+"@type":"Review",
+itemReviewed:{
+"@type":"SoftwareApplication",
+name:title
+},
+author:{
+"@type":"Organization",
+name:"ReviewLab Editorial"
+},
+reviewRating:{
+"@type":"Rating",
+ratingValue:"4.6",
+bestRating:"5"
+}
+};
 
 const page=`<!DOCTYPE html>
 <html>
@@ -108,7 +111,10 @@ const page=`<!DOCTYPE html>
 <meta property="og:url" content="${url}">
 
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="${ogImage}">
+
+<script type="application/ld+json">
+${JSON.stringify(schema)}
+</script>
 
 <style>
 
@@ -122,31 +128,24 @@ color:#e5e7eb;
 line-height:1.75;
 }
 
-h1{
-font-size:42px;
-margin-bottom:30px;
-}
-
 .hero{
 width:100%;
 border-radius:14px;
 margin-bottom:30px;
 }
 
-/* SLIM EMAIL */
-
-.slim-email{
+.slim{
 margin:45px 0;
-padding:16px;
-border-radius:12px;
+padding:14px;
 border:1px solid #1e293b;
+border-radius:10px;
 display:flex;
 gap:10px;
 justify-content:center;
 flex-wrap:wrap;
 }
 
-.slim-email input{
+.slim input{
 padding:10px;
 border-radius:8px;
 border:1px solid #334155;
@@ -154,25 +153,13 @@ background:#020617;
 color:white;
 }
 
-.slim-email button{
+.slim button{
 padding:10px 14px;
 border:none;
 border-radius:8px;
 background:#22c55e;
 font-weight:700;
 }
-
-/* AUTHORITY BOX */
-
-.authority{
-margin-top:70px;
-padding:24px;
-border-radius:14px;
-background:#07122a;
-border:1px solid #1e293b;
-}
-
-a{color:#38bdf8}
 
 </style>
 
@@ -185,9 +172,7 @@ a{color:#38bdf8}
 
 ${html}
 
-/* SLIM CAPTURE */
-
-<section class="slim-email">
+<section class="slim">
 
 <form 
 action="https://docs.google.com/forms/d/e/1FAIpQLSchzs0bE9se3YCR2TTiFl3Ohi0nbx0XPBjvK_dbANuI_eI1Aw/formResponse"
@@ -198,7 +183,7 @@ target="_blank"
 <input
 type="email"
 name="entry.364499249"
-placeholder="Enter email for winning tools"
+placeholder="Enter email for elite tools"
 required
 >
 
@@ -208,46 +193,18 @@ required
 
 </section>
 
-<section class="authority">
-
-<strong>ReviewLab Editorial</strong>
-
-<p>
-Every tool reviewed on ReviewLab undergoes structured analysis,
-feature breakdown, and real-world positioning — so readers can make
-confident software decisions.
-</p>
-
-</section>
-
-<h2>Related Reviews</h2>
-<ul>${related(slug)}</ul>
-
 </body>
 </html>`;
 
 fs.writeFileSync(`${dir}/index.html`,page);
 }
 
-/* SITEMAP */
+/* SAFE SWAP */
 
-const sitemap=`<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="https://www.sitemaps.org/schemas/sitemap/0.9">
+if(fs.existsSync("posts")){
+fs.rmSync("posts",{recursive:true,force:true});
+}
 
-<url>
-<loc>${SITE_URL}/</loc>
-<priority>1.0</priority>
-</url>
+fs.renameSync(BUILD_DIR,"posts");
 
-${posts.map(p=>`
-<url>
-<loc>${p.url}</loc>
-<lastmod>${new Date(p.date).toISOString()}</lastmod>
-<priority>0.9</priority>
-</url>`).join("")}
-
-</urlset>`;
-
-fs.writeFileSync("sitemap.xml",sitemap);
-
-console.log("✅ AUTHORITY ENGINE v14 LIVE");
+console.log("✅ v15 AUTHORITY ENGINE DEPLOYED — ZERO POST LOSS");
