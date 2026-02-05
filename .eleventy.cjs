@@ -1,16 +1,17 @@
 module.exports = function (eleventyConfig) {
 
-  /* PASS THROUGH STATIC FILES */
+  /* ================= PASSTHROUGH ASSETS ================= */
+
   eleventyConfig.addPassthroughCopy("og-default.jpg");
   eleventyConfig.addPassthroughCopy("og-images");
   eleventyConfig.addPassthroughCopy("robots.txt");
 
-  /* WATCH FOR OG CHANGES */
   eleventyConfig.addWatchTarget("./og-images/");
+
+  /* ================= TEMPLATE SUPPORT ================= */
 
   eleventyConfig.setTemplateFormats([
     "html",
-    "njk",
     "liquid",
     "xml"
   ]);
