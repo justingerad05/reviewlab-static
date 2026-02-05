@@ -2,10 +2,12 @@ import fs from "fs";
 import satori from "satori";
 import { Resvg } from "@resvg/resvg-js";
 
-/* ---------- LOAD FONT ---------- */
-/* Use any bold modern font */
+/* ENSURE FOLDER EXISTS */
+if (!fs.existsSync("./og-images")) {
+  fs.mkdirSync("./og-images");
+}
 
-/* ---------- CLEAN TITLE ---------- */
+/* CLEAN TITLE */
 
 function cleanTitle(title) {
   return title
@@ -14,7 +16,7 @@ function cleanTitle(title) {
     .slice(0, 90);
 }
 
-/* ---------- BUILD IMAGE ---------- */
+/* GENERATOR */
 
 export async function generateOG(slug, title) {
 
@@ -31,43 +33,40 @@ export async function generateOG(slug, title) {
           display: "flex",
           flexDirection: "column",
           justifyContent: "space-between",
-          background:
-            "linear-gradient(135deg, #0f172a, #020617)",
+          background: "linear-gradient(135deg,#020617,#0f172a)",
           padding: "60px",
-          color: "white"
+          color: "#ffffff"
         },
+
         children: [
 
-          /* TOP LABEL */
-
+          /* TOP STRIP */
           {
             type: "div",
             props: {
               style: {
-                fontSize: 38,
-                color: "#38bdf8",
-                fontWeight: 700
+                fontSize: 42,
+                fontWeight: 700,
+                color: "#38bdf8"
               },
-              children: "HONEST PRODUCT REVIEW"
+              children: "HONEST AI TOOL REVIEW"
             }
           },
 
           /* TITLE */
-
           {
             type: "div",
             props: {
               style: {
                 fontSize: 72,
-                lineHeight: 1.1,
-                fontWeight: 800
+                fontWeight: 800,
+                lineHeight: 1.1
               },
               children: cleanTitle(title)
             }
           },
 
           /* CTA BAR */
-
           {
             type: "div",
             props: {
@@ -76,6 +75,7 @@ export async function generateOG(slug, title) {
                 justifyContent: "space-between",
                 alignItems: "center"
               },
+
               children: [
 
                 {
@@ -86,7 +86,7 @@ export async function generateOG(slug, title) {
                       color: "#22c55e",
                       fontWeight: 700
                     },
-                    children: "SEE FEATURES • PROS • CONS • VERDICT"
+                    children: "FEATURES • PROS • CONS • VERDICT"
                   }
                 },
 
@@ -95,34 +95,31 @@ export async function generateOG(slug, title) {
                   props: {
                     style: {
                       background: "#22c55e",
-                      padding: "14px 28px",
-                      borderRadius: 14,
                       color: "#020617",
-                      fontSize: 32,
+                      padding: "14px 28px",
+                      borderRadius: 12,
+                      fontSize: 30,
                       fontWeight: 800
                     },
                     children: "READ NOW →"
                   }
                 }
+
               ]
             }
           }
+
         ]
       }
     },
     {
       width,
-      height,
-      ]
-    ]
-}
+      height
+    }
   );
 
   const resvg = new Resvg(svg);
   const png = resvg.render();
 
-  fs.writeFileSync(
-    `./og-images/${slug}.png`,
-    png.asPng()
-  );
+  fs.writeFileSync(`./og-images/${slug}.png`, png.asPng());
 }
