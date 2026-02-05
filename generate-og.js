@@ -5,8 +5,6 @@ import { Resvg } from "@resvg/resvg-js";
 /* ---------- LOAD FONT ---------- */
 /* Use any bold modern font */
 
-const fontData = fs.readFileSync("./Inter-Bold.ttf");
-
 /* ---------- CLEAN TITLE ---------- */
 
 function cleanTitle(title) {
@@ -115,13 +113,6 @@ export async function generateOG(slug, title) {
     {
       width,
       height,
-      fonts: [
-        {
-          name: "Inter",
-          data: fontData,
-          weight: 700,
-          style: "normal"
-        }
       ]
     }
   );
