@@ -2,21 +2,17 @@ import fs from "fs";
 import satori from "satori";
 import { Resvg } from "@resvg/resvg-js";
 
-/* ENSURE FOLDER EXISTS */
+/* LOAD FONT */
+const fontData = fs.readFileSync("./fonts/Inter-Regular.ttf");
+
+/* ENSURE DIR */
 if (!fs.existsSync("./og-images")) {
   fs.mkdirSync("./og-images");
 }
 
-/* CLEAN TITLE */
-
 function cleanTitle(title) {
-  return title
-    .replace(/\|.*$/, "")
-    .replace(/Review/gi, "Review")
-    .slice(0, 90);
+  return title.replace(/\|.*$/, "").slice(0, 90);
 }
-
-/* GENERATOR */
 
 export async function generateOG(slug, title) {
 
@@ -33,19 +29,18 @@ export async function generateOG(slug, title) {
           display: "flex",
           flexDirection: "column",
           justifyContent: "space-between",
-          background: "linear-gradient(135deg,#020617,#0f172a)",
+          background: "#020617",
           padding: "60px",
           color: "#ffffff"
         },
 
         children: [
 
-          /* TOP STRIP */
           {
             type: "div",
             props: {
               style: {
-                fontSize: 42,
+                fontSize: 46,
                 fontWeight: 700,
                 color: "#38bdf8"
               },
@@ -53,7 +48,6 @@ export async function generateOG(slug, title) {
             }
           },
 
-          /* TITLE */
           {
             type: "div",
             props: {
@@ -66,55 +60,34 @@ export async function generateOG(slug, title) {
             }
           },
 
-          /* CTA BAR */
           {
             type: "div",
             props: {
               style: {
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center"
+                fontSize: 32,
+                fontWeight: 600,
+                color: "#22c55e"
               },
-
-              children: [
-
-                {
-                  type: "div",
-                  props: {
-                    style: {
-                      fontSize: 34,
-                      color: "#22c55e",
-                      fontWeight: 700
-                    },
-                    children: "FEATURES • PROS • CONS • VERDICT"
-                  }
-                },
-
-                {
-                  type: "div",
-                  props: {
-                    style: {
-                      background: "#22c55e",
-                      color: "#020617",
-                      padding: "14px 28px",
-                      borderRadius: 12,
-                      fontSize: 30,
-                      fontWeight: 800
-                    },
-                    children: "READ NOW →"
-                  }
-                }
-
-              ]
+              children: "Features • Pros • Cons • Verdict"
             }
           }
 
         ]
       }
     },
+
     {
       width,
-      height
+      height,
+
+      fonts: [
+        {
+          name: "Inter",
+          data: fontData,
+          weight: 400,
+          style: "normal"
+        }
+      ]
     }
   );
 
