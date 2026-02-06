@@ -1,68 +1,110 @@
-import fs from "fs";
-import { createCanvas } from "canvas";
+const fs = require("fs");
+const satori = require("satori");
+const { Resvg } = require("@resvg/resvg-js");
 
-/*
-   AUTHORITY OG ENGINE v21
-   Binary-safe.
-   GitHub compatible.
-   Social crawler safe.
-*/
+/* SAFE FONT LOAD */
 
-export async function generateOG(slug, title){
+let fontData;
 
-  const width = 1200;
-  const height = 630;
+try{
+  fontData = fs.readFileSync("./fonts/Inter-Regular.ttf");
+}catch{
+  console.log("⚠️ Font missing — OG fallback activated");
+}
 
-  const canvas = createCanvas(width, height);
-  const ctx = canvas.getContext("2d");
+/* ENSURE og-images FOLDER EXISTS */
 
-  /* Background */
-  ctx.fillStyle = "#020617";
-  ctx.fillRect(0,0,width,height);
+if (!fs.existsSync("./og-images")){
+  fs.mkdirSync("./og-images",{recursive:true});
+}
 
-  /* Accent bar */
-  ctx.fillStyle = "#38bdf8";
-  ctx.fillRect(0,0,18,height);
+function cleanTitle(title){
+  return title.replace(/\|.*$/,"").slice(0,85);
+}
 
-  /* Title */
-  ctx.fillStyle = "#ffffff";
-  ctx.font = "bold 64px Sans";
-  ctx.textBaseline = "top";
+async function generateOG(slug,title){
 
-  const words = title.match(/.{1,28}(\s|$)/g) || [title];
+  try{
 
-  let y = 120;
+    const width=1200;
+    const height=630;
 
-  for(const line of words.slice(0,4)){
-    ctx.fillText(line.trim(),80,y);
-    y += 78;
-  }
+    const svg = await satori({
+      type:"div",
+      props:{
+        style:{
+          width,
+          height,
+          display:"flex",
+          flexDirection:"column",
+          justifyContent:"space-between",
+          background:"#020617",
+          padding:"70px",
+          color:"#ffffff"
+        },
+        children:[
 
-  /* CTA */
-  ctx.fillStyle = "#22c55e";
-  ctx.font = "bold 42px Sans";
-  ctx.fillText("Read The Full Review →",80,520);
+          {
+            type:"div",
+            props:{
+              style:{
+                fontSize:44,
+                fontWeight:700,
+                color:"#38bdf8"
+              },
+              children:"REVIEWLAB VERIFIED"
+            }
+          },
 
-  /* Brand */
-  ctx.fillStyle = "#94a3b8";
-  ctx.font = "28px Sans";
-  ctx.fillText("ReviewLab",80,40);
+          {
+            type:"div",
+            props:{
+              style:{
+                fontSize:68,
+                fontWeight:800,
+                lineHeight:1.1
+              },
+              children:cleanTitle(title)
+            }
+          },
 
-  const buffer = canvas.toBuffer("image/png");
+          {
+            type:"div",
+            props:{
+              style:{
+                fontSize:30,
+                color:"#22c55e"
+              },
+              children:"Real Test • Real Verdict • No Hipe"
+            }
+          }
 
-  // 🚨 CRITICAL — write FULL buffer
-  const path = `og-images/${slug}.png`;
-  fs.writeFileSync(path, buffer);
+        ]
+      }
+    },
+    {
+      width,
+      height,
+      fonts: fontData ? [{
+        name:"Inter",
+        data:fontData,
+        weight:400,
+        style:"normal"
+      }] : []
+    });
 
-  /* Safety check */
-  const stats = fs.statSync(path);
+    const resvg=new Resvg(svg);
+    const png=resvg.render();
 
-  if(stats.size < 5000){
-    console.log("OG too small — using fallback");
+    fs.writeFileSync(`./og-images/${slug}.png`,png.asPng());
 
-    fs.copyFileSync(
-      "og-default.png",
-      path
-    );
+    console.log("✅ OG created:",slug);
+
+  }catch(err){
+
+    console.log("❌ OG FAILED:",slug,err);
+
   }
 }
+
+module.exports = generateOG;
