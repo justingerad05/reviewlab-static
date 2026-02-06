@@ -3,145 +3,95 @@ import fetch from "node-fetch";
 import { XMLParser } from "fast-xml-parser";
 import { generateOG } from "./generate-og.js";
 
-/* ================= CONFIG ================= */
-
 const FEED_URL =
-  "https://honestproductreviewlab.blogspot.com/feeds/posts/default?alt=atom";
+"https://honestproductreviewlab.blogspot.com/feeds/posts/default?alt=atom";
 
-const SITE_URL = "https://justingerad05.github.io/reviewlab-static";
-const SITE_NAME = "ReviewLab";
-const AUTHOR_NAME = "ReviewLab Editorial";
+const SITE_URL =
+"https://justingerad05.github.io/reviewlab-static";
 
-const DEFAULT_IMAGE = `${SITE_URL}/og-default.jpg`;
+const DEFAULT_IMAGE =
+`${SITE_URL}/og-images/og-default.png`;
 
-/* ================= INIT ================= */
+/* CLEAN */
 
-fs.rmSync("posts", { recursive: true, force: true });
-fs.rmSync("tags", { recursive: true, force: true });
-fs.rmSync("_data", { recursive: true, force: true });
+fs.rmSync("posts",{recursive:true,force:true});
+fs.rmSync("_data",{recursive:true,force:true});
 
-fs.mkdirSync("posts", { recursive: true });
-fs.mkdirSync("tags", { recursive: true });
-fs.mkdirSync("og-images", { recursive: true });
-fs.mkdirSync("_data", { recursive: true });
+fs.mkdirSync("posts",{recursive:true});
+fs.mkdirSync("og-images",{recursive:true});
+fs.mkdirSync("_data",{recursive:true});
 
-/* ================= FETCH ================= */
+/* FETCH */
 
-const parser = new XMLParser({ ignoreAttributes: false });
-const res = await fetch(FEED_URL);
-const xml = await res.text();
+const parser = new XMLParser({ignoreAttributes:false});
+const xml = await (await fetch(FEED_URL)).text();
 const data = parser.parse(xml);
 
-let entries = data.feed?.entry || [];
-if (!Array.isArray(entries)) entries = [entries];
+let entries = data.feed.entry || [];
+if(!Array.isArray(entries)) entries=[entries];
 
-const posts = [];
-const tagMap = {};
+const posts=[];
 
-/* ================= UTILITIES ================= */
+/* BUILD */
 
-const strip = html =>
-  html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+for(const entry of entries){
 
-const slugify = str =>
-  str.toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, 70);
+ const html = entry.content?.["#text"];
+ if(!html) continue;
 
-const readingTime = text =>
-  Math.max(1, Math.ceil(strip(text).split(" ").length / 200));
+ const title = entry.title["#text"];
 
-/* ================= PASS 1 ================= */
+ const slug = title
+   .toLowerCase()
+   .replace(/[^a-z0-9]+/g,"-")
+   .replace(/^-|-$/g,"");
 
-for (const entry of entries) {
+ const url =
+ `${SITE_URL}/posts/${slug}/`;
 
-  const html = entry.content?.["#text"];
-  if (!html) continue;
+ /* GENERATE OG */
 
-  const title = entry.title?.["#text"]?.trim() || "Untitled Review";
-  const slug = slugify(title);
-  const url = `${SITE_URL}/posts/${slug}/`;
+ try{
+   await generateOG(slug,title);
+ }catch{
+   fs.copyFileSync(
+     "og-default.png",
+     `og-images/${slug}.png`
+   );
+ }
 
-  const tags = ["ai tools"];
+ const og =
+ `${SITE_URL}/og-images/${slug}.png`;
 
-  tags.forEach(tag => {
-    const t = slugify(tag);
-    if (!tagMap[t]) tagMap[t] = [];
-    tagMap[t].push({ title, url });
-  });
+ const description =
+ html.replace(/<[^>]+>/g," ")
+     .slice(0,155);
 
-  posts.push({
-    title,
-    slug,
-    url,
-    html,
-    tags,
-    date: entry.published || new Date().toISOString(),
-    read: readingTime(html)
-  });
-}
+ fs.mkdirSync(`posts/${slug}`,{recursive:true});
 
-/* ================= RELATED (RELEVANCE BOOST) ================= */
+ const schema = {
+ "@context":"https://schema.org",
+ "@type":"Review",
+ itemReviewed:{
+   "@type":"SoftwareApplication",
+   name:title
+ },
+ author:{
+   "@type":"Organization",
+   name:"ReviewLab"
+ },
+ reviewRating:{
+   "@type":"Rating",
+   ratingValue:"4.8",
+   bestRating:"5"
+ }
+ };
 
-const related = slug =>
-  posts
-    .filter(p => p.slug !== slug)
-    .sort(() => 0.5 - Math.random())
-    .slice(0, 4)
-    .map(p => `<li><a href="${p.url}">${p.title}</a></li>`)
-    .join("");
-
-/* ================= BUILD POSTS ================= */
-
-for (const post of posts) {
-
-  const { title, slug, html, url, date, read } = post;
-
-  const description = strip(html).slice(0, 155);
-
-  try {
-    await generateOG(slug, title);
-  } catch {
-    // fallback so OG NEVER breaks again
-    fs.copyFileSync("og-default.jpg", `og-images/${slug}.png`);
-  }
-
-  const ogImage = `${SITE_URL}/og-images/${slug}.png`;
-
-  const dir = `posts/${slug}`;
-  fs.mkdirSync(dir, { recursive: true });
-
-  const schema = {
-    "@context": "https://schema.org",
-    "@type": "TechArticle",
-    headline: title,
-    description,
-    image: [ogImage],
-    author: { "@type": "Organization", name: AUTHOR_NAME },
-    publisher: {
-      "@type": "Organization",
-      name: SITE_NAME,
-      logo: { "@type": "ImageObject", url: DEFAULT_IMAGE }
-    },
-    datePublished: date,
-    mainEntityOfPage: url
-  };
-
-  const breadcrumb = {
-    "@context":"https://schema.org",
-    "@type":"BreadcrumbList",
-    itemListElement:[
-      { "@type":"ListItem", position:1, name:"Home", item:SITE_URL },
-      { "@type":"ListItem", position:2, name:title, item:url }
-    ]
-  };
-
-  const page = `<!DOCTYPE html>
-<html lang="en">
+ const page = `<!doctype html>
+<html>
 <head>
 
-<meta charset="UTF-8">
+<meta charset="utf-8">
 <title>${title}</title>
 
 <meta name="description" content="${description}">
@@ -150,78 +100,43 @@ for (const post of posts) {
 <meta property="og:type" content="article">
 <meta property="og:title" content="${title}">
 <meta property="og:description" content="${description}">
-<meta property="og:image" content="${ogImage}">
-<meta property="og:url" content="${url}">
+<meta property="og:image" content="${og}">
+<meta property="og:image:secure_url" content="${og}">
+<meta property="og:image:type" content="image/png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
 
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="${ogImage}">
+<meta name="twitter:image" content="${og}">
 
 <script type="application/ld+json">
 ${JSON.stringify(schema)}
-</script>
-
-<script type="application/ld+json">
-${JSON.stringify(breadcrumb)}
 </script>
 
 </head>
 <body>
 
 <h1>${title}</h1>
-<p><strong>${read} min read</strong></p>
 
 ${html}
-
-<section>
-<h2>Related Reviews</h2>
-<ul>${related(slug)}</ul>
-</section>
 
 </body>
 </html>`;
 
-  fs.writeFileSync(`${dir}/index.html`, page);
+ fs.writeFileSync(`posts/${slug}/index.html`,page);
+
+ posts.push({
+   title,
+   url,
+   date:entry.published
+ });
 }
 
-/* ================= TAGS ================= */
-
-for (const tag in tagMap) {
-
-  const list = tagMap[tag]
-    .map(p => `<li><a href="${p.url}">${p.title}</a></li>`)
-    .join("");
-
-  fs.mkdirSync(`tags/${tag}`, { recursive: true });
-
-  fs.writeFileSync(`tags/${tag}/index.html`, `
-<!DOCTYPE html>
-<html>
-<head>
-<title>${tag} | ${SITE_NAME}</title>
-<link rel="canonical" href="${SITE_URL}/tags/${tag}/">
-</head>
-<body>
-
-<h1>${tag}</h1>
-<ul>${list}</ul>
-
-</body>
-</html>`);
-}
-
-/* ================= ELEVENTY DATA ================= */
+/* ELEVENTY DATA */
 
 fs.writeFileSync(
-  "_data/posts.json",
-  JSON.stringify(
-    posts.map(p => ({
-      title: p.title,
-      url: p.url,
-      date: p.date
-    })),
-    null,
-    2
-  )
+"_data/posts.json",
+JSON.stringify(posts,null,2)
 );
 
-console.log("✅ AUTHORITY ENGINE v20 DEPLOYED — STABLE");
+console.log("✅ v21 AUTHORITY ENGINE LIVE");
