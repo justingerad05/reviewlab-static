@@ -1,108 +1,68 @@
 import fs from "fs";
-import satori from "satori";
-import { Resvg } from "@resvg/resvg-js";
+import { createCanvas } from "canvas";
 
-/* SAFE FONT LOAD */
+/*
+   AUTHORITY OG ENGINE v21
+   Binary-safe.
+   GitHub compatible.
+   Social crawler safe.
+*/
 
-let fontData;
+export async function generateOG(slug, title){
 
-try{
-  fontData = fs.readFileSync("./fonts/Inter-Regular.ttf");
-}catch{
-  console.log("⚠️ Font missing — OG fallback activated");
-}
+  const width = 1200;
+  const height = 630;
 
-/* ENSURE DIR */
+  const canvas = createCanvas(width, height);
+  const ctx = canvas.getContext("2d");
 
-if (!fs.existsSync("./og-images")){
-  fs.mkdirSync("./og-images",{recursive:true});
-}
+  /* Background */
+  ctx.fillStyle = "#020617";
+  ctx.fillRect(0,0,width,height);
 
-function cleanTitle(title){
-  return title.replace(/\|.*$/,"").slice(0,85);
-}
+  /* Accent bar */
+  ctx.fillStyle = "#38bdf8";
+  ctx.fillRect(0,0,18,height);
 
-export async function generateOG(slug,title){
+  /* Title */
+  ctx.fillStyle = "#ffffff";
+  ctx.font = "bold 64px Sans";
+  ctx.textBaseline = "top";
 
-  try{
+  const words = title.match(/.{1,28}(\s|$)/g) || [title];
 
-    const width=1200;
-    const height=630;
+  let y = 120;
 
-    const svg = await satori({
-      type:"div",
-      props:{
-        style:{
-          width,
-          height,
-          display:"flex",
-          flexDirection:"column",
-          justifyContent:"space-between",
-          background:"#020617",
-          padding:"70px",
-          color:"#fff"
-        },
-        children:[
+  for(const line of words.slice(0,4)){
+    ctx.fillText(line.trim(),80,y);
+    y += 78;
+  }
 
-          {
-            type:"div",
-            props:{
-              style:{
-                fontSize:44,
-                fontWeight:700,
-                color:"#38bdf8"
-              },
-              children:"REVIEWLAB VERIFIED"
-            }
-          },
+  /* CTA */
+  ctx.fillStyle = "#22c55e";
+  ctx.font = "bold 42px Sans";
+  ctx.fillText("Read The Full Review →",80,520);
 
-          {
-            type:"div",
-            props:{
-              style:{
-                fontSize:68,
-                fontWeight:800,
-                lineHeight:1.1
-              },
-              children:cleanTitle(title)
-            }
-          },
+  /* Brand */
+  ctx.fillStyle = "#94a3b8";
+  ctx.font = "28px Sans";
+  ctx.fillText("ReviewLab",80,40);
 
-          {
-            type:"div",
-            props:{
-              style:{
-                fontSize:30,
-                color:"#22c55e"
-              },
-              children:"Real Test • Real Verdict • No Hype"
-            }
-          }
+  const buffer = canvas.toBuffer("image/png");
 
-        ]
-      }
-    },
-    {
-      width,
-      height,
-      fonts: fontData ? [{
-        name:"Inter",
-        data:fontData,
-        weight:400,
-        style:"normal"
-      }] : []
-    });
+  // 🚨 CRITICAL — write FULL buffer
+  const path = `og-images/${slug}.png`;
+  fs.writeFileSync(path, buffer);
 
-    const resvg=new Resvg(svg);
-    const png=resvg.render();
+  /* Safety check */
+  const stats = fs.statSync(path);
 
-    fs.writeFileSync(`./og-images/${slug}.png`,png.asPng());
+  if(stats.size < 5000){
+    console.log("OG too small — using fallback");
 
-    console.log("✅ OG created:",slug);
-
-  }catch(err){
-
-    console.log("❌ OG FAILED:",slug,err);
-
+    fs.copyFileSync(
+      "og-default.png",
+      path
+    );
   }
 }
