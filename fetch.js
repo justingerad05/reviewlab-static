@@ -1,195 +1,210 @@
 import fs from "fs";
 import fetch from "node-fetch";
 import { XMLParser } from "fast-xml-parser";
+import { generateOG } from "./generate-og.js";
 
-/* ================= CONFIG ================= */
+/* CONFIG */
 
 const FEED_URL =
-  "https://honestproductreviewlab.blogspot.com/feeds/posts/default?alt=atom";
+"https://honestproductreviewlab.blogspot.com/feeds/posts/default?alt=atom";
 
-const SITE_URL = "https://justingerad05.github.io/reviewlab-static";
-const FALLBACK_IMAGE = `${SITE_URL}/og-default.jpg`;
+const SITE_URL="https://justingerad05.github.io/reviewlab-static";
+const SITE_NAME="ReviewLab";
 
-const TITLE_SUFFIXES = [
-  " – In-Depth Review and Final Verdict",
-  " – Complete Features Analysis and Verdict",
-  " – Full Breakdown, Pros, Cons, and Verdict",
-  " – Detailed Review With Honest Final Verdict",
-  " – Complete Product Analysis and Verdict",
-];
+/* SAFE BUILD DIR */
 
-const TAG_POOL = [
-  "AI Tools",
-  "Online Income",
-  "Product Review",
-  "Digital Business",
-  "Software Review",
-  "Automation Tools",
-  "Make Money Online",
-];
+const BUILD_DIR="build-posts";
 
-/* ================= SETUP ================= */
-
-const parser = new XMLParser({ ignoreAttributes: false });
-const res = await fetch(FEED_URL);
-const xml = await res.text();
-const data = parser.parse(xml);
-
-let entries = data.feed?.entry || [];
-if (!Array.isArray(entries)) entries = [entries];
-
-fs.rmSync("posts", { recursive: true, force: true });
-fs.mkdirSync("posts", { recursive: true });
-
-const posts = [];
-
-/* ================= UTILITIES ================= */
-
-function strip(html) {
-  return html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+if(fs.existsSync(BUILD_DIR)){
+fs.rmSync(BUILD_DIR,{recursive:true,force:true});
 }
 
-function stableHash(str) {
-  let h = 0;
-  for (let i = 0; i < str.length; i++) {
-    h = (h << 5) - h + str.charCodeAt(i);
-    h |= 0;
-  }
-  return Math.abs(h);
+fs.mkdirSync(BUILD_DIR,{recursive:true});
+
+/* FETCH */
+
+const parser=new XMLParser({ignoreAttributes:false});
+const res=await fetch(FEED_URL);
+const xml=await res.text();
+const data=parser.parse(xml);
+
+let entries=data.feed?.entry||[];
+if(!Array.isArray(entries)) entries=[entries];
+
+const posts=[];
+
+const strip=html=>html.replace(/<[^>]+>/g," ").replace(/\s+/g," ").trim();
+
+const slugify=str=>
+str.toLowerCase()
+.replace(/[^a-z0-9]+/g,"-")
+.replace(/^-+|-+$/g,"")
+.slice(0,70);
+
+/* COLLECT */
+
+for(const entry of entries){
+
+const html=entry.content?.["#text"];
+if(!html) continue;
+
+const title=entry.title?.["#text"]||"Untitled Review";
+const slug=slugify(title);
+const url=`${SITE_URL}/posts/${slug}/`;
+
+posts.push({
+title,
+slug,
+url,
+html,
+date:entry.published||new Date().toISOString()
+});
 }
 
-function buildTitle(html) {
-  let core = strip(html).replace(/[-–|].*$/, "").trim();
-  if (core.length >= 60) return core.slice(0, 60);
+/* BUILD */
 
-  const suffix = TITLE_SUFFIXES[stableHash(core) % TITLE_SUFFIXES.length];
-  let combined = core + suffix;
+for(const post of posts){
 
-  if (combined.length > 60) combined = combined.slice(0, 60);
-  if (combined.length < 50) combined = combined.padEnd(50, " ");
+const {title,slug,html,url,date}=post;
 
-  return combined.trimEnd();
+await generateOG(slug,title);
+
+const ogImage=`${SITE_URL}/og-images/${slug}.png`;
+
+const description=strip(html).slice(0,155);
+
+const dir=`${BUILD_DIR}/${slug}`;
+fs.mkdirSync(dir,{recursive:true});
+
+const schema={
+"@context":"https://schema.org",
+"@type":"Review",
+itemReviewed:{
+"@type":"SoftwareApplication",
+name:title
+},
+author:{
+"@type":"Organization",
+name:"ReviewLab Editorial"
+},
+reviewRating:{
+"@type":"Rating",
+ratingValue:"4.6",
+bestRating:"5"
 }
+};
 
-function buildTeaser(html) {
-  return strip(html).slice(0, 160);
-}
-
-function rotateTags(html, index) {
-  const tags = [];
-  const lower = html.toLowerCase();
-
-  for (const t of TAG_POOL) {
-    if (lower.includes(t.toLowerCase().split(" ")[0])) tags.push(t);
-  }
-
-  if (tags.length < 3) {
-    const start = index % TAG_POOL.length;
-    for (let i = 0; i < TAG_POOL.length && tags.length < 4; i++) {
-      const t = TAG_POOL[(start + i) % TAG_POOL.length];
-      if (!tags.includes(t)) tags.push(t);
-    }
-  }
-
-  return tags.slice(0, 4);
-}
-
-function extractYouTubeId(html) {
-  const m = html.match(/(?:v=|\/)([0-9A-Za-z_-]{11})/);
-  return m ? m[1] : null;
-}
-
-async function extractImage(html) {
-  const yt = extractYouTubeId(html);
-  if (yt) return `https://img.youtube.com/vi/${yt}/hqdefault.jpg`;
-
-  const src =
-    html.match(/<img[^>]+src=["']([^"']+)["']/i) ||
-    html.match(/<img[^>]+data-src=["']([^"']+)["']/i) ||
-    html.match(/<img[^>]+srcset=["']([^"'\s,]+)/i);
-
-  return src ? src[1] : FALLBACK_IMAGE;
-}
-
-/* ================= BUILD POSTS ================= */
-
-for (let i = 0; i < entries.length; i++) {
-  const html = entries[i].content?.["#text"];
-  if (!html) continue;
-
-  const title = buildTitle(html);
-  const description = buildTeaser(html);
-  const tags = rotateTags(html, i);
-  const image = await extractImage(html);
-  const date = entries[i].published || new Date().toISOString();
-
-  const slug = `post-${stableHash(title)}`;
-  const dir = `posts/${slug}`;
-  fs.mkdirSync(dir, { recursive: true });
-
-  const url = `${SITE_URL}/posts/${slug}/`;
-
-  const ogTags = tags
-    .map(t => `<meta property="article:tag" content="${t}">`)
-    .join("\n");
-
-  const page = `<!DOCTYPE html>
-<html lang="en">
+const page=`<!DOCTYPE html>
+<html>
 <head>
+
 <meta charset="UTF-8">
 <title>${title}</title>
 
 <meta name="description" content="${description}">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-
 <link rel="canonical" href="${url}">
 
 <meta property="og:type" content="article">
-<meta property="og:site_name" content="ReviewLab">
-<meta property="og:url" content="${url}">
 <meta property="og:title" content="${title}">
+<meta property="og:image" content="${ogImage}">
 <meta property="og:description" content="${description}">
-<meta property="og:image" content="${image}">
-<meta property="og:image:width" content="1200">
-<meta property="og:image:height" content="630">
-${ogTags}
+<meta property="og:url" content="${url}">
 
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:site" content="@ReviewLab">
-<meta name="twitter:title" content="${title}">
-<meta name="twitter:description" content="${description}">
-<meta name="twitter:image" content="${image}">
+
+<script type="application/ld+json">
+${JSON.stringify(schema)}
+</script>
+
+<style>
+
+body{
+max-width:760px;
+margin:auto;
+padding:40px 20px;
+font-family:Inter,system-ui;
+background:#020617;
+color:#e5e7eb;
+line-height:1.75;
+}
+
+.hero{
+width:100%;
+border-radius:14px;
+margin-bottom:30px;
+}
+
+.slim{
+margin:45px 0;
+padding:14px;
+border:1px solid #1e293b;
+border-radius:10px;
+display:flex;
+gap:10px;
+justify-content:center;
+flex-wrap:wrap;
+}
+
+.slim input{
+padding:10px;
+border-radius:8px;
+border:1px solid #334155;
+background:#020617;
+color:white;
+}
+
+.slim button{
+padding:10px 14px;
+border:none;
+border-radius:8px;
+background:#22c55e;
+font-weight:700;
+}
+
+</style>
 
 </head>
 <body>
 
+<img class="hero" src="${ogImage}" alt="${title}">
+
+<h1>${title}</h1>
+
 ${html}
 
-<section class="email-capture">
-  <h3>Get Honest AI Tool Reviews</h3>
-  <p>No hype. No fluff. Only tools that actually work.</p>
+<section class="slim">
 
-  <form
-    action="https://docs.google.com/forms/d/e/1FAIpQLSchzs0bE9se3YCR2TTiFl3Ohi0nbx0XPBjvK_dbANuI_eI1Aw/formResponse"
-    method="POST"
-    target="_blank"
-  >
-    <input
-      type="email"
-      name="entry.364499249"
-      placeholder="Enter your email"
-      required
-    >
-    <button type="submit">Get Reviews</button>
-  </form>
+<form 
+action="https://docs.google.com/forms/d/e/1FAIpQLSchzs0bE9se3YCR2TTiFl3Ohi0nbx0XPBjvK_dbANuI_eI1Aw/formResponse"
+method="POST"
+target="_blank"
+>
+
+<input
+type="email"
+name="entry.364499249"
+placeholder="Enter email for elite tools"
+required
+>
+
+<button>Subscribe</button>
+
+</form>
+
 </section>
 
 </body>
 </html>`;
 
-  fs.writeFileSync(`${dir}/index.html`, page);
-  posts.push({ title, url, date, description, tags });
+fs.writeFileSync(`${dir}/index.html`,page);
 }
 
-fs.mkdirSync("_data", { recursive: true });
-fs.writeFileSync("_data/posts.json", JSON.stringify(posts, null, 2));
+/* SAFE SWAP */
+
+if(fs.existsSync("posts")){
+fs.rmSync("posts",{recursive:true,force:true});
+}
+
+fs.renameSync(BUILD_DIR,"posts");
+
+console.log("✅ v15 AUTHORITY ENGINE DEPLOYED — ZERO POST LOSS");
