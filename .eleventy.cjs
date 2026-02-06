@@ -8,12 +8,11 @@ module.exports = function(eleventyConfig) {
   eleventyConfig.addPassthroughCopy("og-cta-tested.jpg");
   eleventyConfig.addPassthroughCopy("og-cta-verdict.jpg");
 
-  /* 🔥 BULLETPROOF POSTS COLLECTION */
+  /* ✅ BULLETPROOF POSTS COLLECTION */
   eleventyConfig.addCollection("posts", function(collectionApi) {
 
     return collectionApi
-      .getFilteredByGlob("posts/**/*.{md,html}") // ← critical fix
-      .filter(item => item.inputPath.includes("/posts/")) // extra safety
+      .getFilteredByGlob("posts/**/*.md") // ONLY grab generated markdown
       .sort((a, b) => b.date - a.date);
 
   });
@@ -25,4 +24,3 @@ module.exports = function(eleventyConfig) {
     }
   };
 };
-
