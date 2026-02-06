@@ -1,4 +1,4 @@
-"import fs from "fs";
+import fs from "fs";
 import fetch from "node-fetch";
 import { XMLParser } from "fast-xml-parser";
 
@@ -192,4 +192,4 @@ ${html}
 }
 
 fs.mkdirSync("_data", { recursive: true });
-fs.writeFileSync("_data/posts.json", JSON.stringify(posts, null, 2));"
+fs.writeFileSync("_data/posts.json", JSON.stringify(posts, null, 2));
