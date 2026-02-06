@@ -10,7 +10,7 @@ const SITE_URL =
 "https://justingerad05.github.io/reviewlab-static";
 
 const DEFAULT_IMAGE =
-`${SITE_URL}/og-images/og-default.png`;
+`${SITE_URL}/og-images/og-default.jpg`;
 
 /* CLEAN */
 
@@ -55,13 +55,12 @@ for(const entry of entries){
    await generateOG(slug,title);
  }catch{
    fs.copyFileSync(
-     "og-default.png",
-     `og-images/${slug}.png`
+     "og-default.jpg",
+     `og-images/${slug}.jpg`
    );
  }
 
- const og =
- `${SITE_URL}/og-images/${slug}.png`;
+const og = `${SITE_URL}/og-images/${slug}.jpg`;
 
  const description =
  html.replace(/<[^>]+>/g," ")
@@ -102,7 +101,7 @@ for(const entry of entries){
 <meta property="og:description" content="${description}">
 <meta property="og:image" content="${og}">
 <meta property="og:image:secure_url" content="${og}">
-<meta property="og:image:type" content="image/png">
+<meta property="og:image:type" content="image/jpg">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 
