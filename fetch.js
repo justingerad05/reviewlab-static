@@ -10,7 +10,7 @@ const SITE_URL =
 "https://justingerad05.github.io/reviewlab-static";
 
 const DEFAULT_IMAGE =
-`${SITE_URL}/og-images/og-default.jpg`;
+`${SITE_URL}/og-default.jpg`;
 
 /* CLEAN */
 
