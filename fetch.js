@@ -1,18 +1,30 @@
 import fs from "fs";
 import fetch from "node-fetch";
 import { XMLParser } from "fast-xml-parser";
-import { generateOG } from "./generate-og.js";
 
-/* CONFIG */
-const FEED_URL = "https://honestproductreviewlab.blogspot.com/feeds/posts/default?alt=atom";
+/* ================= CONFIG ================= */
+
+const FEED_URL =
+  "https://honestproductreviewlab.blogspot.com/feeds/posts/default?alt=atom";
+
 const SITE_URL = "https://justingerad05.github.io/reviewlab-static";
-const POSTS_DIR = "posts";
 
-/* SAFE BUILD DIR */
-if (fs.existsSync(POSTS_DIR)) fs.rmSync(POSTS_DIR, { recursive: true, force: true });
-fs.mkdirSync(POSTS_DIR, { recursive: true });
+/* 🔥 MULTI CTA FALLBACK SYSTEM */
+const FALLBACK_IMAGES = [
+  `${SITE_URL}/og-cta-analysis.jpg?v=3`,
+  `${SITE_URL}/og-cta-features.jpg?v=3`,
+  `${SITE_URL}/og-cta-tested.jpg?v=3`,
+  `${SITE_URL}/og-cta-verdict.jpg?v=3`
+];
 
-/* FETCH FEED */
+const DEFAULT_IMAGE = `${SITE_URL}/og-default.jpg?v=3`;
+
+const SITE_NAME = "ReviewLab";
+const AUTHOR_NAME = "ReviewLab Editorial";
+const TWITTER = "@ReviewLab";
+
+/* ================= SETUP ================= */
+
 const parser = new XMLParser({ ignoreAttributes: false });
 const res = await fetch(FEED_URL);
 const xml = await res.text();
@@ -21,56 +33,314 @@ const data = parser.parse(xml);
 let entries = data.feed?.entry || [];
 if (!Array.isArray(entries)) entries = [entries];
 
-const strip = html => html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
-const slugify = str => str.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 70);
+fs.rmSync("posts", { recursive: true, force: true });
+fs.mkdirSync("posts", { recursive: true });
 
-/* BUILD POSTS */
-for (const entry of entries) {
+const posts = [];
+
+/* ================= UTILITIES ================= */
+
+function strip(html) {
+  return html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+}
+
+/* ---------- TITLE ---------- */
+
+function extractTitle(entry) {
+  return entry.title?.["#text"]?.trim() || "Untitled Review";
+}
+
+/* ---------- SLUG ---------- */
+
+function slugify(str) {
+  return str
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 70);
+}
+
+/* ---------- DESCRIPTION ---------- */
+
+function buildDescription(html) {
+  return strip(html).slice(0, 155);
+}
+
+/* ---------- TAGS (FIXED SEMANTICS) ---------- */
+
+function buildTags(html) {
+  const pool = [
+    "ai tools",
+    "software review",
+    "automation",
+    "digital marketing",
+    "online business"
+  ];
+
+  const lower = html.toLowerCase();
+
+  const tags = pool.filter(t => lower.includes(t));
+
+  return tags.length
+    ? tags.slice(0, 4)
+    : ["software reviews", "ai tools"];
+}
+
+/* ---------- YOUTUBE SAFE THUMBNAIL ---------- */
+
+function extractYouTubeId(html) {
+  const patterns = [
+    /youtube\.com\/watch\?v=([0-9A-Za-z_-]{11})/,
+    /youtu\.be\/([0-9A-Za-z_-]{11})/,
+    /youtube\.com\/embed\/([0-9A-Za-z_-]{11})/
+  ];
+
+  for (const p of patterns) {
+    const m = html.match(p);
+    if (m) return m[1];
+  }
+  return null;
+}
+
+/* 🔥 DETERMINISTIC CTA ROTATION */
+
+function pickFallback(slug) {
+
+  let hash = 0;
+  for (let i = 0; i < slug.length; i++) {
+    hash = slug.charCodeAt(i) + ((hash << 5) - hash);
+  }
+
+  const index = Math.abs(hash) % FALLBACK_IMAGES.length;
+  return FALLBACK_IMAGES[index] || DEFAULT_IMAGE;
+}
+
+/* ---------- SMART IMAGE EXTRACTION ---------- */
+
+function extractImage(html, slug) {
+
+  const yt = extractYouTubeId(html);
+
+  if (yt) {
+    return `https://img.youtube.com/vi/${yt}/hqdefault.jpg`;
+  }
+
+  const matches = [...html.matchAll(/<img[^>]+src=["']([^"']+)["']/gi)];
+
+  for (const m of matches) {
+
+    const url = m[1].toLowerCase();
+
+    if (
+      !url.includes("emoji") &&
+      !url.includes("icon") &&
+      !url.includes("logo") &&
+      !url.includes("avatar") &&
+      !url.includes("pixel") &&
+      !url.includes("1x1") &&
+      !url.includes("spacer") &&
+      !url.includes("blank")
+    ) {
+      return m[1];
+    }
+  }
+
+  return pickFallback(slug);
+}
+
+/* ---------- RELATED POSTS ENGINE ---------- */
+
+function buildRelatedPosts(currentSlug, posts) {
+
+  const others = posts
+    .filter(p => p.slug !== currentSlug)
+    .slice(0, 4);
+
+  if (!others.length) return "";
+
+  const links = others.map(p => `
+    <li>
+      <a href="${p.url}">${p.title}</a>
+    </li>
+  `).join("");
+
+  return `
+<section class="related-posts">
+<h2>Related Reviews</h2>
+<ul>${links}</ul>
+</section>
+`;
+}
+
+/* ================= PASS 1 — COLLECT ================= */
+
+for (let entry of entries) {
+
   const html = entry.content?.["#text"];
   if (!html) continue;
 
-  const title = entry.title?.["#text"] || "Untitled Review";
-  const slug = slugify(title);
-  const date = entry.published || new Date().toISOString();
-  const description = strip(html).slice(0, 155);
+  const rawTitle = extractTitle(entry);
+  const slug = slugify(rawTitle);
+  const url = `${SITE_URL}/posts/${slug}/`;
 
-  // Generate OG image
-  await generateOG(slug, title);
-  const ogImage = `${SITE_URL}/og-images/${slug}.png`;
+  posts.push({
+    title: rawTitle,
+    slug,
+    url,
+    html,
+    date: entry.published || new Date().toISOString()
+  });
+}
 
-  const dir = `${POSTS_DIR}/${slug}`;
+/* ================= PASS 2 — GENERATE ================= */
+
+for (let post of posts) {
+
+  const { title: rawTitle, slug, html, url, date } = post;
+
+  const description = buildDescription(html);
+  const image = extractImage(html, slug);
+  const tags = buildTags(html);
+  const related = buildRelatedPosts(slug, posts);
+
+  const dir = `posts/${slug}`;
   fs.mkdirSync(dir, { recursive: true });
 
-  // Write markdown with frontmatter
-  const content = `---
-title: "${title.replace(/"/g, '\\"')}"
-date: "${date}"
-layout: null
----
+  /* 🔥 TECHARTICLE SCHEMA */
 
-<!DOCTYPE html>
-<html>
+  const schema = {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    headline: rawTitle,
+    description,
+    image: [image],
+    author: {
+      "@type": "Organization",
+      name: AUTHOR_NAME
+    },
+    publisher: {
+      "@type": "Organization",
+      name: SITE_NAME,
+      logo: {
+        "@type": "ImageObject",
+        url: DEFAULT_IMAGE
+      }
+    },
+    datePublished: date,
+    mainEntityOfPage: url
+  };
+
+  /* 🔥 BREADCRUMB SCHEMA */
+
+  const breadcrumb = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Home",
+        item: SITE_URL
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: rawTitle,
+        item: url
+      }
+    ]
+  };
+
+  const ogTags = tags
+    .map(t => `<meta property="article:tag" content="${t}">`)
+    .join("\n");
+
+  const page = `<!DOCTYPE html>
+<html lang="en">
 <head>
+
 <meta charset="UTF-8">
-<title>${title}</title>
+<title>${rawTitle}</title>
+
 <meta name="description" content="${description}">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<link rel="canonical" href="${url}">
+
+<meta name="robots" content="index,follow,max-image-preview:large">
+
 <meta property="og:type" content="article">
-<meta property="og:title" content="${title}">
-<meta property="og:image" content="${ogImage}">
+<meta property="og:site_name" content="${SITE_NAME}">
+<meta property="og:url" content="${url}">
+<meta property="og:title" content="${rawTitle}">
 <meta property="og:description" content="${description}">
-<meta property="og:url" content="${SITE_URL}/posts/${slug}/">
+<meta property="og:image" content="${image}">
+<meta property="og:image:secure_url" content="${image}">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+
+${ogTags}
+
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="${TWITTER}">
+<meta name="twitter:title" content="${rawTitle}">
+<meta name="twitter:description" content="${description}">
+<meta name="twitter:image" content="${image}">
+<meta name="twitter:image:alt" content="${rawTitle}">
+
+<script type="application/ld+json">
+${JSON.stringify(schema)}
+</script>
+
+<script type="application/ld+json">
+${JSON.stringify(breadcrumb)}
+</script>
+
 </head>
 <body>
 
-<h1>${title}</h1>
 ${html}
 
-</body>
-</html>
-`;
+<section class="email-capture">
+<h3>Get Honest AI Tool Reviews</h3>
+<p>No hype. No fluff. Only tools that actually work.</p>
 
-  fs.writeFileSync(`${dir}/index.md`, content);
+<form
+action="https://docs.google.com/forms/d/e/1FAIpQLSchzs0bE9se3YCR2TTiFl3Ohi0nbx0XPBjvK_dbANuI_eI1Aw/formResponse"
+method="POST"
+target="_blank"
+>
+<input
+type="email"
+name="entry.364499249"
+placeholder="Enter your email"
+required
+>
+<button type="submit">Get Reviews</button>
+</form>
+</section>
+
+${related}
+
+</body>
+</html>`;
+
+  fs.writeFileSync(`${dir}/index.html`, page);
 }
 
-console.log("✅ POSTS GENERATED — ELEVENTY WILL SEE THEM");
+/* ---------- POSTS DATA ---------- */
+
+fs.mkdirSync("_data", { recursive: true });
+
+fs.writeFileSync(
+  "_data/posts.json",
+  JSON.stringify(
+    posts.map(p => ({
+      title: p.title,
+      url: p.url,
+      date: p.date
+    })),
+    null,
+    2
+  )
+);
