@@ -12,7 +12,7 @@ try{
   console.log("⚠️ Font missing — OG fallback activated");
 }
 
-/* ENSURE og-images FOLDER EXISTS */
+/* ENSURE FOLDER */
 
 if (!fs.existsSync("./og-images")){
   fs.mkdirSync("./og-images",{recursive:true});
@@ -26,8 +26,8 @@ async function generateOG(slug,title){
 
   try{
 
-    const width=1200;
-    const height=630;
+    const width = 1200;
+    const height = 630;
 
     const svg = await satori({
       type:"div",
@@ -75,7 +75,7 @@ async function generateOG(slug,title){
                 fontSize:30,
                 color:"#22c55e"
               },
-              children:"Real Test • Real Verdict • No Hipe"
+              children:"Real Test • Real Verdict • No Hype"
             }
           }
 
@@ -93,16 +93,20 @@ async function generateOG(slug,title){
       }] : []
     });
 
-    const resvg=new Resvg(svg);
-    const png=resvg.render();
+    const resvg = new Resvg(svg);
 
-    fs.writeFileSync(`./og-images/${slug}.png`,png.asPng());
+    const image = resvg.render();
 
-    console.log("✅ OG created:",slug);
+    /* ✅ FORCE FULL BUFFER (fixes 206 error) */
+    const jpgBuffer = image.asJpeg(95);
+
+    fs.writeFileSync(`./og-images/${slug}.jpg`, jpgBuffer);
+
+    console.log("✅ OG CREATED:", slug);
 
   }catch(err){
 
-    console.log("❌ OG FAILED:",slug,err);
+    console.log("❌ OG FAILED:", slug, err);
 
   }
 }
