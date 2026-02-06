@@ -86,6 +86,17 @@ const og = `${SITE_URL}/og-images/${slug}.jpg`;
  }
  };
 
+function relatedPosts(currentSlug){
+
+  return posts
+    .filter(p => p.slug !== currentSlug)
+    .sort((a,b)=> new Date(b.date) - new Date(a.date))
+    .slice(0,4)
+    .map(p => `<li><a href="${p.url}">${p.title}</a></li>`)
+    .join("");
+
+}
+ 
  const page = `<!doctype html>
 <html>
 <head>
