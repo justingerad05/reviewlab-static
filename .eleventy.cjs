@@ -1,6 +1,6 @@
 module.exports = function(eleventyConfig) {
 
-  /* PASS EVERYTHING THROUGH */
+  /* PASS THROUGH */
   eleventyConfig.addPassthroughCopy("og-images");
   eleventyConfig.addPassthroughCopy("og-default.jpg");
   eleventyConfig.addPassthroughCopy("og-cta-analysis.jpg");
@@ -8,14 +8,12 @@ module.exports = function(eleventyConfig) {
   eleventyConfig.addPassthroughCopy("og-cta-tested.jpg");
   eleventyConfig.addPassthroughCopy("og-cta-verdict.jpg");
 
-  /* 🔥 BUILD POSTS COLLECTION */
+  /* 🔥 AUTHORITATIVE POSTS COLLECTION */
   eleventyConfig.addCollection("posts", function(collectionApi) {
 
     return collectionApi
-      .getFilteredByGlob("posts/**/index.html")
-      .sort((a, b) => {
-        return new Date(b.data.date) - new Date(a.data.date);
-      });
+      .getFilteredByGlob("./posts/**/*.html") // <-- IMPORTANT leading ./
+      .sort((a, b) => b.date - a.date);
 
   });
 
