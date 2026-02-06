@@ -3,176 +3,220 @@ import fetch from "node-fetch";
 import { XMLParser } from "fast-xml-parser";
 import { generateOG } from "./generate-og.js";
 
-/* CONFIG */
+/* ================= CONFIG ================= */
 
 const FEED_URL =
-"https://honestproductreviewlab.blogspot.com/feeds/posts/default?alt=atom";
+  "https://honestproductreviewlab.blogspot.com/feeds/posts/default?alt=atom";
 
-const SITE_URL="https://justingerad05.github.io/reviewlab-static";
-const SITE_NAME="ReviewLab";
+const SITE_URL = "https://justingerad05.github.io/reviewlab-static";
+const SITE_NAME = "ReviewLab";
+const AUTHOR_NAME = "ReviewLab Editorial";
 
-/* SAFE BUILD DIR */
+const FALLBACK_IMAGES = [
+  `${SITE_URL}/og-cta-analysis.jpg`,
+  `${SITE_URL}/og-cta-features.jpg`,
+  `${SITE_URL}/og-cta-tested.jpg`,
+  `${SITE_URL}/og-cta-verdict.jpg`
+];
 
-const BUILD_DIR="build-posts";
+const DEFAULT_IMAGE = `${SITE_URL}/og-default.jpg`;
 
-if(fs.existsSync(BUILD_DIR)){
-fs.rmSync(BUILD_DIR,{recursive:true,force:true});
+/* ================= INIT ================= */
+
+fs.rmSync("posts", { recursive: true, force: true });
+fs.rmSync("tags", { recursive: true, force: true });
+fs.rmSync("_data", { recursive: true, force: true });
+
+fs.mkdirSync("posts", { recursive: true });
+fs.mkdirSync("tags", { recursive: true });
+fs.mkdirSync("og-images", { recursive: true });
+fs.mkdirSync("_data", { recursive: true });
+
+/* ================= FETCH FEED ================= */
+
+const parser = new XMLParser({ ignoreAttributes: false });
+const res = await fetch(FEED_URL);
+const xml = await res.text();
+const data = parser.parse(xml);
+
+let entries = data.feed?.entry || [];
+if (!Array.isArray(entries)) entries = [entries];
+
+const posts = [];
+const tagMap = {};
+
+/* ================= UTILITIES ================= */
+
+const strip = html =>
+  html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+
+const slugify = str =>
+  str.toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 70);
+
+const extractTitle = entry =>
+  entry.title?.["#text"]?.trim() || "Untitled Review";
+
+const buildDescription = html =>
+  strip(html).slice(0, 155);
+
+/* ================= IMAGE ENGINE (v4) ================= */
+
+function extractYouTubeId(html) {
+  const m = html.match(/(?:v=|youtu\.be\/)([0-9A-Za-z_-]{11})/);
+  return m ? m[1] : null;
 }
 
-fs.mkdirSync(BUILD_DIR,{recursive:true});
-
-/* FETCH */
-
-const parser=new XMLParser({ignoreAttributes:false});
-const res=await fetch(FEED_URL);
-const xml=await res.text();
-const data=parser.parse(xml);
-
-let entries=data.feed?.entry||[];
-if(!Array.isArray(entries)) entries=[entries];
-
-const posts=[];
-
-const strip=html=>html.replace(/<[^>]+>/g," ").replace(/\s+/g," ").trim();
-
-const slugify=str=>
-str.toLowerCase()
-.replace(/[^a-z0-9]+/g,"-")
-.replace(/^-+|-+$/g,"")
-.slice(0,70);
-
-/* COLLECT */
-
-for(const entry of entries){
-
-const html=entry.content?.["#text"];
-if(!html) continue;
-
-const title=entry.title?.["#text"]||"Untitled Review";
-const slug=slugify(title);
-const url=`${SITE_URL}/posts/${slug}/`;
-
-posts.push({
-title,
-slug,
-url,
-html,
-date:entry.published||new Date().toISOString()
-});
+function pickFallback(slug) {
+  let hash = 0;
+  for (let i = 0; i < slug.length; i++) {
+    hash = slug.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return FALLBACK_IMAGES[Math.abs(hash) % FALLBACK_IMAGES.length]
+    || DEFAULT_IMAGE;
 }
 
-/* BUILD */
+function extractImage(html, slug) {
+  const yt = extractYouTubeId(html);
+  if (yt) return `https://img.youtube.com/vi/${yt}/hqdefault.jpg`;
 
-for(const post of posts){
-
-const {title,slug,html,url,date}=post;
-
-await generateOG(slug,title);
-
-const ogImage=`${SITE_URL}/og-images/${slug}.png`;
-
-const description=strip(html).slice(0,155);
-
-const dir=`${BUILD_DIR}/${slug}`;
-fs.mkdirSync(dir,{recursive:true});
-
-const schema={
-"@context":"https://schema.org",
-"@type":"Review",
-itemReviewed:{
-"@type":"SoftwareApplication",
-name:title
-},
-author:{
-"@type":"Organization",
-name:"ReviewLab Editorial"
-},
-reviewRating:{
-"@type":"Rating",
-ratingValue:"4.6",
-bestRating:"5"
+  const match = html.match(/<img[^>]+src=["']([^"']+)["']/i);
+  return match ? match[1] : pickFallback(slug);
 }
-};
 
-const page=`<!DOCTYPE html>
-<html>
+/* ================= TAG ENGINE (v5) ================= */
+
+function buildTags(html) {
+  const pool = [
+    "ai tools",
+    "automation",
+    "software review",
+    "digital marketing",
+    "online business"
+  ];
+
+  const lower = html.toLowerCase();
+  const tags = pool.filter(t => lower.includes(t));
+
+  return tags.length ? tags.slice(0, 3) : ["ai tools"];
+}
+
+/* ================= PASS 1 – COLLECT POSTS ================= */
+
+for (const entry of entries) {
+
+  const html = entry.content?.["#text"];
+  if (!html) continue;
+
+  const title = extractTitle(entry);
+  const slug = slugify(title);
+  const url = `${SITE_URL}/posts/${slug}/`;
+  const tags = buildTags(html);
+
+  tags.forEach(tag => {
+    const t = slugify(tag);
+    if (!tagMap[t]) tagMap[t] = [];
+    tagMap[t].push({ title, url });
+  });
+
+  posts.push({
+    title,
+    slug,
+    url,
+    html,
+    tags,
+    date: entry.published || new Date().toISOString()
+  });
+}
+
+/* ================= RELATED ENGINE (v7) ================= */
+
+const related = slug =>
+  posts
+    .filter(p => p.slug !== slug)
+    .slice(0, 4)
+    .map(p => `<li><a href="${p.url}">${p.title}</a></li>`)
+    .join("");
+
+/* ================= PASS 2 – BUILD POSTS ================= */
+
+for (const post of posts) {
+
+  const { title, slug, html, url, date } = post;
+
+  const description = buildDescription(html);
+
+  /* v8 – Generate Branded OG */
+  await generateOG(slug, title);
+
+  /* v9 – Priority OG Stack */
+  const ogImage = `${SITE_URL}/og-images/${slug}.png`;
+
+  const dir = `posts/${slug}`;
+  fs.mkdirSync(dir, { recursive: true });
+
+  const articleSchema = {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    headline: title,
+    description,
+    image: [ogImage],
+    author: { "@type": "Organization", name: AUTHOR_NAME },
+    publisher: {
+      "@type": "Organization",
+      name: SITE_NAME,
+      logo: {
+        "@type": "ImageObject",
+        url: DEFAULT_IMAGE
+      }
+    },
+    datePublished: date,
+    mainEntityOfPage: url
+  };
+
+  const page = `<!DOCTYPE html>
+<html lang="en">
 <head>
 
 <meta charset="UTF-8">
 <title>${title}</title>
 
 <meta name="description" content="${description}">
+<meta name="robots" content="index,follow,max-image-preview:large">
 <link rel="canonical" href="${url}">
 
 <meta property="og:type" content="article">
 <meta property="og:title" content="${title}">
-<meta property="og:image" content="${ogImage}">
 <meta property="og:description" content="${description}">
+<meta property="og:image" content="${ogImage}">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
 <meta property="og:url" content="${url}">
 
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="${ogImage}">
 
 <script type="application/ld+json">
-${JSON.stringify(schema)}
+${JSON.stringify(articleSchema)}
 </script>
-
-<style>
-
-body{
-max-width:760px;
-margin:auto;
-padding:40px 20px;
-font-family:Inter,system-ui;
-background:#020617;
-color:#e5e7eb;
-line-height:1.75;
-}
-
-.hero{
-width:100%;
-border-radius:14px;
-margin-bottom:30px;
-}
-
-.slim{
-margin:45px 0;
-padding:14px;
-border:1px solid #1e293b;
-border-radius:10px;
-display:flex;
-gap:10px;
-justify-content:center;
-flex-wrap:wrap;
-}
-
-.slim input{
-padding:10px;
-border-radius:8px;
-border:1px solid #334155;
-background:#020617;
-color:white;
-}
-
-.slim button{
-padding:10px 14px;
-border:none;
-border-radius:8px;
-background:#22c55e;
-font-weight:700;
-}
-
-</style>
 
 </head>
 <body>
 
-<img class="hero" src="${ogImage}" alt="${title}">
+<img src="${ogImage}" alt="" style="display:none">
 
 <h1>${title}</h1>
 
 ${html}
 
-<section class="slim">
+<section style="margin-top:60px;padding:32px;border-radius:16px;background:#020617;border:1px solid #1e293b;text-align:center">
+
+<h2 style="margin-bottom:10px">Get Future AI Reviews</h2>
+<p style="color:#94a3b8;margin-bottom:20px">
+Join readers who discover winning software early.
+</p>
 
 <form 
 action="https://docs.google.com/forms/d/e/1FAIpQLSchzs0bE9se3YCR2TTiFl3Ohi0nbx0XPBjvK_dbANuI_eI1Aw/formResponse"
@@ -183,28 +227,96 @@ target="_blank"
 <input
 type="email"
 name="entry.364499249"
-placeholder="Enter email for elite tools"
+placeholder="Enter your email"
 required
+style="padding:12px;border-radius:8px;border:1px solid #334155;background:#020617;color:white"
 >
 
-<button>Subscribe</button>
+<button
+style="padding:12px 16px;border-radius:8px;border:none;background:#22c55e;font-weight:700;margin-left:6px"
+>
+Subscribe
+</button>
 
 </form>
 
 </section>
 
+<section>
+<h2>Related Reviews</h2>
+<ul>${related(slug)}</ul>
+</section>
+
 </body>
 </html>`;
 
-fs.writeFileSync(`${dir}/index.html`,page);
+  fs.writeFileSync(`${dir}/index.html`, page);
 }
 
-/* SAFE SWAP */
+/* ================= TAG PAGES (v5) ================= */
 
-if(fs.existsSync("posts")){
-fs.rmSync("posts",{recursive:true,force:true});
+for (const tag in tagMap) {
+
+  const list = tagMap[tag]
+    .map(p => `<li><a href="${p.url}">${p.title}</a></li>`)
+    .join("");
+
+  const page = `<!DOCTYPE html>
+<html>
+<head>
+<title>${tag} | ${SITE_NAME}</title>
+<meta name="robots" content="index,follow">
+<link rel="canonical" href="${SITE_URL}/tags/${tag}/">
+</head>
+<body>
+
+<h1>${tag}</h1>
+<ul>${list}</ul>
+
+</body>
+</html>`;
+
+  fs.mkdirSync(`tags/${tag}`, { recursive: true });
+  fs.writeFileSync(`tags/${tag}/index.html`, page);
 }
 
-fs.renameSync(BUILD_DIR,"posts");
+/* ================= AUTHORITY SITEMAP (v6 + v9) ================= */
 
-console.log("✅ v15 AUTHORITY ENGINE DEPLOYED — ZERO POST LOSS");
+const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="https://www.sitemaps.org/schemas/sitemap/0.9">
+
+<url>
+  <loc>${SITE_URL}/</loc>
+  <changefreq>daily</changefreq>
+  <priority>1.0</priority>
+</url>
+
+${posts.map(p => `
+<url>
+  <loc>${p.url}</loc>
+  <lastmod>${new Date(p.date).toISOString()}</lastmod>
+  <changefreq>weekly</changefreq>
+  <priority>0.9</priority>
+</url>`).join("")}
+
+</urlset>`;
+
+fs.writeFileSync("sitemap.xml", sitemap);
+
+/* ================= DATA FEED (v9 – TRAFFIC MULTIPLIER) ================= */
+
+fs.writeFileSync(
+  "_data/posts.json",
+  JSON.stringify(
+    posts.map(p => ({
+      title: p.title,
+      url: p.url,
+      date: p.date
+    })),
+    null,
+    2
+  )
+);
+
+console.log("✅ AUTHORITY ENGINE v9 DEPLOYED");
+
