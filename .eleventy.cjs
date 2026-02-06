@@ -8,12 +8,12 @@ module.exports = function(eleventyConfig) {
   eleventyConfig.addPassthroughCopy("og-cta-tested.jpg");
   eleventyConfig.addPassthroughCopy("og-cta-verdict.jpg");
 
-
-  /* ✅ BULLETPROOF POSTS COLLECTION */
+  /* BULLETPROOF POSTS COLLECTION */
   eleventyConfig.addCollection("posts", function(collectionApi) {
 
     return collectionApi
-      .getFilteredByGlob("posts/**/*.md") // ONLY grab generated markdown
+      .getFilteredByGlob("./posts/**/*.md")
+      .filter(post => !post.data.draft) // prevents hidden drafts
       .sort((a, b) => b.date - a.date);
 
   });
