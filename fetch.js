@@ -9,7 +9,6 @@ const FEED_URL =
 "https://honestproductreviewlab.blogspot.com/feeds/posts/default?alt=atom";
 
 const SITE_URL="https://justingerad05.github.io/reviewlab-static";
-const SITE_NAME="ReviewLab";
 
 /* SAFE BUILD DIR */
 
@@ -31,8 +30,6 @@ const data=parser.parse(xml);
 let entries=data.feed?.entry||[];
 if(!Array.isArray(entries)) entries=[entries];
 
-const posts=[];
-
 const strip=html=>html.replace(/<[^>]+>/g," ").replace(/\s+/g," ").trim();
 
 const slugify=str=>
@@ -40,6 +37,8 @@ str.toLowerCase()
 .replace(/[^a-z0-9]+/g,"-")
 .replace(/^-+|-+$/g,"")
 .slice(0,70);
+
+const posts=[];
 
 /* COLLECT */
 
@@ -97,7 +96,7 @@ bestRating:"5"
 const page = `---
 title: "${title.replace(/"/g, '\\"')}"
 date: "${new Date(date).toISOString()}"
-layout: null
+layout: false
 ---
 
 <!DOCTYPE html>
@@ -213,4 +212,4 @@ fs.rmSync("posts",{recursive:true,force:true});
 
 fs.renameSync(BUILD_DIR,"posts");
 
-console.log("✅ v15 AUTHORITY ENGINE DEPLOYED — ZERO POST LOSS");
+console.log("✅ AUTHORITY ENGINE STABLE — POSTS GENERATED");
