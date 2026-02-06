@@ -1,6 +1,6 @@
 module.exports = function(eleventyConfig) {
 
-  /* PASS THROUGH */
+  /* PASS THROUGH STATIC ASSETS */
   eleventyConfig.addPassthroughCopy("og-images");
   eleventyConfig.addPassthroughCopy("og-default.jpg");
   eleventyConfig.addPassthroughCopy("og-cta-analysis.jpg");
@@ -10,17 +10,16 @@ module.exports = function(eleventyConfig) {
 
   /* 🔥 AUTHORITATIVE POSTS COLLECTION */
   eleventyConfig.addCollection("posts", function(collectionApi) {
-
     return collectionApi
-      .getFilteredByGlob("./posts/**/*.html") // <-- IMPORTANT leading ./
+      .getFilteredByGlob("./posts/**/*.html") // critical for CI
       .sort((a, b) => b.date - a.date);
-
   });
 
   return {
     dir: {
       input: ".",
-      output: "_site"
+      output: "_site",
+      includes: "_includes"
     }
   };
 };
