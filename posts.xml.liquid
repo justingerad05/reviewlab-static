@@ -18,7 +18,7 @@ eleventyExcludeFromCollections: true
       rel="self"
       type="application/rss+xml" />
 
-    {% for post in posts %}
+    {% for post in collections.posts %}
     <item>
       <title><![CDATA[{{ post.title }}]]></title>
       <link>{{ post.url }}</link>
