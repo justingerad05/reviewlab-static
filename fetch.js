@@ -38,7 +38,7 @@ function extractBestImage(html){
  // YouTube thumbnail wins instantly
  const yt = html.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([A-Za-z0-9_-]{11})/);
  if(yt){
-   return `https://img.youtube.com/vi/${yt[1]}/maxresdefault.jpg`;
+   return `https://img.youtube.com/vi/${yt[1]}/hqdefault.jpg`;
  }
 
  // Grab blogger image
