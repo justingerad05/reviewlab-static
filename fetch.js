@@ -185,7 +185,7 @@ for(const post of posts){
    .map(p=>`
 <li>
 <a href="${p.url}" title="Read for ~${p.readTime} min">
-<img data-src="${p.thumb}" alt="${p.title}" width="100" class="lazy" style="pointer-events:none;" style="vertical-align:middle;margin-right:10px;">
+<img data-src="${p.thumb}" alt="${p.title}" width="100" class="lazy" style="vertical-align:middle;pointer-events:none;margin-right:10px;">
 ${post.title} (~${p.readTime} min)
 </a>
 </li>`).join("");
