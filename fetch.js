@@ -46,27 +46,30 @@ for(const entry of entries){
    .replace(/[^a-z0-9]+/g,"-")
    .replace(/^-|-$/g,"");
 
- const url =
- `${SITE_URL}/posts/${slug}/`;
+ const url = `${SITE_URL}/posts/${slug}/`;
 
  /* GENERATE OG */
 
  try{
    await generateOG(slug,title);
  }catch{
-   fs.copyFileSync(
-     "og-default.jpg",
-     `og-images/${slug}.jpg`
-   );
+   fs.copyFileSync("og-default.jpg",`og-images/${slug}.jpg`);
  }
 
-const og = `${SITE_URL}/og-images/${slug}.jpg`;
+ const og = `${SITE_URL}/og-images/${slug}.jpg`;
 
  const description =
- html.replace(/<[^>]+>/g," ")
-     .slice(0,155);
+ html.replace(/<[^>]+>/g," ").slice(0,155);
 
  fs.mkdirSync(`posts/${slug}`,{recursive:true});
+
+ function relatedPosts(currentSlug){
+  return posts
+    .filter(p => p.slug !== currentSlug)
+    .slice(0,4)
+    .map(p => `<li><a href="${p.url}">${p.title}</a></li>`)
+    .join("");
+ }
 
  const schema = {
  "@context":"https://schema.org",
@@ -86,17 +89,6 @@ const og = `${SITE_URL}/og-images/${slug}.jpg`;
  }
  };
 
-function relatedPosts(currentSlug){
-
-  return posts
-    .filter(p => p.slug !== currentSlug)
-    .sort((a,b)=> new Date(b.date) - new Date(a.date))
-    .slice(0,4)
-    .map(p => `<li><a href="${p.url}">${p.title}</a></li>`)
-    .join("");
-
-}
- 
  const page = `<!doctype html>
 <html>
 <head>
@@ -115,8 +107,6 @@ function relatedPosts(currentSlug){
 <meta property="og:image:type" content="image/jpeg">
 <meta property="og:url" content="${url}">
 <meta property="og:site_name" content="ReviewLab">
-<meta property="og:image:width" content="1200">
-<meta property="og:image:height" content="630">
 
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="${og}">
@@ -147,6 +137,7 @@ ${relatedPosts(slug)}
  posts.push({
    title,
    url,
+   slug,
    date:entry.published
  });
 }
@@ -158,4 +149,4 @@ fs.writeFileSync(
 JSON.stringify(posts,null,2)
 );
 
-console.log("✅ v21 AUTHORITY ENGINE LIVE");
+console.log("✅ AUTHORITY ENGINE LIVE");
