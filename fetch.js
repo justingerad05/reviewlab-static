@@ -9,9 +9,6 @@ const FEED_URL =
 const SITE_URL =
 "https://justingerad05.github.io/reviewlab-static";
 
-const DEFAULT_IMAGE =
-`${SITE_URL}/og-default.jpg`;
-
 /* CLEAN */
 
 fs.rmSync("posts",{recursive:true,force:true});
@@ -30,14 +27,9 @@ const data = parser.parse(xml);
 let entries = data.feed.entry || [];
 if(!Array.isArray(entries)) entries=[entries];
 
-const posts=[];
+/* BUILD POST OBJECTS FIRST (critical for related posts) */
 
-/* BUILD */
-
-for(const entry of entries){
-
- const html = entry.content?.["#text"];
- if(!html) continue;
+const posts = entries.map(entry => {
 
  const title = entry.title["#text"];
 
@@ -46,37 +38,41 @@ for(const entry of entries){
    .replace(/[^a-z0-9]+/g,"-")
    .replace(/^-|-$/g,"");
 
- const url = `${SITE_URL}/posts/${slug}/`;
+ return {
+   title,
+   slug,
+   date:entry.published,
+   url:`${SITE_URL}/posts/${slug}/`,
+   html:entry.content?.["#text"] || ""
+ };
+});
 
- /* GENERATE OG */
+/* GENERATE PAGES */
 
- try{
-   await generateOG(slug,title);
- }catch{
-   fs.copyFileSync("og-default.jpg",`og-images/${slug}.jpg`);
- }
+for(const post of posts){
 
- const og = `${SITE_URL}/og-images/${slug}.jpg`;
+ await generateOG(post.slug,post.title);
+
+ const og = `${SITE_URL}/og-images/${post.slug}.png`;
 
  const description =
- html.replace(/<[^>]+>/g," ").slice(0,155);
+ post.html.replace(/<[^>]+>/g," ").slice(0,155);
 
- fs.mkdirSync(`posts/${slug}`,{recursive:true});
+ fs.mkdirSync(`posts/${post.slug}`,{recursive:true});
 
- function relatedPosts(currentSlug){
-  return posts
-    .filter(p => p.slug !== currentSlug)
-    .slice(0,4)
-    .map(p => `<li><a href="${p.url}">${p.title}</a></li>`)
-    .join("");
- }
+ const related = posts
+   .filter(p=>p.slug!==post.slug)
+   .sort(()=>0.5-Math.random())
+   .slice(0,4)
+   .map(p=>`<li><a href="${p.url}">${p.title}</a></li>`)
+   .join("");
 
  const schema = {
  "@context":"https://schema.org",
  "@type":"Review",
  itemReviewed:{
    "@type":"SoftwareApplication",
-   name:title
+   name:post.title
  },
  author:{
    "@type":"Organization",
@@ -94,18 +90,16 @@ for(const entry of entries){
 <head>
 
 <meta charset="utf-8">
-<title>${title}</title>
+<title>${post.title}</title>
 
 <meta name="description" content="${description}">
-<link rel="canonical" href="${url}">
+<link rel="canonical" href="${post.url}">
 
 <meta property="og:type" content="article">
-<meta property="og:title" content="${title}">
+<meta property="og:title" content="${post.title}">
 <meta property="og:description" content="${description}">
 <meta property="og:image" content="${og}">
-<meta property="og:image:secure_url" content="${og}">
-<meta property="og:image:type" content="image/jpeg">
-<meta property="og:url" content="${url}">
+<meta property="og:url" content="${post.url}">
 <meta property="og:site_name" content="ReviewLab">
 
 <meta name="twitter:card" content="summary_large_image">
@@ -118,35 +112,28 @@ ${JSON.stringify(schema)}
 </head>
 <body>
 
-<h1>${title}</h1>
+<h1>${post.title}</h1>
 
-${html}
+${post.html}
 
 <hr>
 
-<h3>Related Reviews</h3>
+<h2>Related Reviews</h2>
 <ul>
-${relatedPosts(slug)}
+${related}
 </ul>
 
 </body>
 </html>`;
 
- fs.writeFileSync(`posts/${slug}/index.html`,page);
-
- posts.push({
-   title,
-   url,
-   slug,
-   date:entry.published
- });
+ fs.writeFileSync(`posts/${post.slug}/index.html`,page);
 }
 
-/* ELEVENTY DATA */
+/* DATA */
 
 fs.writeFileSync(
 "_data/posts.json",
 JSON.stringify(posts,null,2)
 );
 
-console.log("✅ AUTHORITY ENGINE LIVE");
+console.log("✅ AUTHORITY MODE ACTIVE");
