@@ -1,7 +1,5 @@
-// .eleventy.cjs
 module.exports = function(eleventyConfig) {
 
-  /* ===== PASSTHROUGH COPY ===== */
   eleventyConfig.addPassthroughCopy("og-images");
   eleventyConfig.addPassthroughCopy("og-default.jpg");
   eleventyConfig.addPassthroughCopy("og-cta-analysis.jpg");
@@ -9,22 +7,18 @@ module.exports = function(eleventyConfig) {
   eleventyConfig.addPassthroughCopy("og-cta-tested.jpg");
   eleventyConfig.addPassthroughCopy("og-cta-verdict.jpg");
 
-  /* ===== WATCH OG FOLDER ===== */
   eleventyConfig.addWatchTarget("./og-images/");
 
-  /* ===== BULLETPROOF POSTS COLLECTION ===== */
   eleventyConfig.addCollection("posts", function(collectionApi) {
     return collectionApi
-      .getFilteredByGlob("./posts/**/*.md")
-      .filter(post => !post.data?.draft)
+      .getFilteredByGlob("./posts/**/*.html")
       .sort((a, b) => b.date - a.date);
   });
 
-  /* ===== RETURN CONFIG ===== */
   return {
-    dir: {
-      input: ".",
-      output: "_site"
+    dir:{
+      input:".",
+      output:"_site"
     }
   };
 };
