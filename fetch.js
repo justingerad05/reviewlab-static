@@ -9,11 +9,6 @@ const FEED_URL =
 const SITE_URL =
 "https://justingerad05.github.io/reviewlab-static";
 
-/* ALWAYS RELATIVE — NEVER ABSOLUTE */
-const CTA_FALLBACK = "/og-cta-tested.jpg";
-const DEFAULT_FALLBACK = "/og-default.jpg";
-
-
 /* CLEAN BUILD */
 
 fs.rmSync("posts",{recursive:true,force:true});
@@ -35,9 +30,7 @@ let entries = data.feed.entry || [];
 if(!Array.isArray(entries)) entries=[entries];
 
 
-/* ================================
-   UTILITIES
-================================ */
+/* UTILITIES */
 
 function slugify(title){
  return title
@@ -53,21 +46,26 @@ function strip(html){
    .trim();
 }
 
-
-/* ---------- YOUTUBE DETECTOR ---------- */
-
 function extractYouTubeID(html){
-
  const match =
  html.match(/(?:youtube\.com\/embed\/|youtu\.be\/|watch\?v=)([a-zA-Z0-9_-]{11})/);
 
  return match ? match[1] : null;
 }
 
+/* FAST IMAGE CHECK */
 
-/* =====================================================
-   BUILD POST DATABASE
-===================================================== */
+async function imageExists(url){
+ try{
+   const res = await fetch(url,{method:"HEAD"});
+   return res.ok;
+ }catch{
+   return false;
+ }
+}
+
+
+/* BUILD DATABASE */
 
 const posts=[];
 
@@ -87,66 +85,63 @@ for(const entry of entries){
  let ogImage=null;
 
 
-/* ================================
-   PRIORITY 1 — YOUTUBE (NO HQ!)
-================================ */
+/* =============================
+   PRIORITY 1 — YOUTUBE (MANDATORY TRY)
+============================= */
 
  const videoID = extractYouTubeID(html);
 
  if(videoID){
 
-   /* NEVER USE HQ — it causes the preview bug */
-   const candidates=[
+   const youtubeCandidates=[
 
      `https://img.youtube.com/vi/${videoID}/maxresdefault.jpg`,
-     `https://img.youtube.com/vi/${videoID}/sddefault.jpg`
+     `https://img.youtube.com/vi/${videoID}/sddefault.jpg`,
      `https://img.youtube.com/vi/${videoID}/hqdefault.jpg`
 
    ];
 
-   for(const img of candidates){
-
-     try{
-       const res = await fetch(img,{method:"HEAD"});
-       if(res.ok){
-         ogImage=img;
-         break;
-       }
-     }catch{}
+   for(const img of youtubeCandidates){
+     if(await imageExists(img)){
+       ogImage=img;
+       break;
+     }
    }
- }
+}
 
 
-/* ================================
+/* =============================
    PRIORITY 2 — GENERATED OG
-   (THIS FIXES YOUR TEXT POSTS)
-================================ */
+============================= */
 
  if(!ogImage){
 
    await generateOG(slug,title);
 
-   ogImage =
+   const generated =
    `${SITE_URL}/og-images/${slug}.jpg`;
- }
+
+   if(await imageExists(generated)){
+     ogImage = generated;
+   }
+}
 
 
-/* ================================
+/* =============================
    PRIORITY 3 — CTA
-================================ */
+============================= */
 
  if(!ogImage){
-   ogImage = `${SITE_URL}${CTA_FALLBACK}`;
- }
+   ogImage = `${SITE_URL}/og-cta-tested.jpg`;
+}
 
-
-/* ================================
+/* =============================
    PRIORITY 4 — DEFAULT
-================================ */
+============================= */
 
  if(!ogImage){
-   ogImage = `${SITE_URL}${DEFAULT_FALLBACK}`;
- }
+   ogImage = `${SITE_URL}/og-default.jpg`;
+}
 
 
  posts.push({
@@ -161,60 +156,43 @@ for(const entry of entries){
 }
 
 
-/* SORT NEWEST FIRST */
+/* SORT */
 
 posts.sort((a,b)=> new Date(b.date)-new Date(a.date));
 
 
-/* =====================================================
-   BUILD PAGES WITH INTERNAL GRAPH
-===================================================== */
+/* BUILD PAGES */
 
-for(let i=0;i<posts.length;i++){
-
- const post = posts[i];
+for(const post of posts){
 
  fs.mkdirSync(`posts/${post.slug}`,{recursive:true});
 
-
-/* SMART RELATED — NEVER EMPTY */
-
  const related = posts
    .filter(p=>p.slug!==post.slug)
-   .slice(0,4);
-
- let relatedHTML="";
-
- if(related.length){
-
-   relatedHTML =
-   related
+   .slice(0,4)
    .map(p=>`<li><a href="${p.url}">${p.title}</a></li>`)
-   .join("");
-
- }else{
-
-   relatedHTML =
-   `<li><a href="${SITE_URL}">See all reviews →</a></li>`;
- }
+   .join("") || `<li><a href="${SITE_URL}">See all reviews →</a></li>`;
 
 
- const schema = {
+/* BREADCRUMB SCHEMA */
+
+ const breadcrumb = {
  "@context":"https://schema.org",
- "@type":"Review",
- itemReviewed:{
-   "@type":"SoftwareApplication",
-   name:post.title
- },
- author:{
-   "@type":"Organization",
-   name:"ReviewLab"
- },
- reviewRating:{
-   "@type":"Rating",
-   ratingValue:"4.8",
-   bestRating:"5"
- }
+ "@type":"BreadcrumbList",
+ itemListElement:[
+   {
+     "@type":"ListItem",
+     position:1,
+     name:"Home",
+     item:SITE_URL
+   },
+   {
+     "@type":"ListItem",
+     position:2,
+     name:post.title,
+     item:post.url
+   }
+ ]
  };
 
 
@@ -240,7 +218,7 @@ for(let i=0;i<posts.length;i++){
 <meta name="twitter:image" content="${post.og}">
 
 <script type="application/ld+json">
-${JSON.stringify(schema)}
+${JSON.stringify(breadcrumb)}
 </script>
 
 </head>
@@ -259,7 +237,7 @@ ${post.html}
 
 <h3>Related Reviews</h3>
 <ul>
-${relatedHTML}
+${related}
 </ul>
 
 </body>
@@ -272,12 +250,34 @@ ${relatedHTML}
 }
 
 
-
-/* ELEVENTY DATA */
+/* DATA */
 
 fs.writeFileSync(
 "_data/posts.json",
 JSON.stringify(posts,null,2)
 );
 
-console.log("✅ AUTHORITY STACK PHASE 4 — STABLE BUILD");
+
+/* =============================
+   AUTO SITEMAP (MAJOR AUTHORITY BOOST)
+============================= */
+
+const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+
+<url>
+<loc>${SITE_URL}</loc>
+</url>
+
+${posts.map(p=>`
+<url>
+<loc>${p.url}</loc>
+</url>
+`).join("")}
+
+</urlset>`;
+
+fs.writeFileSync("sitemap.xml", sitemap);
+
+
+console.log("✅ AUTHORITY STACK PHASE 5 — ELITE BUILD");
