@@ -107,7 +107,11 @@ for(const entry of entries){
    await generateOG(slug,title);
    ogImages=[`${SITE_URL}/og-images/${slug}.jpg`];
  }
+
  const primaryOG = ogImages[0];
+
+/* HOMEPAGE THUMBNAIL (small) */
+const thumb = ogImages.find(img => img.includes("hqdefault.jpg")) || primaryOG;
 
 /* BUILD MULTI OG TAGS */
 
@@ -152,6 +156,7 @@ for(const entry of entries){
    url,
    description,
    og:primaryOG,
+   thumb,
    ogMeta,
    schema: JSON.stringify(schema),
    date:entry.published
@@ -171,7 +176,7 @@ for(const post of posts){
  const related = posts
    .filter(p=>p.slug!==post.slug)
    .slice(0,4)
-   .map(p=>`<li><a href="${p.url}">${p.title}</a></li>`)
+   .map(p=>`<li><a href="${p.url}"><img src="${p.thumb}" alt="${p.title}" width="100" style="vertical-align:middle;margin-right:10px;"> ${p.title}</a></li>`)
    .join("");
 
  const page = `<!doctype html>
@@ -218,9 +223,11 @@ ${post.html}
  fs.writeFileSync(`posts/${post.slug}/index.html`,page);
 }
 
+/* SAVE POSTS JSON FOR HOMEPAGE */
+
 fs.writeFileSync(
 "_data/posts.json",
 JSON.stringify(posts,null,2)
 );
 
-console.log("✅ AUTHORITY STACK PHASE 12 — GOOGLE DISCOVER READY");
+console.log("✅ AUTHORITY STACK PHASE 13 — HOMEPAGE & RELATED POSTS THUMBNAILS READY");
