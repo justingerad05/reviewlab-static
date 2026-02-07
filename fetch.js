@@ -15,7 +15,8 @@ const CTA_FALLBACK =
 const DEFAULT_FALLBACK =
 `${SITE_URL}/og-default.jpg`;
 
-/* CLEAN */
+
+/* CLEAN BUILD */
 
 fs.rmSync("posts",{recursive:true,force:true});
 fs.rmSync("_data",{recursive:true,force:true});
@@ -23,6 +24,7 @@ fs.rmSync("_data",{recursive:true,force:true});
 fs.mkdirSync("posts",{recursive:true});
 fs.mkdirSync("_data",{recursive:true});
 fs.mkdirSync("og-images",{recursive:true});
+
 
 /* FETCH FEED */
 
@@ -33,7 +35,25 @@ const data = parser.parse(xml);
 let entries = data.feed.entry || [];
 if(!Array.isArray(entries)) entries=[entries];
 
-const posts=[];
+
+
+/* ================================
+   UTILITIES
+================================ */
+
+function slugify(title){
+ return title
+   .toLowerCase()
+   .replace(/[^a-z0-9]+/g,"-")
+   .replace(/^-|-$/g,"");
+}
+
+function strip(html){
+ return html
+   .replace(/<[^>]+>/g," ")
+   .replace(/\s+/g," ")
+   .trim();
+}
 
 
 /* ---------- YOUTUBE DETECTOR ---------- */
@@ -41,13 +61,13 @@ const posts=[];
 function extractYouTubeID(html){
 
  const match =
- html.match(/(?:youtube\.com\/embed\/|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+ html.match(/(?:youtube\.com\/embed\/|youtu\.be\/|watch\?v=)([a-zA-Z0-9_-]{11})/);
 
  return match ? match[1] : null;
 }
 
 
-/* ---------- THUMBNAIL VALIDATOR ---------- */
+/* ---------- IMAGE VALIDATOR ---------- */
 
 async function validateImage(url){
 
@@ -65,7 +85,12 @@ async function validateImage(url){
 }
 
 
-/* BUILD LOOP */
+
+/* =====================================================
+   PASS 1 — BUILD POST DATABASE
+===================================================== */
+
+const posts=[];
 
 for(const entry of entries){
 
@@ -73,27 +98,23 @@ for(const entry of entries){
  if(!html) continue;
 
  const title = entry.title["#text"];
+ const slug = slugify(title);
 
- const slug = title
-   .toLowerCase()
-   .replace(/[^a-z0-9]+/g,"-")
-   .replace(/^-|-$/g,"");
-
- const url =
+ const postURL =
  `${SITE_URL}/posts/${slug}/`;
 
- let ogImage = null;
+ const description = strip(html).slice(0,155);
+
+ let ogImage=null;
 
 
-/* ================================
-   PRIORITY 1 — YOUTUBE THUMBNAIL
-================================ */
+/* PRIORITY 1 — YOUTUBE */
 
  const videoID = extractYouTubeID(html);
 
  if(videoID){
 
-   const candidates = [
+   const candidates=[
 
      `https://img.youtube.com/vi/${videoID}/maxresdefault.jpg`,
      `https://img.youtube.com/vi/${videoID}/sddefault.jpg`,
@@ -104,78 +125,79 @@ for(const entry of entries){
    for(const img of candidates){
 
      if(await validateImage(img)){
-       ogImage = img;
+       ogImage=img;
        break;
      }
    }
  }
 
 
-/* ================================
-   PRIORITY 2 — CTA IMAGE
-================================ */
+/* PRIORITY 2 — CTA */
 
- if(!ogImage){
-
-   if(await validateImage(CTA_FALLBACK)){
-     ogImage = CTA_FALLBACK;
-   }
+ if(!ogImage && await validateImage(CTA_FALLBACK)){
+   ogImage=CTA_FALLBACK;
  }
 
 
-/* ================================
-   PRIORITY 3 — DEFAULT
-================================ */
+/* PRIORITY 3 — DEFAULT */
 
  if(!ogImage){
-
-   ogImage = DEFAULT_FALLBACK;
+   ogImage=DEFAULT_FALLBACK;
  }
 
 
-/* ================================
-   PRIORITY 4 — GENERATED (LAST)
-================================ */
+/* PRIORITY 4 — GENERATED (LAST ONLY) */
 
  if(!ogImage){
 
    await generateOG(slug,title);
 
-   ogImage =
+   ogImage=
    `${SITE_URL}/og-images/${slug}.jpg`;
  }
 
 
- const description =
- html.replace(/<[^>]+>/g," ")
-     .replace(/\s+/g," ")
-     .slice(0,155);
-
-
- fs.mkdirSync(`posts/${slug}`,{recursive:true});
-
-
-/* RELATED POSTS */
-
-function relatedPosts(currentSlug){
-
- return posts
-  .filter(p => p.slug !== currentSlug)
-  .sort((a,b)=> new Date(b.date)-new Date(a.date))
-  .slice(0,4)
-  .map(p=>`<li><a href="${p.url}">${p.title}</a></li>`)
-  .join("");
+ posts.push({
+   title,
+   slug,
+   html,
+   url:postURL,
+   description,
+   og:ogImage,
+   date:entry.published
+ });
 }
 
 
-/* SCHEMA */
+
+/* SORT NEWEST FIRST (authority signal) */
+
+posts.sort((a,b)=> new Date(b.date)-new Date(a.date));
+
+
+
+/* =====================================================
+   PASS 2 — BUILD PAGES WITH FULL INTERNAL GRAPH
+===================================================== */
+
+for(const post of posts){
+
+ fs.mkdirSync(`posts/${post.slug}`,{recursive:true});
+
+
+ const related = posts
+   .filter(p=>p.slug!==post.slug)
+   .slice(0,4)
+   .map(p=>`<li><a href="${p.url}">${p.title}</a></li>`)
+   .join("");
+
 
  const schema = {
  "@context":"https://schema.org",
  "@type":"Review",
  itemReviewed:{
    "@type":"SoftwareApplication",
-   name:title
+   name:post.title
  },
  author:{
    "@type":"Organization",
@@ -194,57 +216,55 @@ function relatedPosts(currentSlug){
 <head>
 
 <meta charset="utf-8">
-<title>${title}</title>
+<title>${post.title}</title>
 
-<meta name="description" content="${description}">
-<link rel="canonical" href="${url}">
+<meta name="description" content="${post.description}">
+<link rel="canonical" href="${post.url}">
 
 <meta property="og:type" content="article">
-<meta property="og:title" content="${title}">
-<meta property="og:description" content="${description}">
-<meta property="og:image" content="${ogImage}">
-<meta property="og:image:secure_url" content="${ogImage}">
+<meta property="og:title" content="${post.title}">
+<meta property="og:description" content="${post.description}">
+<meta property="og:image" content="${post.og}">
+<meta property="og:image:secure_url" content="${post.og}">
 <meta property="og:image:type" content="image/jpeg">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="${ogImage}">
+<meta name="twitter:image" content="${post.og}">
 
 <script type="application/ld+json">
 ${JSON.stringify(schema)}
 </script>
 
 </head>
-<body>
+<body style="max-width:760px;margin:auto;font-family:system-ui;padding:40px;line-height:1.7;">
 
 <a href="${SITE_URL}"
 style="display:inline-block;margin-bottom:40px;font-weight:600;">
 ← Back to Homepage
 </a>
 
-<h1>${title}</h1>
+<h1>${post.title}</h1>
 
-${html}
+${post.html}
 
 <hr>
+
 <h3>Related Reviews</h3>
 <ul>
-${relatedPosts(slug)}
+${related}
 </ul>
 
 </body>
 </html>`;
 
- fs.writeFileSync(`posts/${slug}/index.html`,page);
-
- posts.push({
-   slug,
-   title,
-   url,
-   date:entry.published
- });
+ fs.writeFileSync(
+   `posts/${post.slug}/index.html`,
+   page
+ );
 }
+
 
 
 /* ELEVENTY DATA */
@@ -254,4 +274,4 @@ fs.writeFileSync(
 JSON.stringify(posts,null,2)
 );
 
-console.log("✅ AUTHORITY STACK PHASE 2 LIVE");
+console.log("✅ AUTHORITY STACK PHASE 3 DEPLOYED");
