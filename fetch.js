@@ -3,26 +3,21 @@ import fetch from "node-fetch";
 import { XMLParser } from "fast-xml-parser";
 import { generateOG } from "./generate-og.js";
 
-/* ================= CONFIG ================= */
-
 const SITE_URL =
 "https://justingerad05.github.io/reviewlab-static";
 
 const FEED_URL =
 "https://honestproductreviewlab.blogspot.com/feeds/posts/default?alt=atom";
 
-const FALLBACK_IMAGE = `${SITE_URL}/og-default.jpg`;
-
-/* ================= CLEAN BUILD ================= */
+/* CLEAN BUILD */
 
 fs.rmSync("posts",{recursive:true,force:true});
 fs.rmSync("_data",{recursive:true,force:true});
+fs.rmSync("og-images",{recursive:true,force:true});
 
 fs.mkdirSync("posts",{recursive:true});
 fs.mkdirSync("og-images",{recursive:true});
 fs.mkdirSync("_data",{recursive:true});
-
-/* ================= FETCH BLOGGER ================= */
 
 const parser = new XMLParser({ignoreAttributes:false});
 const xml = await (await fetch(FEED_URL)).text();
@@ -31,37 +26,9 @@ const data = parser.parse(xml);
 let entries = data.feed.entry || [];
 if(!Array.isArray(entries)) entries=[entries];
 
-/* ================= IMAGE EXTRACTOR (ELITE VERSION) ================= */
-
-function extractBestImage(html){
-
- // YouTube thumbnail wins instantly
- const yt = html.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([A-Za-z0-9_-]{11})/);
- if(yt){
-   return `https://img.youtube.com/vi/${yt[1]}/hqdefault.jpg`;
- }
-
- // Grab blogger image
- const img = html.match(/<img[^>]+src=["']([^"']+)["']/i);
-
- if(!img) return null;
-
- let url = img[1];
-
- /**
-  CRITICAL FIX:
-  Convert blogger resized images → FULL resolution
-  Example:
-  /s320/  -> /s1600/
- */
- url = url.replace(/\/s\d+\//,"/s1600/");
-
- return url;
-}
-
-/* ================= BUILD MASTER LIST ================= */
-
 const posts = [];
+
+/* BUILD POSTS */
 
 for(const entry of entries){
 
@@ -73,21 +40,8 @@ for(const entry of entries){
    .replace(/[^a-z0-9]+/g,"-")
    .replace(/^-|-$/g,"");
 
- let ogImage = extractBestImage(html);
-
- /**
-  If NO thumbnail exists →
-  generate elite OG automatically
- */
- if(!ogImage){
-
-   ogImage = await generateOG(slug,title);
-
-   // Safety fallback
-   if(!ogImage){
-     ogImage = FALLBACK_IMAGE;
-   }
- }
+ /* FORCE LOCAL OG IMAGE */
+ const ogImage = await generateOG(slug,title);
 
  posts.push({
    title,
@@ -99,7 +53,7 @@ for(const entry of entries){
  });
 }
 
-/* ================= CREATE AUTHORITY PAGES ================= */
+/* CREATE PAGES */
 
 for(const post of posts){
 
@@ -112,7 +66,11 @@ for(const post of posts){
    .join("");
 
  const description =
- post.html.replace(/<[^>]+>/g," ").slice(0,155);
+ post.html
+   .replace(/<[^>]+>/g," ")
+   .replace(/\s+/g," ")
+   .trim()
+   .slice(0,155);
 
  const page = `<!doctype html>
 <html>
@@ -128,10 +86,14 @@ for(const post of posts){
 <meta property="og:title" content="${post.title}">
 <meta property="og:description" content="${description}">
 <meta property="og:image" content="${post.og}">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
 <meta property="og:url" content="${post.url}">
 <meta property="og:site_name" content="ReviewLab">
 
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="${post.title}">
+<meta name="twitter:description" content="${description}">
 <meta name="twitter:image" content="${post.og}">
 
 </head>
@@ -156,8 +118,6 @@ ${post.html}
  fs.writeFileSync(`posts/${post.slug}/index.html`,page);
 }
 
-/* ================= DATA ================= */
-
 fs.writeFileSync("_data/posts.json",JSON.stringify(posts,null,2));
 
-console.log("✅ ELITE AUTHORITY ENGINE ACTIVE");
+console.log("✅ STABLE BUILD COMPLETE — OG FIXED");
