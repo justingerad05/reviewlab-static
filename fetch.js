@@ -9,7 +9,13 @@ const FEED_URL =
 const SITE_URL =
 "https://justingerad05.github.io/reviewlab-static";
 
-/* CLEAN BUILD */
+const CTA_FALLBACK =
+`${SITE_URL}/og-cta-tested.jpg`;
+
+const DEFAULT_FALLBACK =
+`${SITE_URL}/og-default.jpg`;
+
+/* CLEAN */
 
 fs.rmSync("posts",{recursive:true,force:true});
 fs.rmSync("_data",{recursive:true,force:true});
@@ -29,6 +35,36 @@ if(!Array.isArray(entries)) entries=[entries];
 
 const posts=[];
 
+
+/* ---------- YOUTUBE DETECTOR ---------- */
+
+function extractYouTubeID(html){
+
+ const match =
+ html.match(/(?:youtube\.com\/embed\/|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+
+ return match ? match[1] : null;
+}
+
+
+/* ---------- THUMBNAIL VALIDATOR ---------- */
+
+async function validateImage(url){
+
+ try{
+
+   const res = await fetch(url,{method:"HEAD"});
+
+   const type = res.headers.get("content-type");
+
+   return res.ok && type && type.startsWith("image");
+
+ }catch{
+   return false;
+ }
+}
+
+
 /* BUILD LOOP */
 
 for(const entry of entries){
@@ -46,18 +82,93 @@ for(const entry of entries){
  const url =
  `${SITE_URL}/posts/${slug}/`;
 
- /* GENERATE OG FIRST */
- await generateOG(slug,title);
+ let ogImage = null;
 
- const og =
- `${SITE_URL}/og-images/${slug}.jpg`;
+
+/* ================================
+   PRIORITY 1 — YOUTUBE THUMBNAIL
+================================ */
+
+ const videoID = extractYouTubeID(html);
+
+ if(videoID){
+
+   const candidates = [
+
+     `https://img.youtube.com/vi/${videoID}/maxresdefault.jpg`,
+     `https://img.youtube.com/vi/${videoID}/sddefault.jpg`,
+     `https://img.youtube.com/vi/${videoID}/hqdefault.jpg`
+
+   ];
+
+   for(const img of candidates){
+
+     if(await validateImage(img)){
+       ogImage = img;
+       break;
+     }
+   }
+ }
+
+
+/* ================================
+   PRIORITY 2 — CTA IMAGE
+================================ */
+
+ if(!ogImage){
+
+   if(await validateImage(CTA_FALLBACK)){
+     ogImage = CTA_FALLBACK;
+   }
+ }
+
+
+/* ================================
+   PRIORITY 3 — DEFAULT
+================================ */
+
+ if(!ogImage){
+
+   ogImage = DEFAULT_FALLBACK;
+ }
+
+
+/* ================================
+   PRIORITY 4 — GENERATED (LAST)
+================================ */
+
+ if(!ogImage){
+
+   await generateOG(slug,title);
+
+   ogImage =
+   `${SITE_URL}/og-images/${slug}.jpg`;
+ }
+
 
  const description =
  html.replace(/<[^>]+>/g," ")
      .replace(/\s+/g," ")
      .slice(0,155);
 
+
  fs.mkdirSync(`posts/${slug}`,{recursive:true});
+
+
+/* RELATED POSTS */
+
+function relatedPosts(currentSlug){
+
+ return posts
+  .filter(p => p.slug !== currentSlug)
+  .sort((a,b)=> new Date(b.date)-new Date(a.date))
+  .slice(0,4)
+  .map(p=>`<li><a href="${p.url}">${p.title}</a></li>`)
+  .join("");
+}
+
+
+/* SCHEMA */
 
  const schema = {
  "@context":"https://schema.org",
@@ -77,6 +188,7 @@ for(const entry of entries){
  }
  };
 
+
  const page = `<!doctype html>
 <html>
 <head>
@@ -90,14 +202,14 @@ for(const entry of entries){
 <meta property="og:type" content="article">
 <meta property="og:title" content="${title}">
 <meta property="og:description" content="${description}">
-<meta property="og:image" content="${og}">
-<meta property="og:image:secure_url" content="${og}">
+<meta property="og:image" content="${ogImage}">
+<meta property="og:image:secure_url" content="${ogImage}">
 <meta property="og:image:type" content="image/jpeg">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="${og}">
+<meta name="twitter:image" content="${ogImage}">
 
 <script type="application/ld+json">
 ${JSON.stringify(schema)}
@@ -106,7 +218,7 @@ ${JSON.stringify(schema)}
 </head>
 <body>
 
-<a href="${SITE_URL}" 
+<a href="${SITE_URL}"
 style="display:inline-block;margin-bottom:40px;font-weight:600;">
 ← Back to Homepage
 </a>
@@ -115,17 +227,25 @@ style="display:inline-block;margin-bottom:40px;font-weight:600;">
 
 ${html}
 
+<hr>
+<h3>Related Reviews</h3>
+<ul>
+${relatedPosts(slug)}
+</ul>
+
 </body>
 </html>`;
 
  fs.writeFileSync(`posts/${slug}/index.html`,page);
 
  posts.push({
+   slug,
    title,
    url,
    date:entry.published
  });
 }
+
 
 /* ELEVENTY DATA */
 
@@ -134,4 +254,4 @@ fs.writeFileSync(
 JSON.stringify(posts,null,2)
 );
 
-console.log("✅ AUTHORITY PIPELINE STABLE");
+console.log("✅ AUTHORITY STACK PHASE 2 LIVE");
