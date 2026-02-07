@@ -1,7 +1,7 @@
 import fs from "fs";
 import fetch from "node-fetch";
 import { XMLParser } from "fast-xml-parser";
-import { generateOG } from "./generate-og.js";
+import { generateOG, upscaleToOG } from "./generate-og.js";
 
 const FEED_URL =
 "https://honestproductreviewlab.blogspot.com/feeds/posts/default?alt=atom";
@@ -16,7 +16,7 @@ const DEFAULT =
 `${SITE_URL}/og-default.jpg`;
 
 
-/* CLEAN BUILD */
+/* CLEAN */
 
 fs.rmSync("posts",{recursive:true,force:true});
 fs.rmSync("_data",{recursive:true,force:true});
@@ -26,7 +26,7 @@ fs.mkdirSync("_data",{recursive:true});
 fs.mkdirSync("og-images",{recursive:true});
 
 
-/* FETCH FEED */
+/* FETCH */
 
 const parser = new XMLParser({ignoreAttributes:false});
 const xml = await (await fetch(FEED_URL)).text();
@@ -36,27 +36,11 @@ let entries = data.feed.entry || [];
 if(!Array.isArray(entries)) entries=[entries];
 
 
-/* ===============================
-UTILITIES
-=============================== */
+/* =====================
+YOUTUBE ENGINE
+===================== */
 
-function slugify(title){
- return title
-   .toLowerCase()
-   .replace(/[^a-z0-9]+/g,"-")
-   .replace(/^-|-$/g,"");
-}
-
-function strip(html){
- return html
-   .replace(/<[^>]+>/g," ")
-   .replace(/\s+/g," ")
-   .trim();
-}
-
-/* YOUTUBE — MANDATORY PRIORITY */
-
-async function getYouTubeThumb(html){
+async function getYouTubeImage(html,slug){
 
  const match =
  html.match(/(?:youtube\.com\/embed\/|watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
@@ -65,48 +49,30 @@ async function getYouTubeThumb(html){
 
  const id = match[1];
 
- const candidates = [
+ const max =
+ `https://img.youtube.com/vi/${id}/maxresdefault.jpg`;
 
-   `https://img.youtube.com/vi/${id}/maxresdefault.jpg`,
-   `https://img.youtube.com/vi/${id}/sddefault.jpg`,
-   `https://img.youtube.com/vi/${id}/hqdefault.jpg`
+ try{
+   const res = await fetch(max,{method:"HEAD"});
+   if(res.ok) return max;
+ }catch{}
 
- ];
 
- for(const img of candidates){
+/* UPSCALE SMALL ONES */
 
-   try{
-     const res = await fetch(img,{method:"HEAD"});
-     if(res.ok) return img;
-   }catch{}
- }
+ const small =
+ `https://img.youtube.com/vi/${id}/hqdefault.jpg`;
+
+ const upscaled = await upscaleToOG(small,slug);
+
+ if(upscaled)
+   return `${SITE_URL}/og-images/${slug}.jpg`;
 
  return null;
 }
 
 
-/* FAQ ENGINE */
-
-function buildFAQ(title){
-
- return [
-   {
-     q:`What is ${title}?`,
-     a:`${title} is a software tool reviewed by ReviewLab using real testing methodology to determine whether it delivers measurable results.`
-   },
-   {
-     q:`Is ${title} worth it?`,
-     a:`If you value automation, efficiency, and scalable results, ${title} may be a strong candidate depending on your workflow needs.`
-   },
-   {
-     q:`Who should use ${title}?`,
-     a:`Marketers, creators, founders, and digital operators looking to increase productivity typically benefit the most.`
-   }
- ];
-}
-
-
-/* BUILD DATABASE */
+/* BUILD */
 
 const posts=[];
 
@@ -116,23 +82,30 @@ for(const entry of entries){
  if(!html) continue;
 
  const title = entry.title["#text"];
- const slug = slugify(title);
+
+ const slug = title
+   .toLowerCase()
+   .replace(/[^a-z0-9]+/g,"-")
+   .replace(/^-|-$/g,"");
 
  const url =
  `${SITE_URL}/posts/${slug}/`;
 
- const description = strip(html).slice(0,155);
+ const description =
+ html.replace(/<[^>]+>/g," ").slice(0,155);
 
 
-/* IMAGE STACK */
+/* IMAGE PRIORITY */
 
- let og = await getYouTubeThumb(html);
+ let og = await getYouTubeImage(html,slug);
 
  if(!og) og = CTA;
  if(!og) og = DEFAULT;
 
  if(!og){
+
    await generateOG(slug,title);
+
    og = `${SITE_URL}/og-images/${slug}.jpg`;
  }
 
@@ -144,115 +117,29 @@ for(const entry of entries){
    url,
    description,
    og,
-   faq:buildFAQ(title),
    date:entry.published
  });
 }
 
 
-/* SORT — NEWEST FIRST */
+/* SORT */
 
 posts.sort((a,b)=> new Date(b.date)-new Date(a.date));
 
 
-
-/* ===============================
-BUILD AUTHORITY PAGES
-=============================== */
+/* BUILD PAGES */
 
 for(const post of posts){
 
  fs.mkdirSync(`posts/${post.slug}`,{recursive:true});
 
-
-/* SEMANTIC RELATED (keyword overlap) */
-
- const keywords = post.title.toLowerCase().split(" ");
-
  const related = posts
    .filter(p=>p.slug!==post.slug)
-   .map(p=>{
-     let score=0;
-     keywords.forEach(k=>{
-       if(p.title.toLowerCase().includes(k)) score++;
-     });
-     return {...p,score};
-   })
-   .sort((a,b)=>b.score-a.score)
    .slice(0,4)
    .map(p=>`<li><a href="${p.url}">${p.title}</a></li>`)
    .join("");
 
-
-/* FAQ SCHEMA */
-
-const faqSchema = {
- "@context":"https://schema.org",
- "@type":"FAQPage",
- mainEntity: post.faq.map(f=>({
-   "@type":"Question",
-   name:f.q,
-   acceptedAnswer:{
-     "@type":"Answer",
-     text:f.a
-   }
- }))
-};
-
-
-/* BREADCRUMB */
-
-const breadcrumb = {
- "@context":"https://schema.org",
- "@type":"BreadcrumbList",
- itemListElement:[
-   {
-     "@type":"ListItem",
-     position:1,
-     name:"Home",
-     item:SITE_URL
-   },
-   {
-     "@type":"ListItem",
-     position:2,
-     name:"Reviews",
-     item:`${SITE_URL}/posts/`
-   },
-   {
-     "@type":"ListItem",
-     position:3,
-     name:post.title,
-     item:post.url
-   }
- ]
-};
-
-
-/* AUTHOR + REVIEW */
-
-const reviewSchema = {
- "@context":"https://schema.org",
- "@type":"Review",
- author:{
-   "@type":"Organization",
-   name:"ReviewLab"
- },
- reviewRating:{
-   "@type":"Rating",
-   ratingValue:"4.8",
-   bestRating:"5"
- },
- itemReviewed:{
-   "@type":"SoftwareApplication",
-   name:post.title
- }
-};
-
-
-
-/* BUILD PAGE */
-
-const page = `<!doctype html>
+ const page = `<!doctype html>
 <html>
 <head>
 
@@ -266,28 +153,17 @@ const page = `<!doctype html>
 <meta property="og:title" content="${post.title}">
 <meta property="og:description" content="${post.description}">
 <meta property="og:image" content="${post.og}">
-<meta property="og:image:secure_url" content="${post.og}">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
 
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="${post.og}">
-
-<script type="application/ld+json">
-${JSON.stringify(reviewSchema)}
-</script>
-
-<script type="application/ld+json">
-${JSON.stringify(faqSchema)}
-</script>
-
-<script type="application/ld+json">
-${JSON.stringify(breadcrumb)}
-</script>
 
 </head>
 
 <body style="max-width:760px;margin:auto;font-family:system-ui;padding:40px;line-height:1.7;">
 
-<a href="${SITE_URL}" style="font-weight:600;">← Home</a>
+<a href="${SITE_URL}">← Home</a>
 
 <h1>${post.title}</h1>
 
@@ -295,16 +171,8 @@ ${post.html}
 
 <hr>
 
-<h2>Frequently Asked Questions</h2>
-
-${post.faq.map(f=>`<p><strong>${f.q}</strong><br>${f.a}</p>`).join("")}
-
-<hr>
-
 <h3>Related Reviews</h3>
-<ul>
-${related}
-</ul>
+<ul>${related}</ul>
 
 </body>
 </html>`;
@@ -313,11 +181,9 @@ ${related}
 }
 
 
-/* DATA FILE */
-
 fs.writeFileSync(
 "_data/posts.json",
 JSON.stringify(posts,null,2)
 );
 
-console.log("✅ AUTHORITY STACK PHASE 7 DEPLOYED");
+console.log("✅ AUTHORITY STACK PHASE 8 LIVE");
