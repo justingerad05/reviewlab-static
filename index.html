@@ -226,11 +226,13 @@ Join smart readers staying ahead of AI.
 
 </section>
 
-
 <ul class="post-list">
 {% for post in posts %}
 <li>
-<a href="{{ post.url }}">{{ post.title }}</a><br>
+<a href="{{ post.url }}">
+<img src="{{ post.thumb }}" alt="{{ post.title }}" width="120" style="vertical-align:middle;margin-right:10px;">
+{{ post.title }}
+</a><br>
 <small>Published {{ post.date | date: "%B %d, %Y" }}</small>
 </li>
 {% endfor %}
