@@ -8,12 +8,12 @@ const OG_FOLDER = "./og-images";
 const SITE_URL = "https://justingerad05.github.io/reviewlab-static";
 const FALLBACK_IMAGE = `${SITE_URL}/og-default.jpg`;
 
-/* ===== ENSURE FOLDER ===== */
+/* ===== ENSURE OG FOLDER ===== */
 if (!fs.existsSync(OG_FOLDER)) {
   fs.mkdirSync(OG_FOLDER, { recursive: true });
 }
 
-/* ===== SAFE FONT LOAD ===== */
+/* ===== FONT LOAD ===== */
 let fontData;
 try {
   fontData = fs.readFileSync("./fonts/Inter-Regular.ttf");
@@ -32,10 +32,10 @@ export async function generateOG(slug, title, thumbnail = null) {
     const width = 1200;
     const height = 630;
 
-    // Decide which image to use: thumbnail or fallback
+    // Decide background image: thumbnail or fallback
     const bgImage = thumbnail || FALLBACK_IMAGE;
 
-    // Create SVG content with Satori
+    // Satori SVG
     const svg = await satori(
       {
         type: "div",
@@ -55,66 +55,36 @@ export async function generateOG(slug, title, thumbnail = null) {
             {
               type: "div",
               props: {
-                style: {
-                  fontSize: 44,
-                  fontWeight: 700,
-                  color: "#38bdf8"
-                },
+                style: { fontSize: 44, fontWeight: 700, color: "#38bdf8" },
                 children: "REVIEWLAB VERIFIED"
               }
             },
             {
               type: "div",
               props: {
-                style: {
-                  fontSize: 68,
-                  fontWeight: 800,
-                  lineHeight: 1.1,
-                  color: "#ffffff"
-                },
+                style: { fontSize: 68, fontWeight: 800, lineHeight: 1.1 },
                 children: cleanTitle(title)
               }
             },
             {
               type: "div",
               props: {
-                style: {
-                  fontSize: 30,
-                  color: "#22c55e"
-                },
+                style: { fontSize: 30, color: "#22c55e" },
                 children: "Real Test • Real Verdict • No Hype"
               }
             },
             {
               type: "div",
               props: {
-                style: {
-                  display: "flex",
-                  justifyContent: "flex-start",
-                  alignItems: "center",
-                  gap: "20px"
-                },
+                style: { display: "flex", justifyContent: "flex-start", alignItems: "center", gap: "20px" },
                 children: [
                   {
                     type: "div",
-                    props: {
-                      style: {
-                        fontSize: 28,
-                        fontWeight: 700,
-                        color: "#facc15"
-                      },
-                      children: "★★★★★"
-                    }
+                    props: { style: { fontSize: 28, fontWeight: 700, color: "#facc15" }, children: "★★★★★" }
                   },
                   {
                     type: "div",
-                    props: {
-                      style: {
-                        fontSize: 24,
-                        color: "#ffffff"
-                      },
-                      children: "Elite OG Review"
-                    }
+                    props: { style: { fontSize: 24, color: "#ffffff" }, children: "Elite OG Review" }
                   }
                 ]
               }
@@ -125,24 +95,14 @@ export async function generateOG(slug, title, thumbnail = null) {
       {
         width,
         height,
-        fonts: fontData
-          ? [
-              {
-                name: "Inter",
-                data: fontData,
-                weight: 400,
-                style: "normal"
-              }
-            ]
-          : []
+        fonts: fontData ? [{ name: "Inter", data: fontData, weight: 400, style: "normal" }] : []
       }
     );
 
-    // Render SVG to PNG using Resvg
+    // Render PNG
     const resvg = new Resvg(svg, { fitTo: { mode: "width", value: width } });
     const pngBuffer = resvg.render().asPng();
 
-    // Write OG image into /og-images
     const ogPath = `${OG_FOLDER}/${slug}.png`;
     fs.writeFileSync(ogPath, pngBuffer);
 
