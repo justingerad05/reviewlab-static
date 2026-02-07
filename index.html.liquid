@@ -1,193 +1,91 @@
 ---
 layout: null
+permalink: /
 ---
 
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>ReviewLab – Honest AI Tool Reviews</title>
+<title>ReviewLab | Trusted AI Software Reviews</title>
+<meta name="description" content="Trusted AI software reviews, tutorials, and automation insights.">
 
-<meta name="description"
-content="ReviewLab publishes deeply tested AI software reviews, real verdicts, and zero-hype product analysis.">
+<link rel="canonical" href="https://justingerad05.github.io/reviewlab-static/">
 
-<meta name="viewport"
-content="width=device-width, initial-scale=1">
-
-<link rel="canonical"
-href="https://justingerad05.github.io/reviewlab-static/">
-
-
-<!-- =========================
-     🔥 HOMEPAGE OG (CRITICAL)
-========================= -->
-
+<!-- Default OG (fallback for homepage) -->
+<meta property="og:title" content="ReviewLab | Trusted AI Software Reviews">
+<meta property="og:description" content="Discover trusted AI tools and automation platforms.">
 <meta property="og:type" content="website">
-<meta property="og:title" content="ReviewLab – Honest AI Tool Reviews">
-<meta property="og:description"
-content="Real testing. No hype. Just software that actually delivers.">
-
-<meta property="og:url"
-content="https://justingerad05.github.io/reviewlab-static/">
-
-<meta property="og:image"
-content="https://justingerad05.github.io/reviewlab-static/og-default.jpg">
-
-<meta property="og:image:secure_url"
-content="https://justingerad05.github.io/reviewlab-static/og-default.jpg">
-
-<meta property="og:image:width" content="1200">
-<meta property="og:image:height" content="630">
-
+<meta property="og:url" content="https://justingerad05.github.io/reviewlab-static/">
+<meta property="og:image" content="https://justingerad05.github.io/reviewlab-static/og-default.jpg">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image"
-content="https://justingerad05.github.io/reviewlab-static/og-default.jpg">
-
-
-<!-- =========================
-     🔥 ORGANIZATION AUTHORITY
-========================= -->
-
-<script type="application/ld+json">
-{
-"@context":"https://schema.org",
-"@type":"Organization",
-"name":"ReviewLab",
-"url":"https://justingerad05.github.io/reviewlab-static/",
-"logo":"https://justingerad05.github.io/reviewlab-static/og-default.jpg"
-}
-</script>
-
-
-<!-- =========================
-     🔥 WEBSITE + SEARCH BOX
-========================= -->
-
-<script type="application/ld+json">
-{
-"@context":"https://schema.org",
-"@type":"WebSite",
-"url":"https://justingerad05.github.io/reviewlab-static/",
-"name":"ReviewLab",
-"potentialAction":{
- "@type":"SearchAction",
- "target":"https://justingerad05.github.io/reviewlab-static/?q={search_term_string}",
- "query-input":"required name=search_term_string"
-}
-}
-</script>
-
 
 <style>
 
 body{
-  margin:0;
-  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Inter,sans-serif;
-  background:#020617;
-  color:#e5e7eb;
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto;
+    background:#0d1117;
+    color:white;
+    margin:0;
 }
 
 .container{
-  max-width:900px;
-  margin:auto;
-  padding:40px 20px;
+    max-width:1100px;
+    margin:auto;
+    padding:24px;
+}
+
+header{
+    text-align:center;
+    margin-bottom:50px;
 }
 
 h1{
-  font-size:42px;
-  margin-bottom:10px;
+    font-size:38px;
+    margin-bottom:6px;
 }
 
-.sub{
-  color:#94a3b8;
-  margin-bottom:40px;
+.grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+    gap:28px;
 }
 
-.post-list{
-  list-style:none;
-  padding:0;
+.card{
+    background:#161b22;
+    border-radius:14px;
+    overflow:hidden;
+    text-decoration:none;
+    color:white;
+    transition:.25s;
 }
 
-.post-list li{
-  margin-bottom:22px;
+.card:hover{
+    transform:translateY(-6px);
 }
 
-.post-list a{
-  color:#38bdf8;
-  text-decoration:none;
-  font-weight:600;
-  font-size:20px;
+/* IMPORTANT — makes touch work */
+.card{
+    cursor:pointer;
+    touch-action:manipulation;
 }
 
-.post-list a:hover{
-  text-decoration:underline;
+.thumb{
+    width:100%;
+    aspect-ratio:1200/630;
+    object-fit:cover;
+    display:block;
 }
 
-/* Lazy load and hover preview */
-.lazy { opacity:0; transition: opacity 0.3s; }
-.lazy.loaded { opacity:1; }
-.hover-preview {
-  position:absolute;
-  display:none;
-  max-width:300px;
-  border:2px solid #ccc;
-  z-index:1000;
-  pointer-events:none;
+.content{
+    padding:18px;
 }
 
-/* AUTHORITY EMAIL BLOCK */
-.email-capture{
-  margin:70px 0;
-  padding:38px;
-  border-radius:18px;
-  background:linear-gradient(145deg,#020617,#07122a);
-  border:1px solid #1e293b;
-  box-shadow:0 10px 40px rgba(0,0,0,.45);
-  text-align:center;
-}
-
-.email-capture h3{
-  font-size:28px;
-  margin-bottom:10px;
-}
-
-.email-capture p{
-  color:#94a3b8;
-  margin-bottom:22px;
-}
-
-.form-row{
-  display:flex;
-  gap:10px;
-  flex-wrap:wrap;
-  justify-content:center;
-}
-
-.email-capture input{
-  padding:14px;
-  border-radius:10px;
-  border:1px solid #334155;
-  background:#020617;
-  color:white;
-  min-width:260px;
-  font-size:16px;
-}
-
-.email-capture button{
-  padding:14px 20px;
-  border-radius:10px;
-  border:none;
-  font-weight:700;
-  cursor:pointer;
-  background:#22c55e;
-  color:#020617;
-}
-
-.trust{
-  margin-top:12px;
-  font-size:13px;
-  color:#64748b;
+.date{
+    opacity:.7;
+    font-size:14px;
 }
 
 </style>
@@ -197,97 +95,56 @@ h1{
 
 <div class="container">
 
-<h1>Latest AI Tool Reviews & Honest Software Analysis</h1>
-<p class="sub">Real testing. No hype. Just software that actually delivers.</p>
+<header>
+<h1>ReviewLab</h1>
+<p>Trusted AI Software Reviews</p>
+</header>
 
+<div class="grid">
 
-<section class="email-capture">
+{% for post in collections.posts reversed %}
 
-<h3>Get Honest AI Tool Reviews</h3>
-<p>No fluff. No sponsored bias. Only tools worth your time.</p>
+{% assign yt = post.data.youtube %}
+{% assign thumb = "" %}
 
-<form 
-action="https://docs.google.com/forms/d/e/1FAIpQLSchzs0bE9se3YCR2TTiFl3Ohi0nbx0XPBjvK_dbANuI_eI1Aw/formResponse"
-method="POST"
-target="_blank"
->
+{% if yt %}
+    {% assign thumb = "https://img.youtube.com/vi/" | append: yt | append: "/maxresdefault.jpg" %}
+{% endif %}
 
-<div class="form-row">
+{% if thumb == "" %}
+    {% assign thumb = "/og-cta-tested.jpg" %}
+{% endif %}
 
-<input
-type="email"
-name="entry.364499249"
-placeholder="Enter your email address"
-required
->
+<a href="{{ post.url }}" class="card">
 
-<button type="submit">
-Get Free Reviews
-</button>
+<img
+class="thumb"
+loading="lazy"
+src="{{ thumb }}"
+onerror="this.onerror=null;
+this.src='https://img.youtube.com/vi/{{ yt }}/hqdefault.jpg';
+if(!this.complete || this.naturalWidth===0){
+this.src='https://img.youtube.com/vi/{{ yt }}/sddefault.jpg';
+}
+if(!this.complete || this.naturalWidth===0){
+this.src='/og-cta-tested.jpg';
+}">
+    
+<div class="content">
+<h2>{{ post.data.title }}</h2>
 
+<div class="date">
+{{ post.date | date: "%B %d, %Y" }}
 </div>
 
-<div class="trust">
-Join smart readers staying ahead of AI.
+<p>{{ post.data.description }}</p>
+
 </div>
+</a>
 
-</form>
-
-</section>
-
-<ul class="post-list">
-{% for post in posts %}
-<li>
-<a href="{{ post.url }}" title="Read for ~{{ post.readTime }} min">
-<img data-src="{{ post.thumb }}" alt="{{ post.title }}" width="120" class="lazy" style="vertical-align:middle;margin-right:10px;">
-{{ post.title }} (~{{ post.readTime }} min)
-</a><br>
-<small>Published {{ post.date | date: "%B %d, %Y" }}</small>
-</li>
 {% endfor %}
-</ul>
 
-<img id="hoverPreview" class="hover-preview" />
-
-<script>
-// Lazy-load images
-document.addEventListener("DOMContentLoaded", function(){
-  const lazyImgs = document.querySelectorAll(".lazy");
-  const io = new IntersectionObserver(entries => {
-    entries.forEach(entry => {
-      if(entry.isIntersecting){
-        const img = entry.target;
-        img.src = img.dataset.src;
-        img.onload = ()=>img.classList.add("loaded");
-        io.unobserve(img);
-      }
-    });
-  });
-  lazyImgs.forEach(img => io.observe(img));
-});
-
-// Hover preview
-const hoverImg = document.getElementById("hoverPreview");
-document.querySelectorAll("ul.post-list li a").forEach(a => {
-  a.addEventListener("mouseover", e=>{
-    const img = a.querySelector("img");
-    if(img){
-      hoverImg.src = img.dataset.src;
-      hoverImg.style.display = "block";
-      hoverImg.style.top = e.pageY + "px";
-      hoverImg.style.left = e.pageX + "px";
-    }
-  });
-  a.addEventListener("mousemove", e=>{
-    hoverImg.style.top = e.pageY + "px";
-    hoverImg.style.left = e.pageX + "px";
-  });
-  a.addEventListener("mouseout", ()=>{
-    hoverImg.style.display = "none";
-  });
-});
-</script>
-
+</div>
 </div>
 
 </body>
