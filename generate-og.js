@@ -1,41 +1,49 @@
-// generate-og.js
 import fs from "fs";
 import satori from "satori";
 import { Resvg } from "@resvg/resvg-js";
 
 /* ===== CONFIG ===== */
+
 const OG_FOLDER = "./og-images";
 const SITE_URL = "https://justingerad05.github.io/reviewlab-static";
-const FALLBACK_IMAGE = `${SITE_URL}/og-default.jpg`;
 
 /* ===== ENSURE OG FOLDER ===== */
+
 if (!fs.existsSync(OG_FOLDER)) {
   fs.mkdirSync(OG_FOLDER, { recursive: true });
 }
 
 /* ===== FONT LOAD ===== */
+
 let fontData;
 try {
   fontData = fs.readFileSync("./fonts/Inter-Regular.ttf");
 } catch {
-  console.log("⚠️ Font missing — OG fallback activated");
+  console.log("⚠️ Font missing — using system font");
 }
 
 /* ===== CLEAN TITLE ===== */
+
 function cleanTitle(title) {
-  return title.replace(/\|.*$/,"").slice(0,85);
+  return title
+    .replace(/\|.*$/,"")
+    .replace(/review/gi,"")
+    .slice(0,60);
 }
 
-/* ===== ELITE OG GENERATOR ===== */
-export async function generateOG(slug, title, thumbnail = null) {
+/* ===== ELITE OG GENERATOR (FACEBOOK SAFE) ===== */
+
+export async function generateOG(slug, title) {
+
   try {
+
     const width = 1200;
     const height = 630;
 
-    // Decide background image: thumbnail or fallback
-    const bgImage = thumbnail || FALLBACK_IMAGE;
+    /* PURE SVG — NO EXTERNAL IMAGES
+       External backgrounds are the #1 reason OG fails.
+    */
 
-    // Satori SVG
     const svg = await satori(
       {
         type: "div",
@@ -46,70 +54,98 @@ export async function generateOG(slug, title, thumbnail = null) {
             display: "flex",
             flexDirection: "column",
             justifyContent: "space-between",
-            background: `url(${bgImage}) center/cover no-repeat`,
             padding: "70px",
+            background: "linear-gradient(135deg,#020617,#0f172a,#020617)",
             color: "#ffffff",
-            fontFamily: "Inter, sans-serif"
+            fontFamily: "Inter"
           },
           children: [
+
+            /* TOP STRIP */
             {
               type: "div",
               props: {
-                style: { fontSize: 44, fontWeight: 700, color: "#38bdf8" },
-                children: "REVIEWLAB VERIFIED"
+                style:{
+                  fontSize:36,
+                  fontWeight:700,
+                  color:"#38bdf8"
+                },
+                children:"REVIEWLAB VERIFIED"
               }
             },
+
+            /* HEADLINE */
             {
-              type: "div",
-              props: {
-                style: { fontSize: 68, fontWeight: 800, lineHeight: 1.1 },
-                children: cleanTitle(title)
+              type:"div",
+              props:{
+                style:{
+                  fontSize:72,
+                  fontWeight:800,
+                  lineHeight:1.05
+                },
+                children:cleanTitle(title)
               }
             },
+
+            /* CTA BOX */
             {
-              type: "div",
-              props: {
-                style: { fontSize: 30, color: "#22c55e" },
-                children: "Real Test • Real Verdict • No Hype"
+              type:"div",
+              props:{
+                style:{
+                  background:"#22c55e",
+                  color:"#020617",
+                  padding:"18px 28px",
+                  borderRadius:"14px",
+                  fontSize:34,
+                  fontWeight:800,
+                  width:"fit-content"
+                },
+                children:"SEE FULL REVIEW →"
               }
             },
+
+            /* TRUST STRIP */
             {
-              type: "div",
-              props: {
-                style: { display: "flex", justifyContent: "flex-start", alignItems: "center", gap: "20px" },
-                children: [
-                  {
-                    type: "div",
-                    props: { style: { fontSize: 28, fontWeight: 700, color: "#facc15" }, children: "★★★★★" }
-                  },
-                  {
-                    type: "div",
-                    props: { style: { fontSize: 24, color: "#ffffff" }, children: "Elite OG Review" }
-                  }
-                ]
+              type:"div",
+              props:{
+                style:{
+                  fontSize:26,
+                  color:"#cbd5e1"
+                },
+                children:"Real Testing • No Hype • Expert Verdict"
               }
             }
+
           ]
         }
       },
       {
         width,
         height,
-        fonts: fontData ? [{ name: "Inter", data: fontData, weight: 400, style: "normal" }] : []
+        fonts: fontData
+          ? [{ name:"Inter", data:fontData, weight:400, style:"normal"}]
+          : []
       }
     );
 
-    // Render PNG
-    const resvg = new Resvg(svg, { fitTo: { mode: "width", value: width } });
+    const resvg = new Resvg(svg, {
+      fitTo:{ mode:"width", value:width }
+    });
+
     const pngBuffer = resvg.render().asPng();
 
-    const ogPath = `${OG_FOLDER}/${slug}.png`;
-    fs.writeFileSync(ogPath, pngBuffer);
+    const filePath = `${OG_FOLDER}/${slug}.png`;
+
+    fs.writeFileSync(filePath, pngBuffer);
 
     console.log("✅ ELITE OG CREATED:", slug);
+
     return `${SITE_URL}/og-images/${slug}.png`;
-  } catch (err) {
-    console.error("❌ ELITE OG FAILED:", slug, err);
-    return FALLBACK_IMAGE;
+
+  } catch(err) {
+
+    console.error("❌ OG FAILED:", err);
+
+    return `${SITE_URL}/og-default.jpg`;
   }
 }
