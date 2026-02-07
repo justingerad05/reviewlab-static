@@ -36,11 +36,11 @@ let entries = data.feed.entry || [];
 if(!Array.isArray(entries)) entries=[entries];
 
 
-/* =============================
-   PHASE 11 — OG NORMALIZER
-============================= */
+/* =====================
+   ELITE YOUTUBE ENGINE
+===================== */
 
-async function normalizeYouTubeOG(html,slug){
+async function getYouTubeImages(html,slug){
 
  const match =
  html.match(/(?:youtube\.com\/embed\/|watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
@@ -56,33 +56,31 @@ async function normalizeYouTubeOG(html,slug){
    `https://img.youtube.com/vi/${id}/mqdefault.jpg`
  ];
 
- let chosen=null;
+ const valid=[];
 
  for(const img of candidates){
    try{
      const res = await fetch(img,{method:"HEAD"});
-     if(res.ok){
-       chosen=img;
-       break;
-     }
+     if(res.ok) valid.push(img);
    }catch{}
  }
 
- if(!chosen) return null;
+ if(valid.length===0){
 
+   // last resort — upscale hq
+   const upscaled = await upscaleToOG(
+     `https://img.youtube.com/vi/${id}/hqdefault.jpg`,
+     slug
+   );
 
-/* =============================
-   FORCE 1200x630 GENERATION
-   (THIS FIXES YOUR WARNING)
-============================= */
+   if(upscaled){
+     return [`${SITE_URL}/og-images/${slug}.jpg`];
+   }
 
- const upscaled = await upscaleToOG(chosen,slug);
-
- if(upscaled){
-   return `${SITE_URL}/og-images/${slug}.jpg`;
+   return null;
  }
 
- return null;
+ return valid;
 }
 
 
@@ -111,33 +109,29 @@ for(const entry of entries){
 
 /* IMAGE PRIORITY */
 
- let og = await normalizeYouTubeOG(html,slug);
+ let ogImages = await getYouTubeImages(html,slug);
 
- if(!og){
-   og = CTA;
- }
+ if(!ogImages) ogImages=[CTA];
+ if(!ogImages) ogImages=[DEFAULT];
 
- if(!og){
-   og = DEFAULT;
- }
-
- if(!og){
+ if(!ogImages){
 
    await generateOG(slug,title);
 
-   og = `${SITE_URL}/og-images/${slug}.jpg`;
+   ogImages=[`${SITE_URL}/og-images/${slug}.jpg`];
  }
 
+ const primaryOG = ogImages[0];
 
-/* PERFECT OG TAG */
 
- const ogMeta = `
-<meta property="og:image" content="${og}">
-<meta property="og:image:secure_url" content="${og}">
+/* BUILD MULTI OG TAGS */
+
+ const ogMeta = ogImages.map(img=>`
+<meta property="og:image" content="${img}">
+<meta property="og:image:secure_url" content="${img}">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
-<meta property="og:image:type" content="image/jpeg">
-`;
+`).join("");
 
 
  posts.push({
@@ -146,7 +140,7 @@ for(const entry of entries){
    html,
    url,
    description,
-   og,
+   og:primaryOG,
    ogMeta,
    date:entry.published
  });
@@ -216,4 +210,4 @@ fs.writeFileSync(
 JSON.stringify(posts,null,2)
 );
 
-console.log("✅ PHASE 11 — OG NORMALIZATION ENGINE ACTIVE");
+console.log("✅ AUTHORITY STACK PHASE 10 — OG ENGINE PERFECTED");
