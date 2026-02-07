@@ -100,7 +100,10 @@ export async function generateOG(slug,title){
   }catch(err){
 
     console.log("❌ OG FAILED:", slug, err);
-    fs.copyFileSync("og-default.jpg", `og-images/${slug}.jpg`);
 
+    fs.copyFileSync(
+      "og-default.jpg",
+      `og-images/${slug}.jpg`
+    );
   }
 }
