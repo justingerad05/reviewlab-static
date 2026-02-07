@@ -36,21 +36,11 @@ let entries = data.feed.entry || [];
 if(!Array.isArray(entries)) entries=[entries];
 
 
-/* ===================================================
-   PHASE 10 — ELITE YOUTUBE THUMBNAIL ENGINE
-   (ZERO ARCHITECTURE CHANGE)
-=================================================== */
+/* =====================
+   ELITE YOUTUBE ENGINE
+===================== */
 
-async function urlWorks(url){
- try{
-   const res = await fetch(url,{method:"HEAD"});
-   return res.ok;
- }catch{
-   return false;
- }
-}
-
-async function getYouTubeImage(html,slug){
+async function getYouTubeImages(html,slug){
 
  const match =
  html.match(/(?:youtube\.com\/embed\/|watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
@@ -59,55 +49,38 @@ async function getYouTubeImage(html,slug){
 
  const id = match[1];
 
- /* ALL FOUR — ORDER MATTERS */
-
  const candidates = [
-
-   {
-     url:`https://img.youtube.com/vi/${id}/maxresdefault.jpg`,
-     large:true
-   },
-
-   {
-     url:`https://img.youtube.com/vi/${id}/sddefault.jpg`,
-     large:true
-   },
-
-   {
-     url:`https://img.youtube.com/vi/${id}/hqdefault.jpg`,
-     large:false
-   },
-
-   {
-     url:`https://img.youtube.com/vi/${id}/mqdefault.jpg`,
-     large:false
-   }
-
+   `https://img.youtube.com/vi/${id}/maxresdefault.jpg`,
+   `https://img.youtube.com/vi/${id}/sddefault.jpg`,
+   `https://img.youtube.com/vi/${id}/hqdefault.jpg`,
+   `https://img.youtube.com/vi/${id}/mqdefault.jpg`
  ];
 
+ const valid=[];
 
  for(const img of candidates){
-
-   if(await urlWorks(img.url)){
-
-     /* LARGE → use immediately */
-
-     if(img.large){
-       return img.url;
-     }
-
-     /* SMALL → upscale to 1200×630 */
-
-     const upscaled =
-     await upscaleToOG(img.url,slug);
-
-     if(upscaled){
-       return `${SITE_URL}/og-images/${slug}.jpg`;
-     }
-   }
+   try{
+     const res = await fetch(img,{method:"HEAD"});
+     if(res.ok) valid.push(img);
+   }catch{}
  }
 
- return null;
+ if(valid.length===0){
+
+   // last resort — upscale hq
+   const upscaled = await upscaleToOG(
+     `https://img.youtube.com/vi/${id}/hqdefault.jpg`,
+     slug
+   );
+
+   if(upscaled){
+     return [`${SITE_URL}/og-images/${slug}.jpg`];
+   }
+
+   return null;
+ }
+
+ return valid;
 }
 
 
@@ -134,23 +107,31 @@ for(const entry of entries){
  html.replace(/<[^>]+>/g," ").slice(0,155);
 
 
-/* =========================
-   IMAGE PRIORITY (LOCKED)
-========================= */
+/* IMAGE PRIORITY */
 
- let og = await getYouTubeImage(html,slug);
+ let ogImages = await getYouTubeImages(html,slug);
 
-/* NEVER skip YouTube */
+ if(!ogImages) ogImages=[CTA];
+ if(!ogImages) ogImages=[DEFAULT];
 
- if(!og) og = CTA;
- if(!og) og = DEFAULT;
-
- if(!og){
+ if(!ogImages){
 
    await generateOG(slug,title);
 
-   og = `${SITE_URL}/og-images/${slug}.jpg`;
+   ogImages=[`${SITE_URL}/og-images/${slug}.jpg`];
  }
+
+ const primaryOG = ogImages[0];
+
+
+/* BUILD MULTI OG TAGS */
+
+ const ogMeta = ogImages.map(img=>`
+<meta property="og:image" content="${img}">
+<meta property="og:image:secure_url" content="${img}">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+`).join("");
 
 
  posts.push({
@@ -159,7 +140,8 @@ for(const entry of entries){
    html,
    url,
    description,
-   og,
+   og:primaryOG,
+   ogMeta,
    date:entry.published
  });
 }
@@ -170,7 +152,7 @@ for(const entry of entries){
 posts.sort((a,b)=> new Date(b.date)-new Date(a.date));
 
 
-/* BUILD PAGES — UNTOUCHED */
+/* BUILD PAGES */
 
 for(const post of posts){
 
@@ -179,7 +161,7 @@ for(const post of posts){
  const related = posts
    .filter(p=>p.slug!==post.slug)
    .slice(0,4)
-   .map(p=>`<li><a href="${post.url}">${p.title}</a></li>`)
+   .map(p=>`<li><a href="${p.url}">${p.title}</a></li>`)
    .join("");
 
  const page = `<!doctype html>
@@ -195,9 +177,8 @@ for(const post of posts){
 <meta property="og:type" content="article">
 <meta property="og:title" content="${post.title}">
 <meta property="og:description" content="${post.description}">
-<meta property="og:image" content="${post.og}">
-<meta property="og:image:width" content="1200">
-<meta property="og:image:height" content="630">
+
+${post.ogMeta}
 
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="${post.og}">
@@ -229,4 +210,4 @@ fs.writeFileSync(
 JSON.stringify(posts,null,2)
 );
 
-console.log("✅ AUTHORITY STACK PHASE 10 LIVE");
+console.log("✅ AUTHORITY STACK PHASE 10 — OG ENGINE PERFECTED");
