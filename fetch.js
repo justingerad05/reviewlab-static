@@ -127,7 +127,7 @@ for(const post of posts){
 <meta property="og:type" content="article">
 <meta property="og:title" content="${post.title}">
 <meta property="og:description" content="${description}">
-<meta property="og:image" content="${post.og}">
+<meta property="og:image" content="${image}">
 <meta property="og:url" content="${post.url}">
 <meta property="og:site_name" content="ReviewLab">
 
@@ -135,7 +135,11 @@ for(const post of posts){
 <meta name="twitter:image" content="${post.og}">
 
 </head>
-<body>
+<body style="max-width:760px;margin:auto;font-family:system-ui;padding:40px;line-height:1.7;">
+
+<a href="${SITE_URL}" style="text-decoration:none;font-weight:700;">
+← Back To Homepage
+</a>
 
 <h1>${post.title}</h1>
 
