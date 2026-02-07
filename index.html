@@ -1,88 +1,65 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>ReviewLab Authority Hub</title>
-<meta name="description" content="Expert AI software reviews, launches, and automation strategies.">
-
-<!-- GLOBAL OG (for homepage sharing) -->
-<meta property="og:title" content="ReviewLab Authority Hub">
-<meta property="og:description" content="Trusted AI software reviews and launch breakdowns.">
-<meta property="og:type" content="website">
-<meta property="og:image" content="https://justingerad05.github.io/reviewlab-static/og-default.jpg">
+<title>ReviewLab — Trusted AI Software Reviews</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
 <link rel="stylesheet" href="styles.css">
+
+<meta property="og:title" content="ReviewLab — Trusted AI Software Reviews">
+<meta property="og:description" content="Expert reviews of the best AI tools for marketers and entrepreneurs.">
+<meta property="og:image" content="https://justingerad05.github.io/reviewlab-static/og-default.jpg">
+<meta property="og:type" content="website">
+
 </head>
 
 <body>
 
-<header class="authority-header">
+<header>
 <h1>ReviewLab</h1>
 <p>Trusted AI Software Reviews</p>
 </header>
 
-<main id="posts" class="post-grid"></main>
+<div class="container" id="posts"></div>
 
 <script>
-const fallbackImages = [
-"https://justingerad05.github.io/reviewlab-static/og-default.jpg",
-"https://justingerad05.github.io/reviewlab-static/og-cta-tested.jpg"
-];
 
-function getYoutubeId(url){
-const reg = /(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&]+)/;
-return url?.match(reg)?.[1] || null;
-}
+async function loadPosts(){
 
-function getThumbnail(post){
+const res = await fetch('posts.json');
+const posts = await res.json();
 
-const id = getYoutubeId(post.youtube);
+let html = '';
 
-if(id){
-return [
-`https://img.youtube.com/vi/${id}/maxresdefault.jpg`,
-`https://img.youtube.com/vi/${id}/sddefault.jpg`,
-`https://img.youtube.com/vi/${id}/hqdefault.jpg`
-];
-}
+posts.forEach(post => {
 
-return fallbackImages;
-}
+let image = post.youtube 
+? post.youtube
+: "https://justingerad05.github.io/reviewlab-static/og-cta-tested.jpg";
 
-fetch('./posts.json')
-.then(res=>res.json())
-.then(posts=>{
+html += `
+<a href="post.html?slug=${post.slug}">
+<div class="card">
 
-const container=document.getElementById('posts');
+<img src="${image}">
 
-posts.forEach(post=>{
-
-const images=getThumbnail(post);
-
-const card=document.createElement('a');
-card.href=`post.html?slug=${post.slug}`;
-card.className="card";
-
-card.innerHTML=`
-<img src="${images[0]}" 
-onerror="this.onerror=null;this.src='${images[1] || fallbackImages[0]}'; 
-if(this.src.includes('sddefault')) this.src='${images[2] || fallbackImages[0]}'; 
-if(this.src.includes('hqdefault')) this.src='${fallbackImages[0]}';"
->
-
-<div class="card-content">
 <h2>${post.title}</h2>
+
 <p>${post.excerpt}</p>
+
 </div>
+</a>
 `;
 
-container.appendChild(card);
-
 });
 
-});
+document.getElementById('posts').innerHTML = html;
+
+}
+
+loadPosts();
+
 </script>
 
 </body>
