@@ -100,6 +100,7 @@ for(const entry of entries){
 
      `https://img.youtube.com/vi/${videoID}/maxresdefault.jpg`,
      `https://img.youtube.com/vi/${videoID}/sddefault.jpg`
+     `https://img.youtube.com/vi/${videoID}/hqdefault.jpg`
 
    ];
 
