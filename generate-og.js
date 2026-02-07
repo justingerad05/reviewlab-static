@@ -24,91 +24,82 @@ function cleanTitle(title){
 
 async function generateOG(slug,title){
 
-  try{
+  const width = 1200;
+  const height = 630;
 
-    const width = 1200;
-    const height = 630;
+  const svg = await satori({
+    type:"div",
+    props:{
+      style:{
+        width,
+        height,
+        display:"flex",
+        flexDirection:"column",
+        justifyContent:"space-between",
+        background:"#020617",
+        padding:"70px",
+        color:"#ffffff"
+      },
+      children:[
 
-    const svg = await satori({
-      type:"div",
-      props:{
-        style:{
-          width,
-          height,
-          display:"flex",
-          flexDirection:"column",
-          justifyContent:"space-between",
-          background:"#020617",
-          padding:"70px",
-          color:"#ffffff"
-        },
-        children:[
-
-          {
-            type:"div",
-            props:{
-              style:{
-                fontSize:44,
-                fontWeight:700,
-                color:"#38bdf8"
-              },
-              children:"REVIEWLAB VERIFIED"
-            }
-          },
-
-          {
-            type:"div",
-            props:{
-              style:{
-                fontSize:68,
-                fontWeight:800,
-                lineHeight:1.1
-              },
-              children:cleanTitle(title)
-            }
-          },
-
-          {
-            type:"div",
-            props:{
-              style:{
-                fontSize:30,
-                color:"#22c55e"
-              },
-              children:"Real Test • Real Verdict • No Hype"
-            }
+        {
+          type:"div",
+          props:{
+            style:{
+              fontSize:44,
+              fontWeight:700,
+              color:"#38bdf8"
+            },
+            children:"REVIEWLAB VERIFIED"
           }
+        },
 
-        ]
-      }
-    },
-    {
-      width,
-      height,
-      fonts: fontData ? [{
-        name:"Inter",
-        data:fontData,
-        weight:400,
-        style:"normal"
-      }] : []
-    });
+        {
+          type:"div",
+          props:{
+            style:{
+              fontSize:68,
+              fontWeight:800,
+              lineHeight:1.1
+            },
+            children:cleanTitle(title)
+          }
+        },
 
-    const resvg = new Resvg(svg);
+        {
+          type:"div",
+          props:{
+            style:{
+              fontSize:30,
+              color:"#22c55e"
+            },
+            children:"Real Test • Real Verdict • No Hype"
+          }
+        }
 
-    const image = resvg.render();
+      ]
+    }
+  },
+  {
+    width,
+    height,
+    fonts: fontData ? [{
+      name:"Inter",
+      data:fontData,
+      weight:400,
+      style:"normal"
+    }] : []
+  });
 
-    /* ✅ FORCE FULL BUFFER (fixes 206 error) */
-    const jpgBuffer = image.asJpeg(95);
+  const resvg = new Resvg(svg);
 
-    fs.writeFileSync(`./og-images/${slug}.jpg`, jpgBuffer);
+  const image = resvg.render();
 
-    console.log("✅ OG CREATED:", slug);
+  const jpgBuffer = image.asJpeg(95);
 
-  }catch(err){
+  fs.writeFileSync(`./og-images/${slug}.jpg`, jpgBuffer);
 
-    console.log("❌ OG FAILED:", slug, err);
-
-  }
+  console.log("✅ OG CREATED:", slug);
 }
 
-module.exports = generateOG;
+module.exports = generateOG; // ✅ critical
