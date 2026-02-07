@@ -154,19 +154,38 @@ const readTime = Math.max(1, Math.ceil(wordCount / 200));
    "description": description
  };
 
- posts.push({
+ function detectTopic(title){
+
+ title = title.toLowerCase();
+
+ if(title.includes("website"))
+   return "AI Website Builders";
+
+ if(title.includes("copy") || title.includes("writer"))
+   return "AI Copywriting";
+
+ if(title.includes("video"))
+   return "AI Video Tools";
+
+ if(title.includes("image") || title.includes("art"))
+   return "AI Image Generators";
+
+ return "AI Tools";
+}
+
+const topic = detectTopic(title);
+
+posts.push({
    title,
    slug,
    html,
    url,
    description,
    og:primaryOG,
-   thumb,
    ogMeta,
-   schema: JSON.stringify(schema),
-   readTime,
+   topic,
    date:entry.published
- });
+});
 }
 
 /* SORT */
@@ -180,12 +199,12 @@ for(const post of posts){
  fs.mkdirSync(`posts/${post.slug}`,{recursive:true});
 
  const related = posts
-   .filter(p=>p.slug!==post.slug)
-   .slice(0,4)
+.filter(p=>p.slug!==post.slug && p.topic===post.topic)
+.slice(0,4)
    .map(p=>`
 <li>
 <a href="${p.url}" title="Read for ~${p.readTime} min">
-<img data-src="${p.thumb}" style="pointer-events:none" alt="${p.title}" width="100" class="lazy" style="vertical-align:middle;margin-right:10px;">
+<img data-src="${p.thumb}" alt="${p.title}" width="100" class="lazy" style="vertical-align:middle;margin-right:10px;">
 ${post.title} (~${p.readTime} min)
 </a>
 </li>`).join("");
