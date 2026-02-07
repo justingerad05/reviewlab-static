@@ -1,7 +1,7 @@
 import fs from "fs";
 import fetch from "node-fetch";
 import { XMLParser } from "fast-xml-parser";
-import { generateOG } from "./generate-og.js";
+import generateOG from "./generate-og.js"; // ✅ FIXED IMPORT
 
 const FEED_URL =
 "https://honestproductreviewlab.blogspot.com/feeds/posts/default?alt=atom";
@@ -16,6 +16,7 @@ const DEFAULT_IMAGE =
 
 fs.rmSync("posts",{recursive:true,force:true});
 fs.rmSync("_data",{recursive:true,force:true});
+fs.rmSync("og-images",{recursive:true,force:true}); // ✅ ensure clean OG
 
 fs.mkdirSync("posts",{recursive:true});
 fs.mkdirSync("og-images",{recursive:true});
@@ -51,22 +52,39 @@ for(const entry of entries){
 
  /* GENERATE OG */
 
+ let ogPath = `og-images/${slug}.jpg`;
+
  try{
    await generateOG(slug,title);
+
+   // ✅ VERIFY FILE EXISTS (prevents broken OG)
+   if(!fs.existsSync(ogPath)){
+     throw "OG missing";
+   }
+
  }catch{
    fs.copyFileSync(
      "og-default.jpg",
-     `og-images/${slug}.jpg`
+     ogPath
    );
  }
 
-const og = `${SITE_URL}/og-images/${slug}.jpg`;
+ const og = `${SITE_URL}/${ogPath}`; // ✅ ALWAYS VALID
 
  const description =
  html.replace(/<[^>]+>/g," ")
      .slice(0,155);
 
  fs.mkdirSync(`posts/${slug}`,{recursive:true});
+
+ /* RELATED POSTS — FIXED (must run AFTER posts array grows) */
+
+ const relatedPosts = posts
+   .filter(p => p.slug !== slug)
+   .sort((a,b)=> new Date(b.date) - new Date(a.date))
+   .slice(0,4)
+   .map(p => `<li><a href="${p.url}">${p.title}</a></li>`)
+   .join("");
 
  const schema = {
  "@context":"https://schema.org",
@@ -86,17 +104,6 @@ const og = `${SITE_URL}/og-images/${slug}.jpg`;
  }
  };
 
-function relatedPosts(currentSlug){
-
-  return posts
-    .filter(p => p.slug !== currentSlug)
-    .sort((a,b)=> new Date(b.date) - new Date(a.date))
-    .slice(0,4)
-    .map(p => `<li><a href="${p.url}">${p.title}</a></li>`)
-    .join("");
-
-}
- 
  const page = `<!doctype html>
 <html>
 <head>
@@ -112,7 +119,7 @@ function relatedPosts(currentSlug){
 <meta property="og:description" content="${description}">
 <meta property="og:image" content="${og}">
 <meta property="og:image:secure_url" content="${og}">
-<meta property="og:image:type" content="image/jpg">
+<meta property="og:image:type" content="image/jpeg">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 
@@ -130,6 +137,14 @@ ${JSON.stringify(schema)}
 
 ${html}
 
+${
+relatedPosts
+? `<hr>
+<h3>Related Reviews</h3>
+<ul>${relatedPosts}</ul>`
+: ""
+}
+
 </body>
 </html>`;
 
@@ -138,6 +153,7 @@ ${html}
  posts.push({
    title,
    url,
+   slug,
    date:entry.published
  });
 }
@@ -149,4 +165,4 @@ fs.writeFileSync(
 JSON.stringify(posts,null,2)
 );
 
-console.log("✅ v21 AUTHORITY ENGINE LIVE");
+console.log("✅ v22 OG + RELATED POSTS FIXED");
