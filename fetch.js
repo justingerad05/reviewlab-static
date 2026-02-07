@@ -9,11 +9,17 @@ const FEED_URL =
 const SITE_URL =
 "https://justingerad05.github.io/reviewlab-static";
 
+const CTA =
+`${SITE_URL}/og-cta-tested.jpg`;
+
+const DEFAULT =
+`${SITE_URL}/og-default.jpg`;
+
+
 /* CLEAN BUILD */
 
 fs.rmSync("posts",{recursive:true,force:true});
 fs.rmSync("_data",{recursive:true,force:true});
-fs.rmSync("og-images",{recursive:true,force:true});
 
 fs.mkdirSync("posts",{recursive:true});
 fs.mkdirSync("_data",{recursive:true});
@@ -30,7 +36,9 @@ let entries = data.feed.entry || [];
 if(!Array.isArray(entries)) entries=[entries];
 
 
-/* UTILITIES */
+/* ===============================
+UTILITIES
+=============================== */
 
 function slugify(title){
  return title
@@ -46,22 +54,55 @@ function strip(html){
    .trim();
 }
 
-function extractYouTubeID(html){
- const match =
- html.match(/(?:youtube\.com\/embed\/|youtu\.be\/|watch\?v=)([a-zA-Z0-9_-]{11})/);
+/* YOUTUBE — MANDATORY PRIORITY */
 
- return match ? match[1] : null;
+async function getYouTubeThumb(html){
+
+ const match =
+ html.match(/(?:youtube\.com\/embed\/|watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+
+ if(!match) return null;
+
+ const id = match[1];
+
+ const candidates = [
+
+   `https://img.youtube.com/vi/${id}/maxresdefault.jpg`,
+   `https://img.youtube.com/vi/${id}/sddefault.jpg`,
+   `https://img.youtube.com/vi/${id}/hqdefault.jpg`
+
+ ];
+
+ for(const img of candidates){
+
+   try{
+     const res = await fetch(img,{method:"HEAD"});
+     if(res.ok) return img;
+   }catch{}
+ }
+
+ return null;
 }
 
-/* FAST IMAGE CHECK */
 
-async function imageExists(url){
- try{
-   const res = await fetch(url,{method:"HEAD"});
-   return res.ok;
- }catch{
-   return false;
- }
+/* FAQ ENGINE */
+
+function buildFAQ(title){
+
+ return [
+   {
+     q:`What is ${title}?`,
+     a:`${title} is a software tool reviewed by ReviewLab using real testing methodology to determine whether it delivers measurable results.`
+   },
+   {
+     q:`Is ${title} worth it?`,
+     a:`If you value automation, efficiency, and scalable results, ${title} may be a strong candidate depending on your workflow needs.`
+   },
+   {
+     q:`Who should use ${title}?`,
+     a:`Marketers, creators, founders, and digital operators looking to increase productivity typically benefit the most.`
+   }
+ ];
 }
 
 
@@ -77,106 +118,91 @@ for(const entry of entries){
  const title = entry.title["#text"];
  const slug = slugify(title);
 
- const postURL =
+ const url =
  `${SITE_URL}/posts/${slug}/`;
 
  const description = strip(html).slice(0,155);
 
- let ogImage=null;
 
+/* IMAGE STACK */
 
-/* =============================
-   PRIORITY 1 — YOUTUBE (MANDATORY TRY)
-============================= */
+ let og = await getYouTubeThumb(html);
 
- const videoID = extractYouTubeID(html);
+ if(!og) og = CTA;
+ if(!og) og = DEFAULT;
 
- if(videoID){
-
-   const youtubeCandidates=[
-
-     `https://img.youtube.com/vi/${videoID}/maxresdefault.jpg`,
-     `https://img.youtube.com/vi/${videoID}/sddefault.jpg`,
-     `https://img.youtube.com/vi/${videoID}/hqdefault.jpg`
-
-   ];
-
-   for(const img of youtubeCandidates){
-     if(await imageExists(img)){
-       ogImage=img;
-       break;
-     }
-   }
-}
-
-
-/* =============================
-   PRIORITY 2 — GENERATED OG
-============================= */
-
- if(!ogImage){
-
+ if(!og){
    await generateOG(slug,title);
-
-   const generated =
-   `${SITE_URL}/og-images/${slug}.jpg`;
-
-   if(await imageExists(generated)){
-     ogImage = generated;
-   }
-}
-
-
-/* =============================
-   PRIORITY 3 — CTA
-============================= */
-
- if(!ogImage){
-   ogImage = `${SITE_URL}/og-cta-tested.jpg`;
-}
-
-/* =============================
-   PRIORITY 4 — DEFAULT
-============================= */
-
- if(!ogImage){
-   ogImage = `${SITE_URL}/og-default.jpg`;
-}
+   og = `${SITE_URL}/og-images/${slug}.jpg`;
+ }
 
 
  posts.push({
    title,
    slug,
    html,
-   url:postURL,
+   url,
    description,
-   og:ogImage,
+   og,
+   faq:buildFAQ(title),
    date:entry.published
  });
 }
 
 
-/* SORT */
+/* SORT — NEWEST FIRST */
 
 posts.sort((a,b)=> new Date(b.date)-new Date(a.date));
 
 
-/* BUILD PAGES */
+
+/* ===============================
+BUILD AUTHORITY PAGES
+=============================== */
 
 for(const post of posts){
 
  fs.mkdirSync(`posts/${post.slug}`,{recursive:true});
 
+
+/* SEMANTIC RELATED (keyword overlap) */
+
+ const keywords = post.title.toLowerCase().split(" ");
+
  const related = posts
    .filter(p=>p.slug!==post.slug)
+   .map(p=>{
+     let score=0;
+     keywords.forEach(k=>{
+       if(p.title.toLowerCase().includes(k)) score++;
+     });
+     return {...p,score};
+   })
+   .sort((a,b)=>b.score-a.score)
    .slice(0,4)
    .map(p=>`<li><a href="${p.url}">${p.title}</a></li>`)
-   .join("") || `<li><a href="${SITE_URL}">See all reviews →</a></li>`;
+   .join("");
 
 
-/* BREADCRUMB SCHEMA */
+/* FAQ SCHEMA */
 
- const breadcrumb = {
+const faqSchema = {
+ "@context":"https://schema.org",
+ "@type":"FAQPage",
+ mainEntity: post.faq.map(f=>({
+   "@type":"Question",
+   name:f.q,
+   acceptedAnswer:{
+     "@type":"Answer",
+     text:f.a
+   }
+ }))
+};
+
+
+/* BREADCRUMB */
+
+const breadcrumb = {
  "@context":"https://schema.org",
  "@type":"BreadcrumbList",
  itemListElement:[
@@ -189,14 +215,44 @@ for(const post of posts){
    {
      "@type":"ListItem",
      position:2,
+     name:"Reviews",
+     item:`${SITE_URL}/posts/`
+   },
+   {
+     "@type":"ListItem",
+     position:3,
      name:post.title,
      item:post.url
    }
  ]
- };
+};
 
 
- const page = `<!doctype html>
+/* AUTHOR + REVIEW */
+
+const reviewSchema = {
+ "@context":"https://schema.org",
+ "@type":"Review",
+ author:{
+   "@type":"Organization",
+   name:"ReviewLab"
+ },
+ reviewRating:{
+   "@type":"Rating",
+   ratingValue:"4.8",
+   bestRating:"5"
+ },
+ itemReviewed:{
+   "@type":"SoftwareApplication",
+   name:post.title
+ }
+};
+
+
+
+/* BUILD PAGE */
+
+const page = `<!doctype html>
 <html>
 <head>
 
@@ -211,27 +267,37 @@ for(const post of posts){
 <meta property="og:description" content="${post.description}">
 <meta property="og:image" content="${post.og}">
 <meta property="og:image:secure_url" content="${post.og}">
-<meta property="og:image:width" content="1200">
-<meta property="og:image:height" content="630">
 
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="${post.og}">
+
+<script type="application/ld+json">
+${JSON.stringify(reviewSchema)}
+</script>
+
+<script type="application/ld+json">
+${JSON.stringify(faqSchema)}
+</script>
 
 <script type="application/ld+json">
 ${JSON.stringify(breadcrumb)}
 </script>
 
 </head>
+
 <body style="max-width:760px;margin:auto;font-family:system-ui;padding:40px;line-height:1.7;">
 
-<a href="${SITE_URL}"
-style="display:inline-block;margin-bottom:40px;font-weight:600;">
-← Back to Homepage
-</a>
+<a href="${SITE_URL}" style="font-weight:600;">← Home</a>
 
 <h1>${post.title}</h1>
 
 ${post.html}
+
+<hr>
+
+<h2>Frequently Asked Questions</h2>
+
+${post.faq.map(f=>`<p><strong>${f.q}</strong><br>${f.a}</p>`).join("")}
 
 <hr>
 
@@ -243,41 +309,15 @@ ${related}
 </body>
 </html>`;
 
- fs.writeFileSync(
-   `posts/${post.slug}/index.html`,
-   page
- );
+ fs.writeFileSync(`posts/${post.slug}/index.html`,page);
 }
 
 
-/* DATA */
+/* DATA FILE */
 
 fs.writeFileSync(
 "_data/posts.json",
 JSON.stringify(posts,null,2)
 );
 
-
-/* =============================
-   AUTO SITEMAP (MAJOR AUTHORITY BOOST)
-============================= */
-
-const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-
-<url>
-<loc>${SITE_URL}</loc>
-</url>
-
-${posts.map(p=>`
-<url>
-<loc>${p.url}</loc>
-</url>
-`).join("")}
-
-</urlset>`;
-
-fs.writeFileSync("sitemap.xml", sitemap);
-
-
-console.log("✅ AUTHORITY STACK PHASE 5 — ELITE BUILD");
+console.log("✅ AUTHORITY STACK PHASE 7 DEPLOYED");
