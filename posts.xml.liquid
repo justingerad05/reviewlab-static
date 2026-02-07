@@ -21,8 +21,8 @@ eleventyExcludeFromCollections: true
     {% for post in collections.posts %}
     <item>
       <title><![CDATA[{{ post.title }}]]></title>
-      <link>{{ post.url }}</link>
-      <guid isPermaLink="true">{{ post.url }}</guid>
+      <link>https://justingerad05.github.io{{ post.url }}</link>
+      <guid isPermaLink="true">https://justingerad05.github.io{{ post.url }}</guid>
       <pubDate>{{ post.date | date: "%a, %d %b %Y %H:%M:%S %z" }}</pubDate>
     </item>
     {% endfor %}
