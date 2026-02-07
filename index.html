@@ -40,7 +40,6 @@ content="https://justingerad05.github.io/reviewlab-static/og-default.jpg">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 
-
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image"
 content="https://justingerad05.github.io/reviewlab-static/og-default.jpg">
@@ -125,9 +124,19 @@ h1{
   text-decoration:underline;
 }
 
+/* Lazy load and hover preview */
+.lazy { opacity:0; transition: opacity 0.3s; }
+.lazy.loaded { opacity:1; }
+.hover-preview {
+  position:absolute;
+  display:none;
+  max-width:300px;
+  border:2px solid #ccc;
+  z-index:1000;
+  pointer-events:none;
+}
 
 /* AUTHORITY EMAIL BLOCK */
-
 .email-capture{
   margin:70px 0;
   padding:38px;
@@ -229,14 +238,55 @@ Join smart readers staying ahead of AI.
 <ul class="post-list">
 {% for post in posts %}
 <li>
-<a href="{{ post.url }}">
-<img src="{{ post.thumb }}" alt="{{ post.title }}" width="120" style="vertical-align:middle;margin-right:10px;">
-{{ post.title }}
+<a href="{{ post.url }}" title="Read for ~{{ post.readTime }} min">
+<img data-src="{{ post.thumb }}" alt="{{ post.title }}" width="120" class="lazy" style="vertical-align:middle;margin-right:10px;">
+{{ post.title }} (~{{ post.readTime }} min)
 </a><br>
 <small>Published {{ post.date | date: "%B %d, %Y" }}</small>
 </li>
 {% endfor %}
 </ul>
+
+<img id="hoverPreview" class="hover-preview" />
+
+<script>
+// Lazy-load images
+document.addEventListener("DOMContentLoaded", function(){
+  const lazyImgs = document.querySelectorAll(".lazy");
+  const io = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if(entry.isIntersecting){
+        const img = entry.target;
+        img.src = img.dataset.src;
+        img.onload = ()=>img.classList.add("loaded");
+        io.unobserve(img);
+      }
+    });
+  });
+  lazyImgs.forEach(img => io.observe(img));
+});
+
+// Hover preview
+const hoverImg = document.getElementById("hoverPreview");
+document.querySelectorAll("ul.post-list li a").forEach(a => {
+  a.addEventListener("mouseover", e=>{
+    const img = a.querySelector("img");
+    if(img){
+      hoverImg.src = img.dataset.src;
+      hoverImg.style.display = "block";
+      hoverImg.style.top = e.pageY + "px";
+      hoverImg.style.left = e.pageX + "px";
+    }
+  });
+  a.addEventListener("mousemove", e=>{
+    hoverImg.style.top = e.pageY + "px";
+    hoverImg.style.left = e.pageX + "px";
+  });
+  a.addEventListener("mouseout", ()=>{
+    hoverImg.style.display = "none";
+  });
+});
+</script>
 
 </div>
 
