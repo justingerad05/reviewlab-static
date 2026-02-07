@@ -1,22 +1,30 @@
-export default function (eleventyConfig) {
+// .eleventy.cjs
+module.exports = function(eleventyConfig) {
 
-  // Publish OG images
+  /* ===== PASSTHROUGH COPY ===== */
   eleventyConfig.addPassthroughCopy("og-images");
+  eleventyConfig.addPassthroughCopy("og-default.jpg");
+  eleventyConfig.addPassthroughCopy("og-cta-analysis.jpg");
+  eleventyConfig.addPassthroughCopy("og-cta-features.jpg");
+  eleventyConfig.addPassthroughCopy("og-cta-tested.jpg");
+  eleventyConfig.addPassthroughCopy("og-cta-verdict.jpg");
 
-  // Publish any root images like og-default.jpg
-  eleventyConfig.addPassthroughCopy({
-    "og-default.jpg": "og-default.jpg"
-  });
-
-  // Optional but recommended
+  /* ===== WATCH OG FOLDER ===== */
   eleventyConfig.addWatchTarget("./og-images/");
 
+  /* ===== BULLETPROOF POSTS COLLECTION ===== */
+  eleventyConfig.addCollection("posts", function(collectionApi) {
+    return collectionApi
+      .getFilteredByGlob("./posts/**/*.md")
+      .filter(post => !post.data?.draft)
+      .sort((a, b) => b.date - a.date);
+  });
+
+  /* ===== RETURN CONFIG ===== */
   return {
     dir: {
       input: ".",
-      includes: "_includes",
-      data: "_data",
       output: "_site"
     }
   };
-}
+};
