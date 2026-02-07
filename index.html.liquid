@@ -26,8 +26,6 @@ content="Real testing. No hype. Just software that actually delivers.">
 content="https://justingerad05.github.io/reviewlab-static/">
 <meta property="og:image"
 content="https://justingerad05.github.io/reviewlab-static/og-default.jpg">
-<meta property="og:image:secure_url"
-content="https://justingerad05.github.io/reviewlab-static/og-default.jpg">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 
@@ -36,6 +34,7 @@ content="https://justingerad05.github.io/reviewlab-static/og-default.jpg">
 content="https://justingerad05.github.io/reviewlab-static/og-default.jpg">
 
 <style>
+
 body{
   margin:0;
   font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Inter,sans-serif;
@@ -49,61 +48,78 @@ body{
   padding:40px 20px;
 }
 
-h1{
-  font-size:42px;
-  margin-bottom:10px;
-}
-
-.sub{
-  color:#94a3b8;
-  margin-bottom:40px;
-}
-
 .post-list{
   list-style:none;
   padding:0;
 }
 
-.post-card{
+.post-list li{
+  margin-bottom:22px;
+}
+
+.post-link{
   display:flex;
-  gap:16px;
   align-items:center;
-  padding:14px;
-  border-radius:14px;
-  transition:.25s;
-}
-
-.post-card:hover{
-  background:#07122a;
-}
-
-.post-thumb{
-  width:120px;
-  height:68px;
-  object-fit:cover;
-  border-radius:8px;
-}
-
-.post-title{
+  gap:12px;
   color:#38bdf8;
   text-decoration:none;
-  font-weight:700;
+  font-weight:600;
   font-size:20px;
 }
 
-.post-title:hover{
+.post-link:hover{
   text-decoration:underline;
 }
 
-.post-date{
-  font-size:13px;
-  color:#94a3b8;
-  margin-top:4px;
+/* Lazy */
+.lazy { opacity:0; transition: opacity .3s; }
+.lazy.loaded { opacity:1; }
+
+/* Hover preview */
+.hover-preview{
+  position:fixed;
+  display:none;
+  width:320px;
+  border-radius:10px;
+  border:2px solid #1e293b;
+  z-index:9999;
+  pointer-events:none;
 }
 
-/* Lazy */
-.lazy { opacity:0; transition: opacity 0.3s; }
-.lazy.loaded { opacity:1; }
+/* EMAIL BLOCK */
+.email-capture{
+  margin:70px 0;
+  padding:38px;
+  border-radius:18px;
+  background:linear-gradient(145deg,#020617,#07122a);
+  border:1px solid #1e293b;
+  text-align:center;
+}
+
+.email-capture input{
+  padding:14px;
+  border-radius:10px;
+  border:1px solid #334155;
+  background:#020617;
+  color:white;
+  min-width:260px;
+}
+
+.email-capture button{
+  padding:14px 20px;
+  border-radius:10px;
+  border:none;
+  font-weight:700;
+  cursor:pointer;
+  background:#22c55e;
+  color:#020617;
+}
+
+.meta{
+  color:#94a3b8;
+  font-size:14px;
+}
+
 </style>
 </head>
 
@@ -112,53 +128,109 @@ h1{
 <div class="container">
 
 <h1>Latest AI Tool Reviews & Honest Software Analysis</h1>
-<p class="sub">Real testing. No hype. Just software that actually delivers.</p>
+<p>Real testing. No hype. Just software that actually delivers.</p>
+
+
+<section class="email-capture">
+
+<h3>Get Honest AI Tool Reviews</h3>
+<p>No fluff. No sponsored bias. Only tools worth your time.</p>
+
+<form 
+action="https://docs.google.com/forms/d/e/1FAIpQLSchzs0bE9se3YCR2TTiFl3Ohi0nbx0XPBjvK_dbANuI_eI1Aw/formResponse"
+method="POST"
+target="_blank"
+>
+
+<input
+type="email"
+name="entry.364499249"
+placeholder="Enter your email address"
+required
+>
+
+<button type="submit">
+Get Free Reviews
+</button>
+
+</form>
+
+</section>
 
 <ul class="post-list">
 {% for post in posts %}
-<li class="post-card">
+<li>
 
-<a href="{{ post.url }}">
-<img data-src="{{ post.thumb }}"
+<a class="post-link" href="{{ post.url }}" title="Read for ~{{ post.readTime }} min">
+
+<img
+data-src="{{ post.thumb }}"
 alt="{{ post.title }}"
-class="post-thumb lazy">
+width="120"
+class="lazy"
+>
+
+<span>{{ post.title }}</span>
+
 </a>
 
-<div>
-
-<a class="post-title"
-href="{{ post.url }}">
-{{ post.title }} (~{{ post.readTime }} min)
-</a>
-
-<div class="post-date">
-Published {{ post.date | date: "%B %d, %Y" }}
-</div>
-
+<div class="meta">
+Published {{ post.date | date: "%B %d, %Y" }} • {{ post.readTime }} min read
 </div>
 
 </li>
 {% endfor %}
 </ul>
 
-</div>
+<img id="hoverPreview" class="hover-preview"/>
 
 <script>
+
 document.addEventListener("DOMContentLoaded", function(){
-  const lazyImgs = document.querySelectorAll(".lazy");
-  const io = new IntersectionObserver(entries => {
-    entries.forEach(entry => {
-      if(entry.isIntersecting){
-        const img = entry.target;
-        img.src = img.dataset.src;
-        img.onload = ()=>img.classList.add("loaded");
-        io.unobserve(img);
-      }
-    });
-  });
-  lazyImgs.forEach(img => io.observe(img));
+
+const lazyImgs=document.querySelectorAll(".lazy");
+
+const io=new IntersectionObserver(entries=>{
+entries.forEach(entry=>{
+if(entry.isIntersecting){
+const img=entry.target;
+img.src=img.dataset.src;
+img.onload=()=>img.classList.add("loaded");
+io.unobserve(img);
+}
 });
+});
+
+lazyImgs.forEach(img=>io.observe(img));
+});
+
+const hover=document.getElementById("hoverPreview");
+
+document.querySelectorAll(".post-link").forEach(link=>{
+
+link.addEventListener("mousemove",e=>{
+
+const img=link.querySelector("img");
+
+if(!img.dataset.src) return;
+
+hover.src=img.dataset.src;
+hover.style.display="block";
+hover.style.top=(e.clientY+20)+"px";
+hover.style.left=(e.clientX+20)+"px";
+
+});
+
+link.addEventListener("mouseleave",()=>{
+hover.style.display="none";
+});
+
+});
+
 </script>
+
+</div>
 
 </body>
 </html>
+
