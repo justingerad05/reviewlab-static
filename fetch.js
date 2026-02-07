@@ -1,4 +1,4 @@
-import fs from "fs";
+import fs from "fs";	
 import fetch from "node-fetch";
 import { XMLParser } from "fast-xml-parser";
 import { generateOG, upscaleToOG } from "./generate-og.js";
@@ -12,8 +12,6 @@ const SITE_URL =
 const CTA = `${SITE_URL}/og-cta-tested.jpg`;
 const DEFAULT = `${SITE_URL}/og-default.jpg`;
 
-/* CLEAN */
-
 fs.rmSync("posts",{recursive:true,force:true});
 fs.rmSync("_data",{recursive:true,force:true});
 
@@ -21,37 +19,12 @@ fs.mkdirSync("posts",{recursive:true});
 fs.mkdirSync("_data",{recursive:true});
 fs.mkdirSync("og-images",{recursive:true});
 
-/* FETCH */
-
 const parser = new XMLParser({ignoreAttributes:false});
 const xml = await (await fetch(FEED_URL)).text();
 const data = parser.parse(xml);
 
 let entries = data.feed.entry || [];
 if(!Array.isArray(entries)) entries=[entries];
-
-/* TOPIC ENGINE */
-
-function detectTopic(title){
-
- title = title.toLowerCase();
-
- if(title.includes("website"))
-   return "AI Website Builders";
-
- if(title.includes("copy") || title.includes("writer"))
-   return "AI Copywriting";
-
- if(title.includes("video"))
-   return "AI Video Tools";
-
- if(title.includes("image") || title.includes("art"))
-   return "AI Image Generators";
-
- return "AI Tools";
-}
-
-/* YOUTUBE ENGINE */
 
 async function getYouTubeImages(html,slug){
 
@@ -68,32 +41,23 @@ async function getYouTubeImages(html,slug){
    `https://img.youtube.com/vi/${id}/hqdefault.jpg`
  ];
 
- const valid=[];
-
  for(const img of candidates){
    try{
      const res = await fetch(img,{method:"HEAD"});
-     if(res.ok) valid.push(img);
+     if(res.ok) return [img];
    }catch{}
  }
 
- if(valid.length===0){
+ const upscaled = await upscaleToOG(
+   `https://img.youtube.com/vi/${id}/hqdefault.jpg`,
+   slug
+ );
 
-   const upscaled = await upscaleToOG(
-     `https://img.youtube.com/vi/${id}/hqdefault.jpg`,
-     slug
-   );
+ if(upscaled)
+   return [`${SITE_URL}/og-images/${slug}.jpg`];
 
-   if(upscaled)
-     return [`${SITE_URL}/og-images/${slug}.jpg`];
-
-   return null;
- }
-
- return valid;
+ return null;
 }
-
-/* BUILD POSTS */
 
 const posts=[];
 
@@ -114,101 +78,52 @@ for(const entry of entries){
  const description =
  html.replace(/<[^>]+>/g," ").slice(0,155);
 
-/* IMAGE PRIORITY */
-
  let ogImages = await getYouTubeImages(html,slug);
  if(!ogImages) ogImages=[CTA];
  if(!ogImages) ogImages=[DEFAULT];
-
  if(!ogImages){
    await generateOG(slug,title);
    ogImages=[`${SITE_URL}/og-images/${slug}.jpg`];
  }
 
  const primaryOG = ogImages[0];
- const thumb = ogImages.find(img=>img.includes("hqdefault")) || primaryOG;
+ const thumb = primaryOG;
 
-/* READ TIME */
-
-const textOnly = html.replace(/<[^>]+>/g,"");
+ const textOnly = html.replace(/<[^>]+>/g,"");
 const wordCount = textOnly.split(/\s+/).length;
-const readTime = Math.max(1, Math.ceil(wordCount/200));
-
-/* TOPIC */
-
-const topic = detectTopic(title);
-
-/* OG META */
-
-const ogMeta = ogImages.map(img=>`
-<meta property="og:image" content="${img}">
-<meta property="og:image:width" content="1200">
-<meta property="og:image:height" content="630">
-`).join("");
-
-/* SCHEMA */
-
-const schema = {
- "@context":"https://schema.org",
- "@type":"Article",
- "headline":title,
- "image":ogImages,
- "datePublished":entry.published,
- "author":{
-   "@type":"Organization",
-   "name":"ReviewLab"
- },
- "publisher":{
-   "@type":"Organization",
-   "name":"ReviewLab",
-   "logo":{
-     "@type":"ImageObject",
-     "url":CTA
-   }
- },
- "description":description,
- "mainEntityOfPage":url
-};
+const readTime = Math.max(1, Math.ceil(wordCount / 200));
 
 posts.push({
- title,
- slug,
- html,
- url,
- description,
- og:primaryOG,
- ogMeta,
- thumb,
- readTime,
- topic,
- schema: JSON.stringify(schema),
- date:entry.published
+   title,
+   slug,
+   html,
+   url,
+   description,
+   og:primaryOG,
+   thumb,
+   readTime,
+   date:entry.published
 });
 }
 
-/* SORT */
-
 posts.sort((a,b)=> new Date(b.date)-new Date(a.date));
-
-/* BUILD PAGES */
 
 for(const post of posts){
 
  fs.mkdirSync(`posts/${post.slug}`,{recursive:true});
 
  const related = posts
- .filter(p=>p.slug!==post.slug && p.topic===post.topic)
- .slice(0,4)
- .map(p=>`
+.filter(p=>p.slug!==post.slug)
+.slice(0,4)
+   .map(p=>`
 <li>
-<a href="${p.url}" style="display:flex;gap:10px;align-items:center;text-decoration:none;">
-<img src="${p.thumb}" width="90"
-style="border-radius:8px;pointer-events:none;">
-<span>${p.title} (~${p.readTime} min)</span>
+<a href="${p.url}">
+<img data-src="${p.thumb}" width="100" class="lazy">
+${p.title}
 </a>
 </li>`).join("");
 
-const page = `<!doctype html>
+ const page = `<!doctype html>
 <html>
 <head>
 
@@ -221,32 +136,18 @@ const page = `<!doctype html>
 <meta property="og:type" content="article">
 <meta property="og:title" content="${post.title}">
 <meta property="og:description" content="${post.description}">
-${post.ogMeta}
+<meta property="og:image" content="${post.og}">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
 
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="${post.og}">
-
-<script type="application/ld+json">
-${post.schema}
-</script>
 
 </head>
 
 <body style="max-width:760px;margin:auto;font-family:system-ui;padding:40px;line-height:1.7;">
 
-<a href="${SITE_URL}">← Home</a>
-
-<div style="
-display:inline-block;
-padding:6px 10px;
-border-radius:8px;
-background:#0ea5e9;
-color:white;
-font-size:13px;
-margin-top:20px;
-font-weight:600;">
-${post.topic}
-</div>
+<a href="${SITE_URL}">← Back Home</a>
 
 <h1>${post.title}</h1>
 
@@ -255,9 +156,23 @@ ${post.html}
 <hr>
 
 <h3>Related Reviews</h3>
-<ul style="list-style:none;padding:0;">
-${related}
-</ul>
+<ul>${related}</ul>
+
+<script>
+document.addEventListener("DOMContentLoaded", function(){
+  const lazyImgs = document.querySelectorAll(".lazy");
+  const io = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if(entry.isIntersecting){
+        const img = entry.target;
+        img.src = img.dataset.src;
+        io.unobserve(img);
+      }
+    });
+  });
+  lazyImgs.forEach(img => io.observe(img));
+});
+</script>
 
 </body>
 </html>`;
@@ -265,11 +180,9 @@ ${related}
  fs.writeFileSync(`posts/${post.slug}/index.html`,page);
 }
 
-/* SAVE POSTS */
-
 fs.writeFileSync(
 "_data/posts.json",
 JSON.stringify(posts,null,2)
 );
 
-console.log("✅ PHASE 17 — AUTHORITY ENGINE ACTIVE");
+console.log("PHASE 19 & 20 COMPLETE — CLEAN INDEX + FIXED RELATED + NO LABEL");
