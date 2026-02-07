@@ -1,238 +1,89 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>ReviewLab – Honest AI Tool Reviews</title>
+<title>ReviewLab Authority Hub</title>
+<meta name="description" content="Expert AI software reviews, launches, and automation strategies.">
 
-<meta name="description"
-content="ReviewLab publishes deeply tested AI software reviews, real verdicts, and zero-hype product analysis.">
-
-<meta name="viewport"
-content="width=device-width, initial-scale=1">
-
-<link rel="canonical"
-href="https://justingerad05.github.io/reviewlab-static/">
-
-
-<!-- =========================
-     🔥 HOMEPAGE OG (CRITICAL)
-========================= -->
-
+<!-- GLOBAL OG (for homepage sharing) -->
+<meta property="og:title" content="ReviewLab Authority Hub">
+<meta property="og:description" content="Trusted AI software reviews and launch breakdowns.">
 <meta property="og:type" content="website">
-<meta property="og:title" content="ReviewLab – Honest AI Tool Reviews">
-<meta property="og:description"
-content="Real testing. No hype. Just software that actually delivers.">
+<meta property="og:image" content="https://justingerad05.github.io/reviewlab-static/og-default.jpg">
 
-<meta property="og:url"
-content="https://justingerad05.github.io/reviewlab-static/">
-
-<meta property="og:image"
-content="https://justingerad05.github.io/reviewlab-static/og-default.jpg">
-
-<meta property="og:image:secure_url"
-content="https://justingerad05.github.io/reviewlab-static/og-default.jpg">
-
-<meta property="og:image:width" content="1200">
-<meta property="og:image:height" content="630">
-
-
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image"
-content="https://justingerad05.github.io/reviewlab-static/og-default.jpg">
-
-
-<!-- =========================
-     🔥 ORGANIZATION AUTHORITY
-========================= -->
-
-<script type="application/ld+json">
-{
-"@context":"https://schema.org",
-"@type":"Organization",
-"name":"ReviewLab",
-"url":"https://justingerad05.github.io/reviewlab-static/",
-"logo":"https://justingerad05.github.io/reviewlab-static/og-default.jpg"
-}
-</script>
-
-
-<!-- =========================
-     🔥 WEBSITE + SEARCH BOX
-========================= -->
-
-<script type="application/ld+json">
-{
-"@context":"https://schema.org",
-"@type":"WebSite",
-"url":"https://justingerad05.github.io/reviewlab-static/",
-"name":"ReviewLab",
-"potentialAction":{
- "@type":"SearchAction",
- "target":"https://justingerad05.github.io/reviewlab-static/?q={search_term_string}",
- "query-input":"required name=search_term_string"
-}
-}
-</script>
-
-
-<style>
-
-body{
-  margin:0;
-  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Inter,sans-serif;
-  background:#020617;
-  color:#e5e7eb;
-}
-
-.container{
-  max-width:900px;
-  margin:auto;
-  padding:40px 20px;
-}
-
-h1{
-  font-size:42px;
-  margin-bottom:10px;
-}
-
-.sub{
-  color:#94a3b8;
-  margin-bottom:40px;
-}
-
-.post-list{
-  list-style:none;
-  padding:0;
-}
-
-.post-list li{
-  margin-bottom:22px;
-}
-
-.post-list a{
-  color:#38bdf8;
-  text-decoration:none;
-  font-weight:600;
-  font-size:20px;
-}
-
-.post-list a:hover{
-  text-decoration:underline;
-}
-
-
-/* AUTHORITY EMAIL BLOCK */
-
-.email-capture{
-  margin:70px 0;
-  padding:38px;
-  border-radius:18px;
-  background:linear-gradient(145deg,#020617,#07122a);
-  border:1px solid #1e293b;
-  box-shadow:0 10px 40px rgba(0,0,0,.45);
-  text-align:center;
-}
-
-.email-capture h3{
-  font-size:28px;
-  margin-bottom:10px;
-}
-
-.email-capture p{
-  color:#94a3b8;
-  margin-bottom:22px;
-}
-
-.form-row{
-  display:flex;
-  gap:10px;
-  flex-wrap:wrap;
-  justify-content:center;
-}
-
-.email-capture input{
-  padding:14px;
-  border-radius:10px;
-  border:1px solid #334155;
-  background:#020617;
-  color:white;
-  min-width:260px;
-  font-size:16px;
-}
-
-.email-capture button{
-  padding:14px 20px;
-  border-radius:10px;
-  border:none;
-  font-weight:700;
-  cursor:pointer;
-  background:#22c55e;
-  color:#020617;
-}
-
-.trust{
-  margin-top:12px;
-  font-size:13px;
-  color:#64748b;
-}
-
-</style>
+<link rel="stylesheet" href="styles.css">
 </head>
 
 <body>
 
-<div class="container">
+<header class="authority-header">
+<h1>ReviewLab</h1>
+<p>Trusted AI Software Reviews</p>
+</header>
 
-<h1>Latest AI Tool Reviews & Honest Software Analysis</h1>
-<p class="sub">Real testing. No hype. Just software that actually delivers.</p>
+<main id="posts" class="post-grid"></main>
 
+<script>
+const fallbackImages = [
+"https://justingerad05.github.io/reviewlab-static/og-default.jpg",
+"https://justingerad05.github.io/reviewlab-static/og-cta-tested.jpg"
+];
 
-<section class="email-capture">
+function getYoutubeId(url){
+const reg = /(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&]+)/;
+return url?.match(reg)?.[1] || null;
+}
 
-<h3>Get Honest AI Tool Reviews</h3>
-<p>No fluff. No sponsored bias. Only tools worth your time.</p>
+function getThumbnail(post){
 
-<form 
-action="https://docs.google.com/forms/d/e/1FAIpQLSchzs0bE9se3YCR2TTiFl3Ohi0nbx0XPBjvK_dbANuI_eI1Aw/formResponse"
-method="POST"
-target="_blank"
+const id = getYoutubeId(post.youtube);
+
+if(id){
+return [
+`https://img.youtube.com/vi/${id}/maxresdefault.jpg`,
+`https://img.youtube.com/vi/${id}/sddefault.jpg`,
+`https://img.youtube.com/vi/${id}/hqdefault.jpg`
+];
+}
+
+return fallbackImages;
+}
+
+fetch('./posts.json')
+.then(res=>res.json())
+.then(posts=>{
+
+const container=document.getElementById('posts');
+
+posts.forEach(post=>{
+
+const images=getThumbnail(post);
+
+const card=document.createElement('a');
+card.href=`post.html?slug=${post.slug}`;
+card.className="card";
+
+card.innerHTML=`
+<img src="${images[0]}" 
+onerror="this.onerror=null;this.src='${images[1] || fallbackImages[0]}'; 
+if(this.src.includes('sddefault')) this.src='${images[2] || fallbackImages[0]}'; 
+if(this.src.includes('hqdefault')) this.src='${fallbackImages[0]}';"
 >
 
-<div class="form-row">
-
-<input
-type="email"
-name="entry.364499249"
-placeholder="Enter your email address"
-required
->
-
-<button type="submit">
-Get Free Reviews
-</button>
-
+<div class="card-content">
+<h2>${post.title}</h2>
+<p>${post.excerpt}</p>
 </div>
+`;
 
-<div class="trust">
-Join smart readers staying ahead of AI.
-</div>
+container.appendChild(card);
 
-</form>
+});
 
-</section>
-
-
-<ul class="post-list">
-{% for post in posts %}
-<li>
-<a href="{{ post.url }}">{{ post.title }}</a><br>
-<small>Published {{ post.date | date: "%B %d, %Y" }}</small>
-</li>
-{% endfor %}
-</ul>
-
-</div>
+});
+</script>
 
 </body>
 </html>
