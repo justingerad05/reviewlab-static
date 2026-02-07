@@ -1,11 +1,7 @@
 module.exports = function(eleventyConfig) {
 
   eleventyConfig.addPassthroughCopy("og-images");
-  eleventyConfig.addPassthroughCopy("og-default.jpg");
-  eleventyConfig.addPassthroughCopy("og-cta-analysis.jpg");
-  eleventyConfig.addPassthroughCopy("og-cta-features.jpg");
-  eleventyConfig.addPassthroughCopy("og-cta-tested.jpg");
-  eleventyConfig.addPassthroughCopy("og-cta-verdict.jpg");
+  eleventyConfig.addPassthroughCopy("*.jpg");
 
   eleventyConfig.addWatchTarget("./og-images/");
 
