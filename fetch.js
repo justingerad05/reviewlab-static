@@ -113,6 +113,11 @@ for(const entry of entries){
 /* HOMEPAGE THUMBNAIL (small) */
 const thumb = ogImages.find(img => img.includes("hqdefault.jpg")) || primaryOG;
 
+/* CALCULATE READ TIME (words / 200 wpm) */
+const textOnly = html.replace(/<[^>]+>/g,"");
+const wordCount = textOnly.split(/\s+/).length;
+const readTime = Math.max(1, Math.ceil(wordCount / 200));
+
 /* BUILD MULTI OG TAGS */
 
  const ogMeta = ogImages.map(img=>`
@@ -159,6 +164,7 @@ const thumb = ogImages.find(img => img.includes("hqdefault.jpg")) || primaryOG;
    thumb,
    ogMeta,
    schema: JSON.stringify(schema),
+   readTime,
    date:entry.published
  });
 }
@@ -176,8 +182,13 @@ for(const post of posts){
  const related = posts
    .filter(p=>p.slug!==post.slug)
    .slice(0,4)
-   .map(p=>`<li><a href="${p.url}"><img src="${p.thumb}" alt="${p.title}" width="100" style="vertical-align:middle;margin-right:10px;"> ${p.title}</a></li>`)
-   .join("");
+   .map(p=>`
+<li>
+<a href="${p.url}" title="Read for ~${p.readTime} min">
+<img data-src="${p.thumb}" alt="${p.title}" width="100" class="lazy" style="vertical-align:middle;margin-right:10px;">
+${post.title} (~${p.readTime} min)
+</a>
+</li>`).join("");
 
  const page = `<!doctype html>
 <html>
@@ -202,6 +213,18 @@ ${post.ogMeta}
 ${post.schema}
 </script>
 
+<style>
+.lazy { opacity:0; transition: opacity 0.3s; }
+.lazy.loaded { opacity:1; }
+.hover-preview {
+  position:absolute;
+  display:none;
+  max-width:300px;
+  border:2px solid #ccc;
+  z-index:1000;
+}
+</style>
+
 </head>
 
 <body style="max-width:760px;margin:auto;font-family:system-ui;padding:40px;line-height:1.7;">
@@ -217,6 +240,47 @@ ${post.html}
 <h3>Related Reviews</h3>
 <ul>${related}</ul>
 
+<img id="hoverPreview" class="hover-preview" />
+
+<script>
+// Lazy-load images
+document.addEventListener("DOMContentLoaded", function(){
+  const lazyImgs = document.querySelectorAll(".lazy");
+  const io = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if(entry.isIntersecting){
+        const img = entry.target;
+        img.src = img.dataset.src;
+        img.onload = ()=>img.classList.add("loaded");
+        io.unobserve(img);
+      }
+    });
+  });
+  lazyImgs.forEach(img => io.observe(img));
+});
+
+// Hover preview
+const hoverImg = document.getElementById("hoverPreview");
+document.querySelectorAll("ul li a").forEach(a => {
+  a.addEventListener("mouseover", e=>{
+    const img = a.querySelector("img");
+    if(img){
+      hoverImg.src = img.dataset.src;
+      hoverImg.style.display = "block";
+      hoverImg.style.top = e.pageY + "px";
+      hoverImg.style.left = e.pageX + "px";
+    }
+  });
+  a.addEventListener("mousemove", e=>{
+    hoverImg.style.top = e.pageY + "px";
+    hoverImg.style.left = e.pageX + "px";
+  });
+  a.addEventListener("mouseout", ()=>{
+    hoverImg.style.display = "none";
+  });
+});
+</script>
+
 </body>
 </html>`;
 
@@ -230,4 +294,4 @@ fs.writeFileSync(
 JSON.stringify(posts,null,2)
 );
 
-console.log("✅ AUTHORITY STACK PHASE 13 — HOMEPAGE & RELATED POSTS THUMBNAILS READY");
+console.log("✅ AUTHORITY STACK PHASE 14 — LAZY-LOAD + HOVER PREVIEW + READ TIME ACTIVE");
