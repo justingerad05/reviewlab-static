@@ -36,15 +36,28 @@ for(const entry of entries){
    .replace(/[^a-z0-9]+/g,"-")
    .replace(/^-|-$/g,"");
 
- /* Detect Blogger thumbnail automatically */
- let thumbMatch = html.match(/<img.*?src="(.*?)"/);
+ /* ===== FORCE VALID OG IMAGE (FIX FACEBOOK ERROR) ===== */
+
+ let thumbMatch = html.match(/<img.*?src="(.*?)"/i);
 
  let ogImage;
 
  if(thumbMatch){
-   ogImage = thumbMatch[1];
+
+   let thumb = thumbMatch[1];
+
+   // Blogger sometimes serves WEBP which FB rejects.
+   // Force PNG version.
+   thumb = thumb
+     .replace(/=w\d+-h\d+-.*$/, "=s1200")
+     .replace(/\.webp/g,".png");
+
+   ogImage = thumb;
+
  }else{
+
    await generateOG(slug,title);
+
    ogImage = `${SITE_URL}/og-images/${slug}.png`;
  }
 
@@ -87,6 +100,8 @@ for(const post of posts){
 <meta property="og:title" content="${post.title}">
 <meta property="og:description" content="${description}">
 <meta property="og:image" content="${post.og}">
+<meta property="og:image:secure_url" content="${post.og}">
+<meta property="og:image:type" content="image/png">
 <meta property="og:url" content="${post.url}">
 <meta property="og:site_name" content="ReviewLab">
 
@@ -94,7 +109,11 @@ for(const post of posts){
 <meta name="twitter:image" content="${post.og}">
 
 </head>
-<body>
+<body style="max-width:860px;margin:auto;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;padding:40px;line-height:1.7;">
+
+<a href="${SITE_URL}/" style="text-decoration:none;font-weight:600;color:#2563eb;">
+← Return to Homepage
+</a>
 
 <h1>${post.title}</h1>
 
