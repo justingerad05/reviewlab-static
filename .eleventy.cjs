@@ -1,23 +1,22 @@
-module.exports = function(eleventyConfig) {
+export default function (eleventyConfig) {
 
-  /* STATIC ASSETS — CRITICAL */
+  // Publish OG images
   eleventyConfig.addPassthroughCopy("og-images");
-  eleventyConfig.addPassthroughCopy("fonts");
-  eleventyConfig.addWatchTarget("./og-images/");
 
-  /* POSTS COLLECTION */
-  eleventyConfig.addCollection("posts", function(collectionApi) {
-
-    return collectionApi
-      .getFilteredByGlob("./posts/**/*.html")
-      .sort((a,b)=> b.date - a.date);
-
+  // Publish any root images like og-default.jpg
+  eleventyConfig.addPassthroughCopy({
+    "og-default.jpg": "og-default.jpg"
   });
 
+  // Optional but recommended
+  eleventyConfig.addWatchTarget("./og-images/");
+
   return {
-    dir:{
-      input:".",
-      output:"_site"
+    dir: {
+      input: ".",
+      includes: "_includes",
+      data: "_data",
+      output: "_site"
     }
   };
-};
+}
