@@ -7,7 +7,7 @@ let fontData;
 try{
   fontData = fs.readFileSync("./fonts/Inter-Regular.ttf");
 }catch{
-  console.log("⚠️ Font missing — OG fallback activated");
+  console.log("⚠️ Font missing — fallback font used");
 }
 
 if (!fs.existsSync("./og-images")){
@@ -15,95 +15,83 @@ if (!fs.existsSync("./og-images")){
 }
 
 function cleanTitle(title){
-  return title.replace(/\|.*$/,"").slice(0,85);
+  return title.replace(/\|.*$/,"").slice(0,70);
 }
 
 export async function generateOG(slug,title){
 
-  try{
+  const width = 1200;
+  const height = 630;
 
-    const width = 1200;
-    const height = 630;
+  const svg = await satori({
+    type:"div",
+    props:{
+      style:{
+        width,
+        height,
+        display:"flex",
+        flexDirection:"column",
+        justifyContent:"space-between",
+        background:"#020617",
+        padding:"80px",
+        color:"#fff"
+      },
+      children:[
 
-    const svg = await satori({
-      type:"div",
-      props:{
-        style:{
-          width,
-          height,
-          display:"flex",
-          flexDirection:"column",
-          justifyContent:"space-between",
-          background:"#020617",
-          padding:"70px",
-          color:"#ffffff"
-        },
-        children:[
-
-          {
-            type:"div",
-            props:{
-              style:{
-                fontSize:44,
-                fontWeight:700,
-                color:"#38bdf8"
-              },
-              children:"REVIEWLAB VERIFIED"
-            }
-          },
-
-          {
-            type:"div",
-            props:{
-              style:{
-                fontSize:68,
-                fontWeight:800,
-                lineHeight:1.1
-              },
-              children:cleanTitle(title)
-            }
-          },
-
-          {
-            type:"div",
-            props:{
-              style:{
-                fontSize:30,
-                color:"#22c55e"
-              },
-              children:"Real Test • Real Verdict • No Hype"
-            }
+        {
+          type:"div",
+          props:{
+            style:{
+              fontSize:42,
+              fontWeight:700,
+              color:"#22c55e"
+            },
+            children:"REVIEWLAB VERIFIED"
           }
+        },
 
-        ]
-      }
-    },
-    {
-      width,
-      height,
-      fonts: fontData ? [{
-        name:"Inter",
-        data:fontData,
-        weight:400,
-        style:"normal"
-      }] : []
-    });
+        {
+          type:"div",
+          props:{
+            style:{
+              fontSize:72,
+              fontWeight:800,
+              lineHeight:1.05
+            },
+            children:cleanTitle(title)
+          }
+        },
 
-    const resvg = new Resvg(svg);
-    const image = resvg.render();
-    const jpgBuffer = image.asJpeg(95);
+        {
+          type:"div",
+          props:{
+            style:{
+              fontSize:34,
+              color:"#38bdf8",
+              fontWeight:600
+            },
+            children:"Read The Full Review →"
+          }
+        }
 
-    fs.writeFileSync(`./og-images/${slug}.jpg`, jpgBuffer);
+      ]
+    }
+  },
+  {
+    width,
+    height,
+    fonts: fontData ? [{
+      name:"Inter",
+      data:fontData,
+      weight:400,
+      style:"normal"
+    }] : []
+  });
 
-    console.log("✅ OG CREATED:", slug);
+  const resvg = new Resvg(svg);
+  const pngBuffer = resvg.render().asPng();
 
-  }catch(err){
+  fs.writeFileSync(`./og-images/${slug}.png`, pngBuffer);
 
-    console.log("❌ OG FAILED:", slug, err);
-
-    fs.copyFileSync(
-      "og-default.jpg",
-      `og-images/${slug}.jpg`
-    );
-  }
+  console.log("✅ OG PNG CREATED:", slug);
 }
