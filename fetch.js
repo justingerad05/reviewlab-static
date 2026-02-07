@@ -9,11 +9,8 @@ const SITE_URL =
 const FEED_URL =
 "https://honestproductreviewlab.blogspot.com/feeds/posts/default?alt=atom";
 
-/* CLEAN BUILD */
-
 fs.rmSync("posts",{recursive:true,force:true});
 fs.rmSync("_data",{recursive:true,force:true});
-fs.rmSync("og-images",{recursive:true,force:true});
 
 fs.mkdirSync("posts",{recursive:true});
 fs.mkdirSync("og-images",{recursive:true});
@@ -26,9 +23,8 @@ const data = parser.parse(xml);
 let entries = data.feed.entry || [];
 if(!Array.isArray(entries)) entries=[entries];
 
+/* BUILD MASTER LIST FIRST */
 const posts = [];
-
-/* BUILD POSTS */
 
 for(const entry of entries){
 
@@ -40,8 +36,30 @@ for(const entry of entries){
    .replace(/[^a-z0-9]+/g,"-")
    .replace(/^-|-$/g,"");
 
- /* FORCE LOCAL OG IMAGE */
- const ogImage = await generateOG(slug,title);
+ /* ===== FORCE VALID OG IMAGE (FIX FACEBOOK ERROR) ===== */
+
+ let thumbMatch = html.match(/<img.*?src="(.*?)"/i);
+
+ let ogImage;
+
+ if(thumbMatch){
+
+   let thumb = thumbMatch[1];
+
+   // Blogger sometimes serves WEBP which FB rejects.
+   // Force PNG version.
+   thumb = thumb
+     .replace(/=w\d+-h\d+-.*$/, "=s1200")
+     .replace(/\.webp/g,".png");
+
+   ogImage = thumb;
+
+ }else{
+
+   await generateOG(slug,title);
+
+   ogImage = `${SITE_URL}/og-images/${slug}.png`;
+ }
 
  posts.push({
    title,
@@ -53,7 +71,7 @@ for(const entry of entries){
  });
 }
 
-/* CREATE PAGES */
+/* CREATE PAGES WITH TRUE RELATED AUTHORITY */
 
 for(const post of posts){
 
@@ -66,11 +84,7 @@ for(const post of posts){
    .join("");
 
  const description =
- post.html
-   .replace(/<[^>]+>/g," ")
-   .replace(/\s+/g," ")
-   .trim()
-   .slice(0,155);
+ post.html.replace(/<[^>]+>/g," ").slice(0,155);
 
  const page = `<!doctype html>
 <html>
@@ -86,21 +100,19 @@ for(const post of posts){
 <meta property="og:title" content="${post.title}">
 <meta property="og:description" content="${description}">
 <meta property="og:image" content="${post.og}">
-<meta property="og:image:width" content="1200">
-<meta property="og:image:height" content="630">
+<meta property="og:image:secure_url" content="${post.og}">
+<meta property="og:image:type" content="image/png">
 <meta property="og:url" content="${post.url}">
 <meta property="og:site_name" content="ReviewLab">
 
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="${post.title}">
-<meta name="twitter:description" content="${description}">
 <meta name="twitter:image" content="${post.og}">
 
 </head>
-<body style="max-width:760px;margin:auto;font-family:system-ui;padding:40px;line-height:1.7;">
+<body style="max-width:860px;margin:auto;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;padding:40px;line-height:1.7;">
 
-<a href="${SITE_URL}" style="text-decoration:none;font-weight:700;">
-← Back To Homepage
+<a href="${SITE_URL}/" style="text-decoration:none;font-weight:600;color:#2563eb;">
+← Return to Homepage
 </a>
 
 <h1>${post.title}</h1>
@@ -120,4 +132,4 @@ ${post.html}
 
 fs.writeFileSync("_data/posts.json",JSON.stringify(posts,null,2));
 
-console.log("✅ STABLE BUILD COMPLETE — OG FIXED");
+console.log("✅ TOPICAL AUTHORITY ENGINE LIVE");
