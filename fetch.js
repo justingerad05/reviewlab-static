@@ -9,17 +9,16 @@ const FEED_URL =
 const SITE_URL =
 "https://justingerad05.github.io/reviewlab-static";
 
-const CTA_FALLBACK =
-`${SITE_URL}/og-cta-tested.jpg`;
-
-const DEFAULT_FALLBACK =
-`${SITE_URL}/og-default.jpg`;
+/* ALWAYS RELATIVE — NEVER ABSOLUTE */
+const CTA_FALLBACK = "/og-cta-tested.jpg";
+const DEFAULT_FALLBACK = "/og-default.jpg";
 
 
 /* CLEAN BUILD */
 
 fs.rmSync("posts",{recursive:true,force:true});
 fs.rmSync("_data",{recursive:true,force:true});
+fs.rmSync("og-images",{recursive:true,force:true});
 
 fs.mkdirSync("posts",{recursive:true});
 fs.mkdirSync("_data",{recursive:true});
@@ -34,7 +33,6 @@ const data = parser.parse(xml);
 
 let entries = data.feed.entry || [];
 if(!Array.isArray(entries)) entries=[entries];
-
 
 
 /* ================================
@@ -67,27 +65,8 @@ function extractYouTubeID(html){
 }
 
 
-/* ---------- IMAGE VALIDATOR ---------- */
-
-async function validateImage(url){
-
- try{
-
-   const res = await fetch(url,{method:"HEAD"});
-
-   const type = res.headers.get("content-type");
-
-   return res.ok && type && type.startsWith("image");
-
- }catch{
-   return false;
- }
-}
-
-
-
 /* =====================================================
-   PASS 1 — BUILD POST DATABASE
+   BUILD POST DATABASE
 ===================================================== */
 
 const posts=[];
@@ -108,52 +87,64 @@ for(const entry of entries){
  let ogImage=null;
 
 
-/* PRIORITY 1 — YOUTUBE */
+/* ================================
+   PRIORITY 1 — YOUTUBE (NO HQ!)
+================================ */
 
  const videoID = extractYouTubeID(html);
 
  if(videoID){
 
+   /* NEVER USE HQ — it causes the preview bug */
    const candidates=[
 
      `https://img.youtube.com/vi/${videoID}/maxresdefault.jpg`,
-     `https://img.youtube.com/vi/${videoID}/sddefault.jpg`,
-     `https://img.youtube.com/vi/${videoID}/hqdefault.jpg`
+     `https://img.youtube.com/vi/${videoID}/sddefault.jpg`
 
    ];
 
    for(const img of candidates){
 
-     if(await validateImage(img)){
-       ogImage=img;
-       break;
-     }
+     try{
+       const res = await fetch(img,{method:"HEAD"});
+       if(res.ok){
+         ogImage=img;
+         break;
+       }
+     }catch{}
    }
  }
 
 
-/* PRIORITY 2 — CTA */
-
- if(!ogImage && await validateImage(CTA_FALLBACK)){
-   ogImage=CTA_FALLBACK;
- }
-
-
-/* PRIORITY 3 — DEFAULT */
-
- if(!ogImage){
-   ogImage=DEFAULT_FALLBACK;
- }
-
-
-/* PRIORITY 4 — GENERATED (LAST ONLY) */
+/* ================================
+   PRIORITY 2 — GENERATED OG
+   (THIS FIXES YOUR TEXT POSTS)
+================================ */
 
  if(!ogImage){
 
    await generateOG(slug,title);
 
-   ogImage=
+   ogImage =
    `${SITE_URL}/og-images/${slug}.jpg`;
+ }
+
+
+/* ================================
+   PRIORITY 3 — CTA
+================================ */
+
+ if(!ogImage){
+   ogImage = `${SITE_URL}${CTA_FALLBACK}`;
+ }
+
+
+/* ================================
+   PRIORITY 4 — DEFAULT
+================================ */
+
+ if(!ogImage){
+   ogImage = `${SITE_URL}${DEFAULT_FALLBACK}`;
  }
 
 
@@ -169,27 +160,42 @@ for(const entry of entries){
 }
 
 
-
-/* SORT NEWEST FIRST (authority signal) */
+/* SORT NEWEST FIRST */
 
 posts.sort((a,b)=> new Date(b.date)-new Date(a.date));
 
 
-
 /* =====================================================
-   PASS 2 — BUILD PAGES WITH FULL INTERNAL GRAPH
+   BUILD PAGES WITH INTERNAL GRAPH
 ===================================================== */
 
-for(const post of posts){
+for(let i=0;i<posts.length;i++){
+
+ const post = posts[i];
 
  fs.mkdirSync(`posts/${post.slug}`,{recursive:true});
 
 
+/* SMART RELATED — NEVER EMPTY */
+
  const related = posts
    .filter(p=>p.slug!==post.slug)
-   .slice(0,4)
+   .slice(0,4);
+
+ let relatedHTML="";
+
+ if(related.length){
+
+   relatedHTML =
+   related
    .map(p=>`<li><a href="${p.url}">${p.title}</a></li>`)
    .join("");
+
+ }else{
+
+   relatedHTML =
+   `<li><a href="${SITE_URL}">See all reviews →</a></li>`;
+ }
 
 
  const schema = {
@@ -226,7 +232,6 @@ for(const post of posts){
 <meta property="og:description" content="${post.description}">
 <meta property="og:image" content="${post.og}">
 <meta property="og:image:secure_url" content="${post.og}">
-<meta property="og:image:type" content="image/jpeg">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 
@@ -253,7 +258,7 @@ ${post.html}
 
 <h3>Related Reviews</h3>
 <ul>
-${related}
+${relatedHTML}
 </ul>
 
 </body>
@@ -274,4 +279,4 @@ fs.writeFileSync(
 JSON.stringify(posts,null,2)
 );
 
-console.log("✅ AUTHORITY STACK PHASE 3 DEPLOYED");
+console.log("✅ AUTHORITY STACK PHASE 4 — STABLE BUILD");
