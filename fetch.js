@@ -3,11 +3,17 @@ import fetch from "node-fetch";
 import { XMLParser } from "fast-xml-parser";
 import { generateOG } from "./generate-og.js";
 
+/* ================= CONFIG ================= */
+
 const SITE_URL =
 "https://justingerad05.github.io/reviewlab-static";
 
 const FEED_URL =
 "https://honestproductreviewlab.blogspot.com/feeds/posts/default?alt=atom";
+
+const FALLBACK_IMAGE = `${SITE_URL}/og-default.jpg`;
+
+/* ================= CLEAN BUILD ================= */
 
 fs.rmSync("posts",{recursive:true,force:true});
 fs.rmSync("_data",{recursive:true,force:true});
@@ -16,6 +22,8 @@ fs.mkdirSync("posts",{recursive:true});
 fs.mkdirSync("og-images",{recursive:true});
 fs.mkdirSync("_data",{recursive:true});
 
+/* ================= FETCH BLOGGER ================= */
+
 const parser = new XMLParser({ignoreAttributes:false});
 const xml = await (await fetch(FEED_URL)).text();
 const data = parser.parse(xml);
@@ -23,7 +31,36 @@ const data = parser.parse(xml);
 let entries = data.feed.entry || [];
 if(!Array.isArray(entries)) entries=[entries];
 
-/* BUILD MASTER LIST FIRST */
+/* ================= IMAGE EXTRACTOR (ELITE VERSION) ================= */
+
+function extractBestImage(html){
+
+ // YouTube thumbnail wins instantly
+ const yt = html.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([A-Za-z0-9_-]{11})/);
+ if(yt){
+   return `https://img.youtube.com/vi/${yt[1]}/maxresdefault.jpg`;
+ }
+
+ // Grab blogger image
+ const img = html.match(/<img[^>]+src=["']([^"']+)["']/i);
+
+ if(!img) return null;
+
+ let url = img[1];
+
+ /**
+  CRITICAL FIX:
+  Convert blogger resized images → FULL resolution
+  Example:
+  /s320/  -> /s1600/
+ */
+ url = url.replace(/\/s\d+\//,"/s1600/");
+
+ return url;
+}
+
+/* ================= BUILD MASTER LIST ================= */
+
 const posts = [];
 
 for(const entry of entries){
@@ -36,16 +73,20 @@ for(const entry of entries){
    .replace(/[^a-z0-9]+/g,"-")
    .replace(/^-|-$/g,"");
 
- /* Detect Blogger thumbnail automatically */
- let thumbMatch = html.match(/<img.*?src="(.*?)"/);
+ let ogImage = extractBestImage(html);
 
- let ogImage;
+ /**
+  If NO thumbnail exists →
+  generate elite OG automatically
+ */
+ if(!ogImage){
 
- if(thumbMatch){
-   ogImage = thumbMatch[1];
- }else{
-   await generateOG(slug,title);
-   ogImage = `${SITE_URL}/og-images/${slug}.png`;
+   ogImage = await generateOG(slug,title);
+
+   // Safety fallback
+   if(!ogImage){
+     ogImage = FALLBACK_IMAGE;
+   }
  }
 
  posts.push({
@@ -58,7 +99,7 @@ for(const entry of entries){
  });
 }
 
-/* CREATE PAGES WITH TRUE RELATED AUTHORITY */
+/* ================= CREATE AUTHORITY PAGES ================= */
 
 for(const post of posts){
 
@@ -111,6 +152,8 @@ ${post.html}
  fs.writeFileSync(`posts/${post.slug}/index.html`,page);
 }
 
+/* ================= DATA ================= */
+
 fs.writeFileSync("_data/posts.json",JSON.stringify(posts,null,2));
 
-console.log("✅ TOPICAL AUTHORITY ENGINE LIVE");
+console.log("✅ ELITE AUTHORITY ENGINE ACTIVE");
