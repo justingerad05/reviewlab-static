@@ -15,7 +15,6 @@ const CTA =
 const DEFAULT =
 `${SITE_URL}/og-default.jpg`;
 
-
 /* CLEAN */
 
 fs.rmSync("posts",{recursive:true,force:true});
@@ -25,7 +24,6 @@ fs.mkdirSync("posts",{recursive:true});
 fs.mkdirSync("_data",{recursive:true});
 fs.mkdirSync("og-images",{recursive:true});
 
-
 /* FETCH */
 
 const parser = new XMLParser({ignoreAttributes:false});
@@ -34,7 +32,6 @@ const data = parser.parse(xml);
 
 let entries = data.feed.entry || [];
 if(!Array.isArray(entries)) entries=[entries];
-
 
 /* =====================
    ELITE YOUTUBE ENGINE
@@ -66,25 +63,20 @@ async function getYouTubeImages(html,slug){
  }
 
  if(valid.length===0){
-
-   // last resort — upscale hq
    const upscaled = await upscaleToOG(
      `https://img.youtube.com/vi/${id}/hqdefault.jpg`,
      slug
    );
-
-   if(upscaled){
-     return [`${SITE_URL}/og-images/${slug}.jpg`];
-   }
-
+   if(upscaled) return [`${SITE_URL}/og-images/${slug}.jpg`];
    return null;
  }
 
  return valid;
 }
 
-
-/* BUILD */
+/* =====================
+   BUILD POSTS
+===================== */
 
 const posts=[];
 
@@ -106,23 +98,16 @@ for(const entry of entries){
  const description =
  html.replace(/<[^>]+>/g," ").slice(0,155);
 
-
 /* IMAGE PRIORITY */
 
  let ogImages = await getYouTubeImages(html,slug);
-
  if(!ogImages) ogImages=[CTA];
  if(!ogImages) ogImages=[DEFAULT];
-
  if(!ogImages){
-
    await generateOG(slug,title);
-
    ogImages=[`${SITE_URL}/og-images/${slug}.jpg`];
  }
-
  const primaryOG = ogImages[0];
-
 
 /* BUILD MULTI OG TAGS */
 
@@ -133,6 +118,32 @@ for(const entry of entries){
 <meta property="og:image:height" content="630">
 `).join("");
 
+/* SCHEMA FOR GOOGLE DISCOVER */
+
+ const schema = {
+   "@context": "https://schema.org",
+   "@type": "Article",
+   "mainEntityOfPage": {
+     "@type": "WebPage",
+     "@id": url
+   },
+   "headline": title,
+   "image": ogImages,
+   "datePublished": entry.published,
+   "author": {
+     "@type": "Organization",
+     "name": "ReviewLab"
+   },
+   "publisher": {
+     "@type": "Organization",
+     "name": "ReviewLab",
+     "logo": {
+       "@type": "ImageObject",
+       "url": CTA
+     }
+   },
+   "description": description
+ };
 
  posts.push({
    title,
@@ -142,15 +153,14 @@ for(const entry of entries){
    description,
    og:primaryOG,
    ogMeta,
+   schema: JSON.stringify(schema),
    date:entry.published
  });
 }
 
-
 /* SORT */
 
 posts.sort((a,b)=> new Date(b.date)-new Date(a.date));
-
 
 /* BUILD PAGES */
 
@@ -183,6 +193,10 @@ ${post.ogMeta}
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="${post.og}">
 
+<script type="application/ld+json">
+${post.schema}
+</script>
+
 </head>
 
 <body style="max-width:760px;margin:auto;font-family:system-ui;padding:40px;line-height:1.7;">
@@ -204,10 +218,9 @@ ${post.html}
  fs.writeFileSync(`posts/${post.slug}/index.html`,page);
 }
 
-
 fs.writeFileSync(
 "_data/posts.json",
 JSON.stringify(posts,null,2)
 );
 
-console.log("✅ AUTHORITY STACK PHASE 10 — OG ENGINE PERFECTED");
+console.log("✅ AUTHORITY STACK PHASE 12 — GOOGLE DISCOVER READY");
