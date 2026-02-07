@@ -7,6 +7,7 @@ module.exports = function(eleventyConfig) {
   eleventyConfig.addPassthroughCopy("og-cta-features.jpg");
   eleventyConfig.addPassthroughCopy("og-cta-tested.jpg");
   eleventyConfig.addPassthroughCopy("og-cta-verdict.jpg");
+  eleventyConfig.addWatchTarget("./og-images/");
 
   /* BULLETPROOF POSTS COLLECTION */
   eleventyConfig.addCollection("posts", function(collectionApi) {
