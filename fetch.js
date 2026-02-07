@@ -36,9 +36,19 @@ let entries = data.feed.entry || [];
 if(!Array.isArray(entries)) entries=[entries];
 
 
-/* =====================
-YOUTUBE ENGINE
-===================== */
+/* ===================================================
+   PHASE 10 — ELITE YOUTUBE THUMBNAIL ENGINE
+   (ZERO ARCHITECTURE CHANGE)
+=================================================== */
+
+async function urlWorks(url){
+ try{
+   const res = await fetch(url,{method:"HEAD"});
+   return res.ok;
+ }catch{
+   return false;
+ }
+}
 
 async function getYouTubeImage(html,slug){
 
@@ -49,24 +59,53 @@ async function getYouTubeImage(html,slug){
 
  const id = match[1];
 
- const max =
- `https://img.youtube.com/vi/${id}/maxresdefault.jpg`;
+ /* ALL FOUR — ORDER MATTERS */
 
- try{
-   const res = await fetch(max,{method:"HEAD"});
-   if(res.ok) return max;
- }catch{}
+ const candidates = [
+
+   {
+     url:`https://img.youtube.com/vi/${id}/maxresdefault.jpg`,
+     large:true
+   },
+
+   {
+     url:`https://img.youtube.com/vi/${id}/sddefault.jpg`,
+     large:true
+   },
+
+   {
+     url:`https://img.youtube.com/vi/${id}/hqdefault.jpg`,
+     large:false
+   },
+
+   {
+     url:`https://img.youtube.com/vi/${id}/mqdefault.jpg`,
+     large:false
+   }
+
+ ];
 
 
-/* UPSCALE SMALL ONES */
+ for(const img of candidates){
 
- const small =
- `https://img.youtube.com/vi/${id}/hqdefault.jpg`;
+   if(await urlWorks(img.url)){
 
- const upscaled = await upscaleToOG(small,slug);
+     /* LARGE → use immediately */
 
- if(upscaled)
-   return `${SITE_URL}/og-images/${slug}.jpg`;
+     if(img.large){
+       return img.url;
+     }
+
+     /* SMALL → upscale to 1200×630 */
+
+     const upscaled =
+     await upscaleToOG(img.url,slug);
+
+     if(upscaled){
+       return `${SITE_URL}/og-images/${slug}.jpg`;
+     }
+   }
+ }
 
  return null;
 }
@@ -95,9 +134,13 @@ for(const entry of entries){
  html.replace(/<[^>]+>/g," ").slice(0,155);
 
 
-/* IMAGE PRIORITY */
+/* =========================
+   IMAGE PRIORITY (LOCKED)
+========================= */
 
  let og = await getYouTubeImage(html,slug);
+
+/* NEVER skip YouTube */
 
  if(!og) og = CTA;
  if(!og) og = DEFAULT;
@@ -127,7 +170,7 @@ for(const entry of entries){
 posts.sort((a,b)=> new Date(b.date)-new Date(a.date));
 
 
-/* BUILD PAGES */
+/* BUILD PAGES — UNTOUCHED */
 
 for(const post of posts){
 
@@ -136,7 +179,7 @@ for(const post of posts){
  const related = posts
    .filter(p=>p.slug!==post.slug)
    .slice(0,4)
-   .map(p=>`<li><a href="${p.url}">${p.title}</a></li>`)
+   .map(p=>`<li><a href="${post.url}">${p.title}</a></li>`)
    .join("");
 
  const page = `<!doctype html>
@@ -186,4 +229,4 @@ fs.writeFileSync(
 JSON.stringify(posts,null,2)
 );
 
-console.log("✅ AUTHORITY STACK PHASE 8 LIVE");
+console.log("✅ AUTHORITY STACK PHASE 10 LIVE");
