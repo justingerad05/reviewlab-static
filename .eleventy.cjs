@@ -7,16 +7,9 @@ module.exports = function(eleventyConfig) {
   eleventyConfig.addPassthroughCopy("og-cta-features.jpg");
   eleventyConfig.addPassthroughCopy("og-cta-tested.jpg");
   eleventyConfig.addPassthroughCopy("og-cta-verdict.jpg");
-  
-  /* BULLETPROOF POSTS COLLECTION */
-  eleventyConfig.addCollection("posts", function(collectionApi) {
 
-    return collectionApi
-      .getFilteredByGlob("./posts/**/*.md")
-      .filter(post => !post.data.draft) // prevents hidden drafts
-      .sort((a, b) => b.date - a.date);
-
-  });
+  /* WATCH OG FOLDER (prevents cache issues) */
+  eleventyConfig.addWatchTarget("./og-images/");
 
   return {
     dir: {
