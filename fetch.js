@@ -3,13 +3,11 @@ import fetch from "node-fetch";
 import { XMLParser } from "fast-xml-parser";
 import { generateOG } from "./generate-og.js";
 
-const FEED_URL =
-"https://honestproductreviewlab.blogspot.com/feeds/posts/default?alt=atom";
-
 const SITE_URL =
 "https://justingerad05.github.io/reviewlab-static";
 
-/* CLEAN */
+const FEED_URL =
+"https://honestproductreviewlab.blogspot.com/feeds/posts/default?alt=atom";
 
 fs.rmSync("posts",{recursive:true,force:true});
 fs.rmSync("_data",{recursive:true,force:true});
@@ -18,8 +16,6 @@ fs.mkdirSync("posts",{recursive:true});
 fs.mkdirSync("og-images",{recursive:true});
 fs.mkdirSync("_data",{recursive:true});
 
-/* FETCH */
-
 const parser = new XMLParser({ignoreAttributes:false});
 const xml = await (await fetch(FEED_URL)).text();
 const data = parser.parse(xml);
@@ -27,10 +23,12 @@ const data = parser.parse(xml);
 let entries = data.feed.entry || [];
 if(!Array.isArray(entries)) entries=[entries];
 
-/* BUILD POST OBJECTS FIRST (critical for related posts) */
+/* BUILD MASTER LIST FIRST */
+const posts = [];
 
-const posts = entries.map(entry => {
+for(const entry of entries){
 
+ const html = entry.content?.["#text"] || "";
  const title = entry.title["#text"];
 
  const slug = title
@@ -38,52 +36,42 @@ const posts = entries.map(entry => {
    .replace(/[^a-z0-9]+/g,"-")
    .replace(/^-|-$/g,"");
 
- return {
+ /* Detect Blogger thumbnail automatically */
+ let thumbMatch = html.match(/<img.*?src="(.*?)"/);
+
+ let ogImage;
+
+ if(thumbMatch){
+   ogImage = thumbMatch[1];
+ }else{
+   await generateOG(slug,title);
+   ogImage = `${SITE_URL}/og-images/${slug}.png`;
+ }
+
+ posts.push({
    title,
    slug,
+   html,
    date:entry.published,
    url:`${SITE_URL}/posts/${slug}/`,
-   html:entry.content?.["#text"] || ""
- };
-});
+   og:ogImage
+ });
+}
 
-/* GENERATE PAGES */
+/* CREATE PAGES WITH TRUE RELATED AUTHORITY */
 
 for(const post of posts){
-
- await generateOG(post.slug,post.title);
-
- const og = `${SITE_URL}/og-images/${post.slug}.png`;
-
- const description =
- post.html.replace(/<[^>]+>/g," ").slice(0,155);
 
  fs.mkdirSync(`posts/${post.slug}`,{recursive:true});
 
  const related = posts
    .filter(p=>p.slug!==post.slug)
-   .sort(()=>0.5-Math.random())
    .slice(0,4)
    .map(p=>`<li><a href="${p.url}">${p.title}</a></li>`)
    .join("");
 
- const schema = {
- "@context":"https://schema.org",
- "@type":"Review",
- itemReviewed:{
-   "@type":"SoftwareApplication",
-   name:post.title
- },
- author:{
-   "@type":"Organization",
-   name:"ReviewLab"
- },
- reviewRating:{
-   "@type":"Rating",
-   ratingValue:"4.8",
-   bestRating:"5"
- }
- };
+ const description =
+ post.html.replace(/<[^>]+>/g," ").slice(0,155);
 
  const page = `<!doctype html>
 <html>
@@ -98,16 +86,12 @@ for(const post of posts){
 <meta property="og:type" content="article">
 <meta property="og:title" content="${post.title}">
 <meta property="og:description" content="${description}">
-<meta property="og:image" content="${og}">
+<meta property="og:image" content="${post.og}">
 <meta property="og:url" content="${post.url}">
 <meta property="og:site_name" content="ReviewLab">
 
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="${og}">
-
-<script type="application/ld+json">
-${JSON.stringify(schema)}
-</script>
+<meta name="twitter:image" content="${post.og}">
 
 </head>
 <body>
@@ -119,9 +103,7 @@ ${post.html}
 <hr>
 
 <h2>Related Reviews</h2>
-<ul>
-${related}
-</ul>
+<ul>${related}</ul>
 
 </body>
 </html>`;
@@ -129,11 +111,6 @@ ${related}
  fs.writeFileSync(`posts/${post.slug}/index.html`,page);
 }
 
-/* DATA */
+fs.writeFileSync("_data/posts.json",JSON.stringify(posts,null,2));
 
-fs.writeFileSync(
-"_data/posts.json",
-JSON.stringify(posts,null,2)
-);
-
-console.log("✅ AUTHORITY MODE ACTIVE");
+console.log("✅ TOPICAL AUTHORITY ENGINE LIVE");
