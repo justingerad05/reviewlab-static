@@ -1,0 +1,31 @@
+---
+permalink: sitemap.xml
+eleventyExcludeFromCollections: true
+---
+
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset 
+xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+xmlns:xhtml="http://www.w3.org/1999/xhtml">
+
+  <!-- Homepage -->
+  <url>
+    <loc>https://justingerad05.github.io/reviewlab-static/</loc>
+    <lastmod>{{ "now" | date: "%Y-%m-%d" }}</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+  </url>
+
+  <!-- Posts -->
+  {% if posts and posts.length > 0 %}
+    {% for post in posts %}
+    <url>
+      <loc>https://justingerad05.github.io{{ post.url }}</loc>
+      <lastmod>{{ post.date | date: "%Y-%m-%d" }}</lastmod>
+      <changefreq>weekly</changefreq>
+      <priority>0.9</priority>
+    </url>
+    {% endfor %}
+  {% endif %}
+
+</urlset>
