@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title id="meta-title"></title>
+<meta id="meta-desc" name="description">
+
+<meta property="og:type" content="article">
+<meta property="og:title" id="og-title">
+<meta property="og:description" id="og-desc">
+<meta property="og:image" id="og-image">
+
+<link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+
+<a href="index.html" class="home-btn">← Return to Homepage</a>
+
+<article id="post"></article>
+
+<section>
+<h3>Related Posts</h3>
+<div id="related" class="post-grid"></div>
+</section>
+
+<script>
+
+const fallbackImages = [
+"https://justingerad05.github.io/reviewlab-static/og-default.jpg",
+"https://justingerad05.github.io/reviewlab-static/og-cta-tested.jpg"
+];
+
+function getYoutubeId(url){
+const reg = /(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&]+)/;
+return url?.match(reg)?.[1] || null;
+}
+
+function resolveThumbnail(post){
+
+const id = getYoutubeId(post.youtube);
+
+if(id){
+return [
+`https://img.youtube.com/vi/${id}/maxresdefault.jpg`,
+`https://img.youtube.com/vi/${id}/sddefault.jpg`,
+`https://img.youtube.com/vi/${id}/hqdefault.jpg`
+];
+}
+
+return fallbackImages;
+}
+
+const params=new URLSearchParams(location.search);
+const slug=params.get('slug');
+
+fetch('./posts.json')
+.then(res=>res.json())
+.then(posts=>{
+
+const post=posts.find(p=>p.slug===slug);
+const thumbs=resolveThumbnail(post);
+
+document.title=post.title;
+document.getElementById('meta-title').innerText=post.title;
+document.getElementById('meta-desc').content=post.excerpt;
+
+document.getElementById('og-title').content=post.title;
+document.getElementById('og-desc').content=post.excerpt;
+document.getElementById('og-image').content=thumbs[0];
+
+const article=document.getElementById('post');
+
+article.innerHTML=`
+<h1>${post.title}</h1>
+
+<img src="${thumbs[0]}" 
+onerror="this.onerror=null;this.src='${thumbs[1] || fallbackImages[0]}'; 
+if(this.src.includes('sddefault')) this.src='${thumbs[2] || fallbackImages[0]}'; 
+if(this.src.includes('hqdefault')) this.src='${fallbackImages[0]}';"
+>
+
+${post.content}
+`;
+
+
+// RELATED POSTS
+const related=document.getElementById('related');
+
+posts
+.filter(p=>p.slug!==slug)
+.slice(0,3)
+.forEach(p=>{
+
+const rThumb=resolveThumbnail(p);
+
+related.innerHTML+=`
+<a href="post.html?slug=${p.slug}" class="card">
+<img src="${rThumb[0]}"
+onerror="this.src='${fallbackImages[0]}'">
+<h4>${p.title}</h4>
+</a>
+`;
+});
+
+});
+</script>
+
+</body>
+</html>
