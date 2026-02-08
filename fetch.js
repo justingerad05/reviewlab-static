@@ -12,7 +12,6 @@ const SITE_URL =
 const CTA = `${SITE_URL}/og-cta-tested.jpg`;
 const DEFAULT = `${SITE_URL}/og-default.jpg`;
 
-/* CLEAN BUILD */
 fs.rmSync("posts",{recursive:true,force:true});
 fs.rmSync("_data",{recursive:true,force:true});
 
@@ -20,7 +19,6 @@ fs.mkdirSync("posts",{recursive:true});
 fs.mkdirSync("_data",{recursive:true});
 fs.mkdirSync("og-images",{recursive:true});
 
-/* FETCH FEED */
 const parser = new XMLParser({ignoreAttributes:false});
 const xml = await (await fetch(FEED_URL)).text();
 const data = parser.parse(xml);
@@ -28,7 +26,6 @@ const data = parser.parse(xml);
 let entries = data.feed.entry || [];
 if(!Array.isArray(entries)) entries=[entries];
 
-/* YOUTUBE IMAGE ENGINE */
 async function getYouTubeImages(html,slug){
   const match = html.match(/(?:youtube\.com\/embed\/|watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
   if(!match) return null;
@@ -56,21 +53,15 @@ async function getYouTubeImages(html,slug){
   return valid;
 }
 
-/* CATEGORY EXTRACTION (PHASE 22) */
 function extractCategories(text){
   const words = text.toLowerCase().match(/\b[a-z]{4,}\b/g) || [];
   const freq = {};
   words.forEach(w=>freq[w]=(freq[w]||0)+1);
-  // top 3 frequent words as simple tags
-  return Object.entries(freq)
-               .sort((a,b)=>b[1]-a[1])
-               .slice(0,3)
-               .map(e=>e[0]);
+  return Object.entries(freq).sort((a,b)=>b[1]-a[1]).slice(0,3).map(e=>e[0]);
 }
 
 const posts=[];
 
-/* BUILD POSTS */
 for(const entry of entries){
   const html = entry.content?.["#text"];
   if(!html) continue;
@@ -88,7 +79,6 @@ for(const entry of entries){
   const thumb = ogImages.find(img=>img.includes("hqdefault")) || primaryOG;
   const textOnly = html.replace(/<[^>]+>/g,"");
   const readTime = Math.max(1, Math.ceil(textOnly.split(/\s+/).length / 200));
-
   const categories = extractCategories(textOnly);
 
   const schema = {
@@ -110,6 +100,7 @@ for(const entry of entries){
       }
     },
     "description":description,
+    "keywords":categories.join(", "),
     "mainEntityOfPage":{
       "@type":"WebPage",
       "@id":url
@@ -133,7 +124,6 @@ for(const entry of entries){
 
 posts.sort((a,b)=> new Date(b.date)-new Date(a.date));
 
-/* GENERATE POST PAGES */
 for(const post of posts){
   fs.mkdirSync(`posts/${post.slug}`,{recursive:true});
 
@@ -143,7 +133,7 @@ for(const post of posts){
     .map(p=>`
 <li style="margin-bottom:14px;">
 <a href="${p.url}" style="display:flex;align-items:center;gap:10px;text-decoration:none;">
-<img src="${p.thumb}" width="110" style="border-radius:8px;">
+<img src="${p.thumb}" width="110" alt="${p.title}" style="border-radius:8px;transition:opacity .3s;opacity:0;" class="related-thumb">
 <span>${p.title} (~${p.readTime} min)</span>
 </a>
 </li>`).join("");
@@ -168,7 +158,9 @@ max-width:260px;
 border:2px solid #ccc;
 z-index:9999;
 pointer-events:none;
+transition:opacity .2s;
 }
+.related-thumb.loaded{opacity:1;}
 </style>
 </head>
 <body style="max-width:760px;margin:auto;font-family:system-ui;padding:40px;line-height:1.7;">
@@ -184,7 +176,10 @@ const hover=document.getElementById("hoverPreview");
 document.querySelectorAll("ul li a").forEach(link=>{
   const img = link.querySelector("img");
   if(!img) return;
-  // Hover shows image
+  // Fade-in thumbnail
+  img.onload = ()=> img.classList.add("loaded");
+  // Hover/long-press preview
+  let touchTimer=null;
   link.addEventListener("mouseenter",e=>{
     hover.src = img.src;
     hover.style.display="block";
@@ -195,6 +190,15 @@ document.querySelectorAll("ul li a").forEach(link=>{
   });
   link.addEventListener("mouseleave",()=>{
     hover.style.display="none";
+    clearTimeout(touchTimer);
+  });
+  // Mobile long-press
+  link.addEventListener("touchstart",()=>{
+    touchTimer = setTimeout(()=>{hover.src=img.src;hover.style.display="block";}, 300);
+  });
+  link.addEventListener("touchend",()=>{
+    hover.style.display="none";
+    clearTimeout(touchTimer);
   });
 });
 </script>
@@ -204,7 +208,6 @@ document.querySelectorAll("ul li a").forEach(link=>{
   fs.writeFileSync(`posts/${post.slug}/index.html`,page);
 }
 
-/* SAVE POSTS JSON */
 fs.writeFileSync("_data/posts.json",JSON.stringify(posts,null,2));
 
-console.log("✅ PHASE 22 COMPLETE — RELATED THUMBNAILS, HOVER, MOBILE TAP & CATEGORIES FIXED");
+console.log("✅ PHASE 23 COMPLETE — MOBILE-LONG-PRESS + FADE-IN + TAGS ADDED");
