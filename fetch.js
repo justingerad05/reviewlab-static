@@ -9,13 +9,9 @@ const FEED_URL =
 const SITE_URL =
 "https://justingerad05.github.io/reviewlab-static";
 
-const CTA =
-`${SITE_URL}/og-cta-tested.jpg`;
+const CTA = `${SITE_URL}/og-cta-tested.jpg`;
+const DEFAULT = `${SITE_URL}/og-default.jpg`;
 
-const DEFAULT =
-`${SITE_URL}/og-default.jpg`;
-
-/* CLEAN */
 fs.rmSync("posts",{recursive:true,force:true});
 fs.rmSync("_data",{recursive:true,force:true});
 
@@ -23,17 +19,12 @@ fs.mkdirSync("posts",{recursive:true});
 fs.mkdirSync("_data",{recursive:true});
 fs.mkdirSync("og-images",{recursive:true});
 
-/* FETCH */
 const parser = new XMLParser({ignoreAttributes:false});
 const xml = await (await fetch(FEED_URL)).text();
 const data = parser.parse(xml);
 
 let entries = data.feed.entry || [];
 if(!Array.isArray(entries)) entries=[entries];
-
-/* =====================
-   ELITE YOUTUBE ENGINE
-===================== */
 
 async function getYouTubeImages(html,slug){
 
@@ -47,8 +38,7 @@ async function getYouTubeImages(html,slug){
  const candidates = [
    `https://img.youtube.com/vi/${id}/maxresdefault.jpg`,
    `https://img.youtube.com/vi/${id}/sddefault.jpg`,
-   `https://img.youtube.com/vi/${id}/hqdefault.jpg`,
-   `https://img.youtube.com/vi/${id}/mqdefault.jpg`
+   `https://img.youtube.com/vi/${id}/hqdefault.jpg`
  ];
 
  const valid=[];
@@ -60,19 +50,17 @@ async function getYouTubeImages(html,slug){
    }catch{}
  }
 
- if(valid.length) return valid;
+ if(valid.length===0){
+   const upscaled = await upscaleToOG(
+     `https://img.youtube.com/vi/${id}/hqdefault.jpg`,
+     slug
+   );
+   if(upscaled) return [`${SITE_URL}/og-images/${slug}.jpg`];
+   return null;
+ }
 
- const upscaled = await upscaleToOG(
-   `https://img.youtube.com/vi/${id}/hqdefault.jpg`,
-   slug
- );
-
- return upscaled ? [`${SITE_URL}/og-images/${slug}.jpg`] : null;
+ return valid;
 }
-
-/* =====================
-   BUILD POSTS
-===================== */
 
 const posts=[];
 
@@ -93,61 +81,31 @@ for(const entry of entries){
  const description =
  html.replace(/<[^>]+>/g," ").slice(0,155);
 
-/* IMAGE PRIORITY */
- let ogImages =
-   (await getYouTubeImages(html,slug)) ||
-   [CTA] ||
-   [DEFAULT];
-
- if(!ogImages){
-   await generateOG(slug,title);
-   ogImages=[`${SITE_URL}/og-images/${slug}.jpg`];
- }
+ let ogImages = await getYouTubeImages(html,slug);
+ if(!ogImages) ogImages=[CTA];
+ if(!ogImages) ogImages=[DEFAULT];
 
  const primaryOG = ogImages[0];
- const thumb =
- ogImages.find(img=>img.includes("hqdefault.jpg")) || primaryOG;
+ const thumb = ogImages.find(img=>img.includes("hqdefault")) || primaryOG;
 
-/* READ TIME */
  const textOnly = html.replace(/<[^>]+>/g,"");
  const readTime = Math.max(1, Math.ceil(textOnly.split(/\s+/).length / 200));
 
-/* OG META */
- const ogMeta = ogImages.map(img=>`
-<meta property="og:image" content="${img}">
-<meta property="og:image:secure_url" content="${img}">
-<meta property="og:image:width" content="1200">
-<meta property="og:image:height" content="630">
-`).join("");
-
- const schema = {
-   "@context":"https://schema.org",
-   "@type":"Article",
-   "mainEntityOfPage":{"@type":"WebPage","@id":url},
-   "headline":title,
-   "image":ogImages,
-   "datePublished":entry.published,
-   "author":{"@type":"Organization","name":"ReviewLab"},
-   "publisher":{
-     "@type":"Organization",
-     "name":"ReviewLab",
-     "logo":{"@type":"ImageObject","url":CTA}
-   },
-   "description":description
- };
-
  posts.push({
-   title,slug,html,url,description,
-   og:primaryOG,thumb,ogMeta,
-   schema:JSON.stringify(schema),
-   readTime,date:entry.published
+   title,
+   slug,
+   html,
+   url,
+   description,
+   og:primaryOG,
+   thumb,
+   readTime,
+   date:entry.published
  });
 }
 
-/* SORT */
-posts.sort((a,b)=>new Date(b.date)-new Date(a.date));
+posts.sort((a,b)=> new Date(b.date)-new Date(a.date));
 
-/* BUILD PAGES */
 for(const post of posts){
 
  fs.mkdirSync(`posts/${post.slug}`,{recursive:true});
@@ -157,7 +115,7 @@ for(const post of posts){
    .slice(0,4)
    .map(p=>`
 <li>
-<a href="${p.url}" title="Read for ~${p.readTime} min">
+<a href="${p.url}" class="related-link">
 <img data-src="${p.thumb}" width="100" class="lazy">
 ${p.title} (~${p.readTime} min)
 </a>
@@ -166,33 +124,110 @@ ${p.title} (~${p.readTime} min)
  const page = `<!doctype html>
 <html>
 <head>
+
 <meta charset="utf-8">
 <title>${post.title}</title>
-<meta name="description" content="${post.description}">
-<link rel="canonical" href="${post.url}">
-<meta property="og:type" content="article">
-<meta property="og:title" content="${post.title}">
-<meta property="og:description" content="${post.description}">
-${post.ogMeta}
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="${post.og}">
-<script type="application/ld+json">${post.schema}</script>
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+
+.lazy{opacity:0;transition:.3s;}
+.lazy.loaded{opacity:1;}
+
+.hover-preview{
+position:absolute;
+display:none;
+max-width:260px;
+border:2px solid #ccc;
+z-index:9999;
+pointer-events:none;
+}
+
+.related-link{
+display:block;
+padding:10px 0;
+}
+
+</style>
+
 </head>
 
-<body style="max-width:760px;margin:auto;font-family:system-ui;padding:40px;">
+<body style="max-width:760px;margin:auto;font-family:system-ui;padding:40px;line-height:1.7;">
+
 <a href="${SITE_URL}">← Home</a>
+
 <h1>${post.title}</h1>
+
 ${post.html}
+
 <hr>
+
 <h3>Related Reviews</h3>
 <ul>${related}</ul>
+
+<img id="hoverPreview" class="hover-preview"/>
+
+<script>
+
+document.addEventListener("DOMContentLoaded",()=>{
+
+const lazy=document.querySelectorAll(".lazy");
+
+const io=new IntersectionObserver(entries=>{
+entries.forEach(e=>{
+if(e.isIntersecting){
+const img=e.target;
+img.src=img.dataset.src;
+img.onload=()=>img.classList.add("loaded");
+io.unobserve(img);
+}
+});
+});
+
+lazy.forEach(img=>io.observe(img));
+
+});
+
+const hover=document.getElementById("hoverPreview");
+
+document.querySelectorAll(".related-link").forEach(link=>{
+
+link.addEventListener("mouseover",e=>{
+const img=link.querySelector("img");
+if(!img) return;
+
+hover.src=img.dataset.src;
+hover.style.display="block";
+hover.style.top=e.pageY+"px";
+hover.style.left=e.pageX+"px";
+});
+
+link.addEventListener("mousemove",e=>{
+hover.style.top=e.pageY+"px";
+hover.style.left=e.pageX+"px";
+});
+
+link.addEventListener("mouseout",()=>{
+hover.style.display="none";
+});
+
+/* TOUCH SUPPORT */
+
+link.addEventListener("touchstart",()=>{
+window.location.href = link.href;
+});
+
+});
+
+</script>
+
 </body>
 </html>`;
 
  fs.writeFileSync(`posts/${post.slug}/index.html`,page);
 }
 
-/* SAVE POSTS */
 fs.writeFileSync("_data/posts.json",JSON.stringify(posts,null,2));
 
-console.log("✅ AUTHORITY STACK PHASE 15 — LOGIC HARDENED & RELATED POSTS FIXED");
+console.log("✅ PHASE 16 COMPLETE — RELATED POSTS FULLY FIXED");
