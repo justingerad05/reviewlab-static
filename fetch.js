@@ -12,6 +12,7 @@ const SITE_URL =
 const CTA = `${SITE_URL}/og-cta-tested.jpg`;
 const DEFAULT = `${SITE_URL}/og-default.jpg`;
 
+/* CLEAN BUILD */
 fs.rmSync("posts",{recursive:true,force:true});
 fs.rmSync("_data",{recursive:true,force:true});
 
@@ -19,6 +20,7 @@ fs.mkdirSync("posts",{recursive:true});
 fs.mkdirSync("_data",{recursive:true});
 fs.mkdirSync("og-images",{recursive:true});
 
+/* FETCH FEED */
 const parser = new XMLParser({ignoreAttributes:false});
 const xml = await (await fetch(FEED_URL)).text();
 const data = parser.parse(xml);
@@ -26,6 +28,7 @@ const data = parser.parse(xml);
 let entries = data.feed.entry || [];
 if(!Array.isArray(entries)) entries=[entries];
 
+/* YOUTUBE IMAGE ENGINE */
 async function getYouTubeImages(html,slug){
 
  const match =
@@ -62,6 +65,7 @@ async function getYouTubeImages(html,slug){
  return valid;
 }
 
+/* BUILD POSTS */
 const posts=[];
 
 for(const entry of entries){
@@ -106,6 +110,7 @@ for(const entry of entries){
 
 posts.sort((a,b)=> new Date(b.date)-new Date(a.date));
 
+/* BUILD POST PAGES */
 for(const post of posts){
 
  fs.mkdirSync(`posts/${post.slug}`,{recursive:true});
@@ -116,7 +121,7 @@ for(const post of posts){
    .map(p=>`
 <li>
 <a href="${p.url}" class="related-link">
-<img data-src="${p.thumb}" width="100" class="lazy">
+<img data-src="${p.thumb}" width="100" class="lazy" alt="${p.title}">
 ${p.title} (~${p.readTime} min)
 </a>
 </li>`).join("");
@@ -127,7 +132,6 @@ ${p.title} (~${p.readTime} min)
 
 <meta charset="utf-8">
 <title>${post.title}</title>
-
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
@@ -170,6 +174,7 @@ ${post.html}
 
 <script>
 
+/* LAZY LOAD */
 document.addEventListener("DOMContentLoaded",()=>{
 
 const lazy=document.querySelectorAll(".lazy");
@@ -189,33 +194,37 @@ lazy.forEach(img=>io.observe(img));
 
 });
 
+/* HOVER (DESKTOP ONLY) */
 const hover=document.getElementById("hoverPreview");
 
 document.querySelectorAll(".related-link").forEach(link=>{
 
-link.addEventListener("mouseover",e=>{
-const img=link.querySelector("img");
-if(!img) return;
+let isTouch = false;
 
-hover.src=img.dataset.src;
-hover.style.display="block";
-hover.style.top=e.pageY+"px";
-hover.style.left=e.pageX+"px";
+link.addEventListener("touchstart",()=>{
+  isTouch = true;
+});
+
+link.addEventListener("mouseover",e=>{
+  if(isTouch) return;
+
+  const img=link.querySelector("img");
+  if(!img) return;
+
+  hover.src=img.dataset.src;
+  hover.style.display="block";
+  hover.style.top=e.pageY+"px";
+  hover.style.left=e.pageX+"px";
 });
 
 link.addEventListener("mousemove",e=>{
-hover.style.top=e.pageY+"px";
-hover.style.left=e.pageX+"px";
+  if(isTouch) return;
+  hover.style.top=e.pageY+"px";
+  hover.style.left=e.pageX+"px";
 });
 
 link.addEventListener("mouseout",()=>{
-hover.style.display="none";
-});
-
-/* TOUCH SUPPORT */
-
-link.addEventListener("touchstart",()=>{
-window.location.href = link.href;
+  hover.style.display="none";
 });
 
 });
@@ -228,6 +237,7 @@ window.location.href = link.href;
  fs.writeFileSync(`posts/${post.slug}/index.html`,page);
 }
 
+/* SAVE POSTS */
 fs.writeFileSync("_data/posts.json",JSON.stringify(posts,null,2));
 
-console.log("✅ PHASE 16 COMPLETE — RELATED POSTS FULLY FIXED");
+console.log("✅ PHASE 16 — RELATED POST THUMB + HOVER + TAP STABLE");
