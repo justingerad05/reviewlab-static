@@ -1,7 +1,7 @@
 import fs from "fs";
 import fetch from "node-fetch";
 import { XMLParser } from "fast-xml-parser";
-import { upscaleToOG } from "./generate-og.js";
+import { generateOG, upscaleToOG } from "./generate-og.js";
 
 const FEED_URL =
 "https://honestproductreviewlab.blogspot.com/feeds/posts/default?alt=atom";
@@ -13,6 +13,7 @@ const CTA = `${SITE_URL}/og-cta-tested.jpg`;
 const DEFAULT = `${SITE_URL}/og-default.jpg`;
 
 /* CLEAN BUILD */
+
 fs.rmSync("posts",{recursive:true,force:true});
 fs.rmSync("_data",{recursive:true,force:true});
 
@@ -21,6 +22,7 @@ fs.mkdirSync("_data",{recursive:true});
 fs.mkdirSync("og-images",{recursive:true});
 
 /* FETCH FEED */
+
 const parser = new XMLParser({ignoreAttributes:false});
 const xml = await (await fetch(FEED_URL)).text();
 const data = parser.parse(xml);
@@ -28,11 +30,12 @@ const data = parser.parse(xml);
 let entries = data.feed.entry || [];
 if(!Array.isArray(entries)) entries=[entries];
 
-/* YOUTUBE IMAGE ENGINE */
+/* YOUTUBE ENGINE */
+
 async function getYouTubeImages(html,slug){
 
  const match =
- html.match(/(?:youtube\.com\/embed\/|watch\\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+ html.match(/(?:youtube\.com\/embed\/|watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
 
  if(!match) return null;
 
@@ -67,7 +70,8 @@ async function getYouTubeImages(html,slug){
 
 const posts=[];
 
-/* BUILD POSTS DATA */
+/* BUILD POSTS */
+
 for(const entry of entries){
 
  const html = entry.content?.["#text"];
@@ -93,7 +97,34 @@ for(const entry of entries){
  const thumb = ogImages.find(img=>img.includes("hqdefault")) || primaryOG;
 
  const textOnly = html.replace(/<[^>]+>/g,"");
- const readTime = Math.max(1, Math.ceil(textOnly.split(/\\s+/).length / 200));
+ const readTime = Math.max(1, Math.ceil(textOnly.split(/\s+/).length / 200));
+
+ /* AUTHOR AUTHORITY */
+
+ const schema = {
+   "@context":"https://schema.org",
+   "@type":"Article",
+   "headline":title,
+   "image":ogImages,
+   "datePublished":entry.published,
+   "author":{
+     "@type":"Person",
+     "name":"Justin Gerald"
+   },
+   "publisher":{
+     "@type":"Organization",
+     "name":"ReviewLab",
+     "logo":{
+       "@type":"ImageObject",
+       "url":CTA
+     }
+   },
+   "description":description,
+   "mainEntityOfPage":{
+     "@type":"WebPage",
+     "@id":url
+   }
+ };
 
  posts.push({
    title,
@@ -104,13 +135,15 @@ for(const entry of entries){
    og:primaryOG,
    thumb,
    readTime,
-   date:entry.published
+   date:entry.published,
+   schema:JSON.stringify(schema)
  });
 }
 
 posts.sort((a,b)=> new Date(b.date)-new Date(a.date));
 
-/* BUILD POST PAGES */
+/* GENERATE PAGES */
+
 for(const post of posts){
 
  fs.mkdirSync(`posts/${post.slug}`,{recursive:true});
@@ -119,10 +152,10 @@ for(const post of posts){
    .filter(p=>p.slug!==post.slug)
    .slice(0,4)
    .map(p=>`
-<li>
-<a href="${p.url}" class="related-link">
-<img src="${p.thumb}" width="100" alt="${p.title}" class="related-thumb">
-${p.title} (~${p.readTime} min)
+<li style="margin-bottom:14px;">
+<a href="${p.url}" style="display:flex;align-items:center;gap:10px;text-decoration:none;">
+<img src="${p.thumb}" width="110" style="border-radius:8px;">
+<span>${p.title} (~${p.readTime} min)</span>
 </a>
 </li>`).join("");
 
@@ -131,17 +164,21 @@ ${p.title} (~${p.readTime} min)
 <head>
 
 <meta charset="utf-8">
-<title>${post.title}</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<style>
+<title>${post.title}</title>
+<meta name="description" content="${post.description}">
 
-.related-thumb{
-display:inline-block;
-vertical-align:middle;
-margin-right:10px;
-border-radius:6px;
-}
+<meta property="og:title" content="${post.title}">
+<meta property="og:description" content="${post.description}">
+<meta property="og:type" content="article">
+<meta property="og:image" content="${post.og}">
+
+<script type="application/ld+json">
+${post.schema}
+</script>
+
+<style>
 
 .hover-preview{
 position:absolute;
@@ -150,13 +187,6 @@ max-width:260px;
 border:2px solid #ccc;
 z-index:9999;
 pointer-events:none;
-}
-
-.related-link{
-display:block;
-padding:10px 0;
-text-decoration:none;
-color:inherit;
 }
 
 </style>
@@ -174,32 +204,24 @@ ${post.html}
 <hr>
 
 <h3>Related Reviews</h3>
-<ul>${related}</ul>
+<ul style="list-style:none;padding:0;">
+${related}
+</ul>
 
 <img id="hoverPreview" class="hover-preview"/>
 
 <script>
 
-/* DESKTOP HOVER ONLY */
 const hover=document.getElementById("hoverPreview");
 
-document.querySelectorAll(".related-link").forEach(link=>{
-
-const isTouchDevice =
-('ontouchstart' in window) || navigator.maxTouchPoints > 0;
-
-if(!isTouchDevice){
+document.querySelectorAll("ul li a").forEach(link=>{
 
 link.addEventListener("mouseenter",e=>{
-
 const img=link.querySelector("img");
 if(!img) return;
 
 hover.src=img.src;
 hover.style.display="block";
-hover.style.top=e.pageY+"px";
-hover.style.left=e.pageX+"px";
-
 });
 
 link.addEventListener("mousemove",e=>{
@@ -211,8 +233,6 @@ link.addEventListener("mouseleave",()=>{
 hover.style.display="none";
 });
 
-}
-
 });
 
 </script>
@@ -223,7 +243,8 @@ hover.style.display="none";
  fs.writeFileSync(`posts/${post.slug}/index.html`,page);
 }
 
-/* SAVE POSTS */
+/* SAVE DATA */
+
 fs.writeFileSync("_data/posts.json",JSON.stringify(posts,null,2));
 
-console.log("✅ PHASE 16–20 COMPLETE — RELATED POSTS FULLY STABLE");
+console.log("✅ PHASE 21 COMPLETE — AUTHORITY + RELATED THUMBNAILS FIXED");
