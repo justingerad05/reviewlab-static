@@ -18,66 +18,22 @@ content="width=device-width, initial-scale=1">
 <link rel="canonical"
 href="https://justingerad05.github.io/reviewlab-static/">
 
-
-<!-- =========================
-     🔥 HOMEPAGE OG (CRITICAL)
-========================= -->
-
 <meta property="og:type" content="website">
 <meta property="og:title" content="ReviewLab – Honest AI Tool Reviews">
 <meta property="og:description"
 content="Real testing. No hype. Just software that actually delivers.">
-
 <meta property="og:url"
 content="https://justingerad05.github.io/reviewlab-static/">
-
 <meta property="og:image"
 content="https://justingerad05.github.io/reviewlab-static/og-default.jpg">
-
 <meta property="og:image:secure_url"
 content="https://justingerad05.github.io/reviewlab-static/og-default.jpg">
-
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image"
 content="https://justingerad05.github.io/reviewlab-static/og-default.jpg">
-
-
-<!-- =========================
-     🔥 ORGANIZATION AUTHORITY
-========================= -->
-
-<script type="application/ld+json">
-{
-"@context":"https://schema.org",
-"@type":"Organization",
-"name":"ReviewLab",
-"url":"https://justingerad05.github.io/reviewlab-static/",
-"logo":"https://justingerad05.github.io/reviewlab-static/og-default.jpg"
-}
-</script>
-
-
-<!-- =========================
-     🔥 WEBSITE + SEARCH BOX
-========================= -->
-
-<script type="application/ld+json">
-{
-"@context":"https://schema.org",
-"@type":"WebSite",
-"url":"https://justingerad05.github.io/reviewlab-static/",
-"name":"ReviewLab",
-"potentialAction":{
- "@type":"SearchAction",
- "target":"https://justingerad05.github.io/reviewlab-static/?q={search_term_string}",
- "query-input":"required name=search_term_string"
-}
-}
-</script>
-
 
 <style>
 
@@ -94,24 +50,8 @@ body{
   padding:40px 20px;
 }
 
-h1{
-  font-size:42px;
-  margin-bottom:10px;
-}
-
-.sub{
-  color:#94a3b8;
-  margin-bottom:40px;
-}
-
-.post-list{
-  list-style:none;
-  padding:0;
-}
-
-.post-list li{
-  margin-bottom:22px;
-}
+.post-list{list-style:none;padding:0;}
+.post-list li{margin-bottom:22px;}
 
 .post-list a{
   color:#38bdf8;
@@ -120,14 +60,10 @@ h1{
   font-size:20px;
 }
 
-.post-list a:hover{
-  text-decoration:underline;
-}
-
-/* Lazy load and hover preview */
 .lazy { opacity:0; transition: opacity 0.3s; }
 .lazy.loaded { opacity:1; }
-.hover-preview {
+
+.hover-preview{
   position:absolute;
   display:none;
   max-width:300px;
@@ -136,7 +72,6 @@ h1{
   pointer-events:none;
 }
 
-/* AUTHORITY EMAIL BLOCK */
 .email-capture{
   margin:70px 0;
   padding:38px;
@@ -147,49 +82,6 @@ h1{
   text-align:center;
 }
 
-.email-capture h3{
-  font-size:28px;
-  margin-bottom:10px;
-}
-
-.email-capture p{
-  color:#94a3b8;
-  margin-bottom:22px;
-}
-
-.form-row{
-  display:flex;
-  gap:10px;
-  flex-wrap:wrap;
-  justify-content:center;
-}
-
-.email-capture input{
-  padding:14px;
-  border-radius:10px;
-  border:1px solid #334155;
-  background:#020617;
-  color:white;
-  min-width:260px;
-  font-size:16px;
-}
-
-.email-capture button{
-  padding:14px 20px;
-  border-radius:10px;
-  border:none;
-  font-weight:700;
-  cursor:pointer;
-  background:#22c55e;
-  color:#020617;
-}
-
-.trust{
-  margin-top:12px;
-  font-size:13px;
-  color:#64748b;
-}
-
 </style>
 </head>
 
@@ -198,21 +90,17 @@ h1{
 <div class="container">
 
 <h1>Latest AI Tool Reviews & Honest Software Analysis</h1>
-<p class="sub">Real testing. No hype. Just software that actually delivers.</p>
-
+<p>Real testing. No hype. Just software that actually delivers.</p>
 
 <section class="email-capture">
 
 <h3>Get Honest AI Tool Reviews</h3>
-<p>No fluff. No sponsored bias. Only tools worth your time.</p>
 
 <form 
 action="https://docs.google.com/forms/d/e/1FAIpQLSchzs0bE9se3YCR2TTiFl3Ohi0nbx0XPBjvK_dbANuI_eI1Aw/formResponse"
 method="POST"
 target="_blank"
 >
-
-<div class="form-row">
 
 <input
 type="email"
@@ -225,12 +113,6 @@ required
 Get Free Reviews
 </button>
 
-</div>
-
-<div class="trust">
-Join smart readers staying ahead of AI.
-</div>
-
 </form>
 
 </section>
@@ -239,7 +121,7 @@ Join smart readers staying ahead of AI.
 {% for post in posts %}
 <li>
 <a href="{{ post.url }}" title="Read for ~{{ post.readTime }} min">
-<img data-src="{{ post.thumb }}" alt="{{ post.title }}" width="120" class="lazy" style="vertical-align:middle;margin-right:10px;">
+<img data-src="{{ post.thumb }}" width="120" class="lazy" style="vertical-align:middle;margin-right:10px;">
 {{ post.title }} (~{{ post.readTime }} min)
 </a><br>
 <small>Published {{ post.date | date: "%B %d, %Y" }}</small>
@@ -250,11 +132,13 @@ Join smart readers staying ahead of AI.
 <img id="hoverPreview" class="hover-preview" />
 
 <script>
-// Lazy-load images
+
 document.addEventListener("DOMContentLoaded", function(){
+
   const lazyImgs = document.querySelectorAll(".lazy");
-  const io = new IntersectionObserver(entries => {
-    entries.forEach(entry => {
+
+  const io = new IntersectionObserver(entries=>{
+    entries.forEach(entry=>{
       if(entry.isIntersecting){
         const img = entry.target;
         img.src = img.dataset.src;
@@ -263,32 +147,39 @@ document.addEventListener("DOMContentLoaded", function(){
       }
     });
   });
-  lazyImgs.forEach(img => io.observe(img));
+
+  lazyImgs.forEach(img=>io.observe(img));
+
 });
 
-// Hover preview
+
 const hoverImg = document.getElementById("hoverPreview");
-document.querySelectorAll("ul.post-list li a").forEach(a => {
-  a.addEventListener("mouseover", e=>{
-    const img = a.querySelector("img");
-    if(img){
-      hoverImg.src = img.dataset.src;
-      hoverImg.style.display = "block";
-      hoverImg.style.top = e.pageY + "px";
-      hoverImg.style.left = e.pageX + "px";
-    }
+
+document.querySelectorAll("ul.post-list li a").forEach(a=>{
+
+  a.addEventListener("mouseover",e=>{
+    const img=a.querySelector("img");
+    if(!img) return;
+
+    hoverImg.src=img.dataset.src;
+    hoverImg.style.display="block";
+    hoverImg.style.top=e.pageY+"px";
+    hoverImg.style.left=e.pageX+"px";
   });
-  a.addEventListener("mousemove", e=>{
-    hoverImg.style.top = e.pageY + "px";
-    hoverImg.style.left = e.pageX + "px";
+
+  a.addEventListener("mousemove",e=>{
+    hoverImg.style.top=e.pageY+"px";
+    hoverImg.style.left=e.pageX+"px";
   });
-  a.addEventListener("mouseout", ()=>{
-    hoverImg.style.display = "none";
+
+  a.addEventListener("mouseout",()=>{
+    hoverImg.style.display="none";
   });
+
 });
+
 </script>
 
 </div>
-
 </body>
 </html>
