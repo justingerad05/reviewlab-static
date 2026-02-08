@@ -1,7 +1,7 @@
 import fs from "fs";
 import fetch from "node-fetch";
 import { XMLParser } from "fast-xml-parser";
-import { generateOG, upscaleToOG } from "./generate-og.js";
+import { upscaleToOG } from "./generate-og.js";
 
 const FEED_URL =
 "https://honestproductreviewlab.blogspot.com/feeds/posts/default?alt=atom";
@@ -32,7 +32,7 @@ if(!Array.isArray(entries)) entries=[entries];
 async function getYouTubeImages(html,slug){
 
  const match =
- html.match(/(?:youtube\.com\/embed\/|watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+ html.match(/(?:youtube\.com\/embed\/|watch\\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
 
  if(!match) return null;
 
@@ -65,9 +65,9 @@ async function getYouTubeImages(html,slug){
  return valid;
 }
 
-/* BUILD POSTS */
 const posts=[];
 
+/* BUILD POSTS DATA */
 for(const entry of entries){
 
  const html = entry.content?.["#text"];
@@ -93,7 +93,7 @@ for(const entry of entries){
  const thumb = ogImages.find(img=>img.includes("hqdefault")) || primaryOG;
 
  const textOnly = html.replace(/<[^>]+>/g,"");
- const readTime = Math.max(1, Math.ceil(textOnly.split(/\s+/).length / 200));
+ const readTime = Math.max(1, Math.ceil(textOnly.split(/\\s+/).length / 200));
 
  posts.push({
    title,
@@ -121,7 +121,7 @@ for(const post of posts){
    .map(p=>`
 <li>
 <a href="${p.url}" class="related-link">
-<img data-src="${p.thumb}" width="100" class="lazy" alt="${p.title}">
+<img src="${p.thumb}" width="100" alt="${p.title}" class="related-thumb">
 ${p.title} (~${p.readTime} min)
 </a>
 </li>`).join("");
@@ -136,8 +136,12 @@ ${p.title} (~${p.readTime} min)
 
 <style>
 
-.lazy{opacity:0;transition:.3s;}
-.lazy.loaded{opacity:1;}
+.related-thumb{
+display:inline-block;
+vertical-align:middle;
+margin-right:10px;
+border-radius:6px;
+}
 
 .hover-preview{
 position:absolute;
@@ -151,6 +155,8 @@ pointer-events:none;
 .related-link{
 display:block;
 padding:10px 0;
+text-decoration:none;
+color:inherit;
 }
 
 </style>
@@ -174,58 +180,38 @@ ${post.html}
 
 <script>
 
-/* LAZY LOAD */
-document.addEventListener("DOMContentLoaded",()=>{
-
-const lazy=document.querySelectorAll(".lazy");
-
-const io=new IntersectionObserver(entries=>{
-entries.forEach(e=>{
-if(e.isIntersecting){
-const img=e.target;
-img.src=img.dataset.src;
-img.onload=()=>img.classList.add("loaded");
-io.unobserve(img);
-}
-});
-});
-
-lazy.forEach(img=>io.observe(img));
-
-});
-
-/* HOVER (DESKTOP ONLY) */
+/* DESKTOP HOVER ONLY */
 const hover=document.getElementById("hoverPreview");
 
 document.querySelectorAll(".related-link").forEach(link=>{
 
-let isTouch = false;
+const isTouchDevice =
+('ontouchstart' in window) || navigator.maxTouchPoints > 0;
 
-link.addEventListener("touchstart",()=>{
-  isTouch = true;
-});
+if(!isTouchDevice){
 
-link.addEventListener("mouseover",e=>{
-  if(isTouch) return;
+link.addEventListener("mouseenter",e=>{
 
-  const img=link.querySelector("img");
-  if(!img) return;
+const img=link.querySelector("img");
+if(!img) return;
 
-  hover.src=img.dataset.src;
-  hover.style.display="block";
-  hover.style.top=e.pageY+"px";
-  hover.style.left=e.pageX+"px";
+hover.src=img.src;
+hover.style.display="block";
+hover.style.top=e.pageY+"px";
+hover.style.left=e.pageX+"px";
+
 });
 
 link.addEventListener("mousemove",e=>{
-  if(isTouch) return;
-  hover.style.top=e.pageY+"px";
-  hover.style.left=e.pageX+"px";
+hover.style.top=e.pageY+"px";
+hover.style.left=e.pageX+"px";
 });
 
-link.addEventListener("mouseout",()=>{
-  hover.style.display="none";
+link.addEventListener("mouseleave",()=>{
+hover.style.display="none";
 });
+
+}
 
 });
 
@@ -240,4 +226,4 @@ link.addEventListener("mouseout",()=>{
 /* SAVE POSTS */
 fs.writeFileSync("_data/posts.json",JSON.stringify(posts,null,2));
 
-console.log("✅ PHASE 16 — RELATED POST THUMB + HOVER + TAP STABLE");
+console.log("✅ PHASE 16–20 COMPLETE — RELATED POSTS FULLY STABLE");
