@@ -53,7 +53,18 @@ async function getYouTubeImages(html, slug) {
   return valid;
 }
 
-/* BUILD POSTS */
+/* EXTRACT KEYWORDS FOR SCHEMA */
+function extractCategories(text) {
+  const words = text.toLowerCase().match(/\b[a-z]{4,}\b/g) || [];
+  const freq = {};
+  words.forEach(w => freq[w] = (freq[w] || 0) + 1);
+  return Object.entries(freq)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 3)
+    .map(e => e[0]);
+}
+
+/* BUILD POSTS ARRAY */
 const posts = [];
 
 for (const entry of entries) {
@@ -74,14 +85,28 @@ for (const entry of entries) {
 
   const textOnly = html.replace(/<[^>]+>/g, "");
   const readTime = Math.max(1, Math.ceil(textOnly.split(/\s+/).length / 200));
+  const categories = extractCategories(textOnly);
 
-  posts.push({ title, slug, html, url, description, og: primaryOG, thumb, readTime, date: entry.published });
+  const schema = {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": title,
+    "image": ogImages,
+    "datePublished": entry.published,
+    "author": { "@type": "Person", "name": "Justin Gerald" },
+    "publisher": { "@type": "Organization", "name": "ReviewLab", "logo": { "@type": "ImageObject", "url": CTA } },
+    "description": description,
+    "keywords": categories.join(", "),
+    "mainEntityOfPage": { "@type": "WebPage", "@id": url }
+  };
+
+  posts.push({ title, slug, html, url, description, og: primaryOG, thumb, readTime, date: entry.published, schema: JSON.stringify(schema), categories });
 }
 
-/* SORT BY DATE DESCENDING */
+/* SORT POSTS BY DATE */
 posts.sort((a, b) => new Date(b.date) - new Date(a.date));
 
-/* BUILD POST PAGES WITH FIXED RELATED THUMBNAILS */
+/* BUILD POST PAGES */
 for (const post of posts) {
   fs.mkdirSync(`posts/${post.slug}`, { recursive: true });
 
@@ -89,10 +114,10 @@ for (const post of posts) {
     .filter(p => p.slug !== post.slug)
     .slice(0, 4)
     .map(p => `
-<li>
-<a href="${p.url}" class="related-link">
-<img src="${p.thumb}" data-src="${p.thumb}" width="100" class="lazy" alt="${p.title}" />
-${p.title} (~${p.readTime} min)
+<li style="margin-bottom:14px;">
+<a href="${p.url}" style="display:flex;align-items:center;gap:10px;text-decoration:none;" class="related-link">
+<img src="${p.thumb}" data-src="${p.thumb}" width="110" alt="${p.title}" class="related-thumb" style="border-radius:8px;opacity:0;transition:opacity .3s;" />
+<span>${p.title} (~${p.readTime} min)</span>
 </a>
 </li>`).join("");
 
@@ -100,14 +125,17 @@ ${p.title} (~${p.readTime} min)
 <html>
 <head>
 <meta charset="utf-8">
-<title>${post.title}</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<title>${post.title}</title>
+<meta name="description" content="${post.description}">
+<meta property="og:title" content="${post.title}">
+<meta property="og:description" content="${post.description}">
+<meta property="og:type" content="article">
+<meta property="og:image" content="${post.og}">
+<script type="application/ld+json">${post.schema}</script>
 <style>
-.lazy { opacity: 0; transition: opacity 0.3s; display:inline-block; }
-.lazy.loaded { opacity: 1; }
-.hover-preview { position:absolute; display:none; max-width:260px; border:2px solid #ccc; z-index:9999; pointer-events:none; }
-.related-link { display:block; padding:10px 0; text-decoration:none; color: inherit; }
-.related-link img { vertical-align:middle; margin-right:8px; }
+.hover-preview{position:absolute;display:none;max-width:260px;border:2px solid #ccc;z-index:9999;pointer-events:none;transition:opacity .2s;}
+.related-thumb.loaded{opacity:1;}
 </style>
 </head>
 <body style="max-width:760px;margin:auto;font-family:system-ui;padding:40px;line-height:1.7;">
@@ -116,60 +144,47 @@ ${p.title} (~${p.readTime} min)
 ${post.html}
 <hr>
 <h3>Related Reviews</h3>
-<ul>${related}</ul>
-<img id="hoverPreview" class="hover-preview" />
+<ul style="list-style:none;padding:0;">${related}</ul>
+<img id="hoverPreview" class="hover-preview"/>
 <script>
-document.addEventListener("DOMContentLoaded", () => {
-  // Lazy-load images
-  const lazyImgs = document.querySelectorAll(".lazy");
-  const io = new IntersectionObserver(entries => {
-    entries.forEach(e => {
-      if (e.isIntersecting) {
-        const img = e.target;
-        img.src = img.dataset.src;
-        img.onload = () => img.classList.add("loaded");
-        io.unobserve(img);
-      }
-    });
+const hover=document.getElementById("hoverPreview");
+
+// Lazy-load related thumbnails
+document.querySelectorAll(".related-thumb").forEach(img=>{
+  img.onload=()=>img.classList.add("loaded");
+  if(img.complete) img.classList.add("loaded");
+});
+
+// Hover & mobile support
+document.querySelectorAll(".related-link").forEach(link=>{
+  const img = link.querySelector("img");
+  if(!img) return;
+
+  let touchTimer=null;
+
+  link.addEventListener("mouseenter",e=>{
+    hover.src = img.src;
+    hover.style.display="block";
   });
-  lazyImgs.forEach(img => io.observe(img));
+  link.addEventListener("mousemove",e=>{
+    hover.style.top=e.pageY+"px";
+    hover.style.left=e.pageX+"px";
+  });
+  link.addEventListener("mouseleave",()=>{
+    hover.style.display="none";
+    clearTimeout(touchTimer);
+  });
 
-  // Hover preview
-  const hover = document.getElementById("hoverPreview");
-  document.querySelectorAll(".related-link").forEach(link => {
-    link.addEventListener("mouseover", e => {
-      const img = link.querySelector("img");
-      if (!img) return;
-      hover.src = img.dataset.src;
-      hover.style.display = "block";
-      hover.style.top = e.pageY + "px";
-      hover.style.left = e.pageX + "px";
-    });
-    link.addEventListener("mousemove", e => {
-      hover.style.top = e.pageY + "px";
-      hover.style.left = e.pageX + "px";
-    });
-    link.addEventListener("mouseout", () => {
-      hover.style.display = "none";
-    });
-
-    // TOUCH SUPPORT: tap opens link, long-press shows hover
-    let touchTimer;
-    link.addEventListener("touchstart", e => {
-      e.preventDefault();
-      touchTimer = setTimeout(() => {
-        const img = link.querySelector("img");
-        if (img) {
-          hover.src = img.dataset.src;
-          hover.style.display = "block";
-        }
-      }, 300);
-    });
-    link.addEventListener("touchend", () => {
-      clearTimeout(touchTimer);
-      hover.style.display = "none";
-      window.location.href = link.href;
-    });
+  link.addEventListener("touchstart",()=>{
+    touchTimer=setTimeout(()=>{
+      hover.src=img.src;
+      hover.style.display="block";
+    },300);
+  });
+  link.addEventListener("touchend",()=>{
+    hover.style.display="none";
+    clearTimeout(touchTimer);
+    window.location.href = link.href;
   });
 });
 </script>
@@ -182,4 +197,4 @@ document.addEventListener("DOMContentLoaded", () => {
 /* SAVE POSTS JSON */
 fs.writeFileSync("_data/posts.json", JSON.stringify(posts, null, 2));
 
-console.log("✅ PHASE 16 COMPLETE — RELATED THUMBNAILS FIXED WITH HOVER AND MOBILE TAP SUPPORT");
+console.log("✅ PHASE 23 COMPLETE — RELATED THUMBNAILS, HOVER, MOBILE TAP & AUTHOR FIXED");
