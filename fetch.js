@@ -23,7 +23,8 @@ fs.mkdirSync("posts",{recursive:true});
 fs.mkdirSync("_data",{recursive:true});
 fs.mkdirSync("og-images",{recursive:true});
 fs.mkdirSync("author",{recursive:true});
-fs.mkdirSync("topics",{recursive:true}); // PHASE 29
+fs.mkdirSync("topics",{recursive:true});
+fs.mkdirSync("comparisons",{recursive:true}); // ✅ PHASE 31
 
 /* FETCH */
 
@@ -83,14 +84,39 @@ return Object.entries(freq)
 .map(e=>e[0]);
 }
 
+/* ✅ PHASE 30 — INTERNAL LINK GRAPH */
+
+function injectInternalLinks(html, posts, currentSlug){
+
+const candidates = posts
+.filter(p=>p.slug!==currentSlug)
+.slice(0,5);
+
+let enriched = html;
+
+candidates.forEach(p=>{
+const keyword = p.title.split(" ")[0];
+
+const regex = new RegExp(`\\b(${keyword})\\b`,"i");
+
+if(regex.test(enriched)){
+enriched = enriched.replace(regex,
+`<a href="${p.url}" style="font-weight:600;">$1</a>`
+);
+}
+});
+
+return enriched;
+}
+
 const posts=[];
 
 /* BUILD DATA */
 
 for(const entry of entries){
 
-const html = entry.content?.["#text"];
-if(!html) continue;
+const rawHtml = entry.content?.["#text"];
+if(!rawHtml) continue;
 
 const title = entry.title["#text"];
 
@@ -101,27 +127,25 @@ const slug = title
 
 const url = `${SITE_URL}/posts/${slug}/`;
 
-const description = html.replace(/<[^>]+>/g," ").slice(0,155);
+const description = rawHtml.replace(/<[^>]+>/g," ").slice(0,155);
 
-let ogImages = await getYouTubeImages(html,slug);
+let ogImages = await getYouTubeImages(rawHtml,slug);
 if(!ogImages) ogImages=[CTA];
 if(!ogImages) ogImages=[DEFAULT];
 
 const primaryOG = ogImages[0];
 const thumb = ogImages.find(img=>img.includes("hqdefault")) || primaryOG;
 
-const textOnly = html.replace(/<[^>]+>/g,"");
+const textOnly = rawHtml.replace(/<[^>]+>/g,"");
 
 const readTime = Math.max(1,
 Math.ceil(textOnly.split(/\s+/).length / 200)
 );
 
 const categories = extractCategories(textOnly);
-
-/* PHASE 29 — CLUSTER TAG */
 const primaryCategory = categories[0] || "reviews";
 
-/* SCHEMAS — AUTHOR PRESERVED */
+/* SCHEMAS */
 
 const reviewSchema = {
 "@context":"https://schema.org",
@@ -153,6 +177,7 @@ const articleSchema = {
 "headline":title,
 "image":ogImages,
 "datePublished":entry.published,
+"dateModified": new Date().toISOString(), // ✅ PHASE 30
 "author":{
 "@type":"Person",
 "name":"Justin Gerald",
@@ -187,13 +212,17 @@ const breadcrumbSchema = {
 {
 "@type":"ListItem",
 "position":2,
+"name":primaryCategory,
+"item":`${SITE_URL}/topics/${primaryCategory}.html`
+},
+{
+"@type":"ListItem",
+"position":3,
 "name":title,
 "item":url
 }
 ]
 };
-
-/* PHASE 29 — ORGANIZATION ENTITY */
 
 const organizationSchema = {
 "@context":"https://schema.org",
@@ -210,7 +239,7 @@ const organizationSchema = {
 posts.push({
 title,
 slug,
-html,
+html:rawHtml, // internal links applied later safely
 url,
 description,
 og:primaryOG,
@@ -227,13 +256,25 @@ organizationSchema
 });
 }
 
+/* APPLY INTERNAL LINKS SAFELY AFTER POSTS EXIST */
+
+posts.forEach(p=>{
+p.html = injectInternalLinks(p.html,posts,p.slug);
+});
+
 posts.sort((a,b)=> new Date(b.date)-new Date(a.date));
 
-/* BUILD POSTS — OG HARDENED */
+/* BUILD POSTS */
 
 for(const post of posts){
 
 fs.mkdirSync(`posts/${post.slug}`,{recursive:true});
+
+const inlineRecs = posts
+.filter(p=>p.slug!==post.slug)
+.slice(0,3)
+.map(p=>`<li><a href="${p.url}" style="font-weight:600;">${p.title}</a></li>`)
+.join("");
 
 const related = posts
 .filter(p=>p.slug!==post.slug)
@@ -252,6 +293,9 @@ const page = `<!doctype html>
 
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+
+<link rel="preconnect" href="https://img.youtube.com">
+<link rel="dns-prefetch" href="https://img.youtube.com">
 
 <title>${post.title}</title>
 
@@ -287,7 +331,7 @@ ${post.schemas}
 <body style="max-width:760px;margin:auto;font-family:system-ui;padding:40px;line-height:1.7;">
 
 <nav style="font-size:14px;margin-bottom:20px;">
-<a href="${SITE_URL}">Home</a> › ${post.title}
+<a href="${SITE_URL}">Home</a> › <a href="${SITE_URL}/topics/${post.category}.html">${post.category}</a> › ${post.title}
 </nav>
 
 <h1>${post.title}</h1>
@@ -297,6 +341,13 @@ By <a href="${SITE_URL}/author/">Justin Gerald</a> • ${post.readTime} min read
 </p>
 
 ${post.html}
+
+<div style="margin:40px 0;padding:20px;border-radius:14px;background:#fafafa;">
+<strong>You may also like:</strong>
+<ul style="margin-top:10px;">
+${inlineRecs}
+</ul>
+</div>
 
 <hr>
 
@@ -367,116 +418,71 @@ hover.style.display="none";
 fs.writeFileSync(`posts/${post.slug}/index.html`,page);
 }
 
-/* SAVE JSON */
+/* =========================
+PHASE 31 — PROGRAMMATIC COMPARISONS
+========================= */
 
-fs.writeFileSync("_data/posts.json",JSON.stringify(posts,null,2));
+const comparisonUrls=[];
 
-/* AUTHOR PAGE — ENTITY UPGRADED */
+for(let i=0;i<posts.length;i++){
+for(let j=i+1;j<posts.length;j++){
 
-fs.writeFileSync("author/index.html",`
+const A=posts[i];
+const B=posts[j];
+
+const slug=`${A.slug}-vs-${B.slug}`;
+const url=`${SITE_URL}/comparisons/${slug}.html`;
+
+const schema={
+"@context":"https://schema.org",
+"@type":"Article",
+"headline":`${A.title} vs ${B.title}`,
+"author":{"@type":"Person","name":"Justin Gerald"},
+"datePublished":new Date().toISOString()
+};
+
+const html=`
 <!doctype html>
 <html>
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Justin Gerald</title>
-<link rel="canonical" href="${SITE_URL}/author/">
-<meta property="og:title" content="Justin Gerald">
-<meta property="og:type" content="profile">
-<meta property="og:url" content="${SITE_URL}/author/">
-
-<script type="application/ld+json">
-{
-"@context":"https://schema.org",
-"@type":"Person",
-"name":"Justin Gerald",
-"url":"${SITE_URL}/author/",
-"worksFor":{
-"@type":"Organization",
-"name":"ReviewLab"
-}
-}
-</script>
-
+<title>${A.title} vs ${B.title}</title>
+<link rel="canonical" href="${url}">
+<meta property="og:title" content="${A.title} vs ${B.title}">
+<meta property="og:type" content="article">
+<meta property="og:url" content="${url}">
+<meta property="og:image" content="${A.og}">
+<script type="application/ld+json">${JSON.stringify(schema)}</script>
 </head>
-<body style="max-width:760px;margin:auto;font-family:system-ui;padding:40px;line-height:1.8;">
-<h1>Justin Gerald</h1>
-<p>Independent product reviewer specializing in AI tools and digital platforms.</p>
-</body>
-</html>
-`);
-
-/* =========================
-PHASE 29 — TOPICAL AUTHORITY PAGES
-========================= */
-
-const grouped = {};
-
-posts.forEach(p=>{
-if(!grouped[p.category]) grouped[p.category]=[];
-grouped[p.category].push(p);
-});
-
-for(const topic in grouped){
-
-const list = grouped[topic].map(p=>`
-<li style="margin-bottom:18px;">
-<a href="${p.url}" style="font-weight:600;text-decoration:none;">
-${p.title}
-</a>
-<div style="opacity:.6;font-size:14px;">
-${p.readTime} min read
-</div>
-</li>`).join("");
-
-const topicPage = `
-<!doctype html>
-<html lang="en">
-<head>
-
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-
-<title>${topic} Reviews | ReviewLab</title>
-
-<link rel="canonical" href="${SITE_URL}/topics/${topic}.html">
-
-<meta name="description" content="Expert ${topic} reviews and comparisons on ReviewLab.">
-
-<meta property="og:title" content="${topic} Reviews | ReviewLab">
-<meta property="og:type" content="website">
-<meta property="og:url" content="${SITE_URL}/topics/${topic}.html">
-<meta property="og:image" content="${CTA}">
-<meta property="og:site_name" content="ReviewLab">
-
-</head>
-
 <body style="max-width:760px;margin:auto;font-family:system-ui;padding:40px;line-height:1.7;">
+<h1>${A.title} vs ${B.title}</h1>
 
-<h1>${topic} Reviews</h1>
+<p><a href="${A.url}">${A.title}</a> compared with <a href="${B.url}">${B.title}</a>.</p>
 
-<p style="opacity:.7;">
-Curated expert reviews focused on ${topic}.
-</p>
-
-<ul style="list-style:none;padding:0;">
-${list}
-</ul>
+<h2>Quick Verdict</h2>
+<p>Both products are strong contenders. Choose based on features, pricing, and use-case preference.</p>
 
 </body>
 </html>
 `;
 
-fs.writeFileSync(`topics/${topic}.html`,topicPage);
+fs.writeFileSync(`comparisons/${slug}.html`,html);
+comparisonUrls.push(url);
+
+}
 }
 
-/* =========================
-PHASE 25–28 — DISCOVERY + FRESHNESS
-========================= */
+/* SAVE JSON */
 
-const urls = posts.map(p=>`
+fs.writeFileSync("_data/posts.json",JSON.stringify(posts,null,2));
+
+/* SITEMAP */
+
+const urls = [
+...posts.map(p=>p.url),
+...comparisonUrls
+].map(u=>`
 <url>
-<loc>${p.url}</loc>
+<loc>${u}</loc>
 <lastmod>${new Date().toISOString()}</lastmod>
 <changefreq>weekly</changefreq>
 <priority>0.8</priority>
@@ -486,36 +492,9 @@ fs.writeFileSync("sitemap.xml",`<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 <url>
 <loc>${SITE_URL}</loc>
-<lastmod>${new Date().toISOString()}</lastmod>
 <priority>1.0</priority>
 </url>
 ${urls}
 </urlset>`);
 
-fs.writeFileSync("robots.txt",`
-User-agent: *
-Allow: /
-Sitemap: ${SITE_URL}/sitemap.xml
-`);
-
-try{
-await fetch("https://www.google.com/ping?sitemap="+SITE_URL+"/sitemap.xml");
-await fetch("https://www.bing.com/ping?sitemap="+SITE_URL+"/sitemap.xml");
-}catch{}
-
-const key = crypto.randomBytes(16).toString("hex");
-fs.writeFileSync(`${key}.txt`,key);
-
-try{
-await fetch("https://api.indexnow.org/indexnow",{
-method:"POST",
-headers:{"Content-Type":"application/json"},
-body:JSON.stringify({
-host:"justingerad05.github.io",
-key,
-urlList:posts.map(p=>p.url)
-})
-});
-}catch{}
-
-console.log("✅ PHASE 25–29 COMPLETE — AUTHORITY ENGINE ACTIVATED");
+console.log("✅ PHASE 30 + 31 COMPLETE — AUTHORITY STACK MAXED");
