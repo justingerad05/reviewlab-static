@@ -116,7 +116,7 @@ for (const post of posts) {
     .map(p => `
 <li style="margin-bottom:14px;">
 <a href="${p.url}" style="display:flex;align-items:center;gap:10px;text-decoration:none;" class="related-link">
-<img src="${p.thumb}" data-src="${p.thumb}" width="110" alt="${p.title}" class="related-thumb" style="border-radius:8px;opacity:0;transition:opacity .3s;" />
+<img src="${p.thumb}" width="110" alt="${p.title}" class="related-thumb" style="border-radius:8px;opacity:0;transition:opacity .3s;">
 <span>${p.title} (~${p.readTime} min)</span>
 </a>
 </li>`).join("");
@@ -149,10 +149,11 @@ ${post.html}
 <script>
 const hover=document.getElementById("hoverPreview");
 
-// Lazy-load related thumbnails
+// FIX: Related thumbnail fade-in immediately
 document.querySelectorAll(".related-thumb").forEach(img=>{
-  img.onload=()=>img.classList.add("loaded");
-  if(img.complete) img.classList.add("loaded");
+  img.src = img.getAttribute("src"); // ensure src is set
+  img.onload = ()=>img.classList.add("loaded");
+  if(img.complete) img.classList.add("loaded"); // immediate fade-in for cached images
 });
 
 // Hover & mobile support
@@ -197,4 +198,4 @@ document.querySelectorAll(".related-link").forEach(link=>{
 /* SAVE POSTS JSON */
 fs.writeFileSync("_data/posts.json", JSON.stringify(posts, null, 2));
 
-console.log("✅ PHASE 23 COMPLETE — RELATED THUMBNAILS, HOVER, MOBILE TAP & AUTHOR FIXED");
+console.log("✅ PHASE 23 COMPLETE — RELATED THUMBNAILS DISPLAY + HOVER + MOBILE TAP FIXED");
