@@ -23,6 +23,7 @@ fs.mkdirSync("posts",{recursive:true});
 fs.mkdirSync("_data",{recursive:true});
 fs.mkdirSync("og-images",{recursive:true});
 fs.mkdirSync("author",{recursive:true});
+fs.mkdirSync("topics",{recursive:true}); // PHASE 29
 
 /* FETCH */
 
@@ -117,6 +118,9 @@ Math.ceil(textOnly.split(/\s+/).length / 200)
 
 const categories = extractCategories(textOnly);
 
+/* PHASE 29 — CLUSTER TAG */
+const primaryCategory = categories[0] || "reviews";
+
 /* SCHEMAS — AUTHOR PRESERVED */
 
 const reviewSchema = {
@@ -189,6 +193,20 @@ const breadcrumbSchema = {
 ]
 };
 
+/* PHASE 29 — ORGANIZATION ENTITY */
+
+const organizationSchema = {
+"@context":"https://schema.org",
+"@type":"Organization",
+"name":"ReviewLab",
+"url":SITE_URL,
+"logo":CTA,
+"sameAs":[
+"https://twitter.com/",
+"https://facebook.com/"
+]
+};
+
 posts.push({
 title,
 slug,
@@ -199,10 +217,12 @@ og:primaryOG,
 thumb,
 readTime,
 date:entry.published,
+category:primaryCategory,
 schemas:JSON.stringify([
 articleSchema,
 breadcrumbSchema,
-reviewSchema
+reviewSchema,
+organizationSchema
 ])
 });
 }
@@ -240,7 +260,6 @@ const page = `<!doctype html>
 <meta name="description" content="${post.description}">
 <meta name="robots" content="index,follow">
 
-<!-- OPEN GRAPH (FIXED) -->
 <meta property="og:title" content="${post.title}">
 <meta property="og:description" content="${post.description}">
 <meta property="og:type" content="article">
@@ -248,7 +267,6 @@ const page = `<!doctype html>
 <meta property="og:image" content="${post.og}">
 <meta property="og:site_name" content="ReviewLab">
 
-<!-- TWITTER -->
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="${post.title}">
 <meta name="twitter:description" content="${post.description}">
@@ -353,7 +371,7 @@ fs.writeFileSync(`posts/${post.slug}/index.html`,page);
 
 fs.writeFileSync("_data/posts.json",JSON.stringify(posts,null,2));
 
-/* AUTHOR PAGE */
+/* AUTHOR PAGE — ENTITY UPGRADED */
 
 fs.writeFileSync("author/index.html",`
 <!doctype html>
@@ -366,6 +384,20 @@ fs.writeFileSync("author/index.html",`
 <meta property="og:title" content="Justin Gerald">
 <meta property="og:type" content="profile">
 <meta property="og:url" content="${SITE_URL}/author/">
+
+<script type="application/ld+json">
+{
+"@context":"https://schema.org",
+"@type":"Person",
+"name":"Justin Gerald",
+"url":"${SITE_URL}/author/",
+"worksFor":{
+"@type":"Organization",
+"name":"ReviewLab"
+}
+}
+</script>
+
 </head>
 <body style="max-width:760px;margin:auto;font-family:system-ui;padding:40px;line-height:1.8;">
 <h1>Justin Gerald</h1>
@@ -373,6 +405,70 @@ fs.writeFileSync("author/index.html",`
 </body>
 </html>
 `);
+
+/* =========================
+PHASE 29 — TOPICAL AUTHORITY PAGES
+========================= */
+
+const grouped = {};
+
+posts.forEach(p=>{
+if(!grouped[p.category]) grouped[p.category]=[];
+grouped[p.category].push(p);
+});
+
+for(const topic in grouped){
+
+const list = grouped[topic].map(p=>`
+<li style="margin-bottom:18px;">
+<a href="${p.url}" style="font-weight:600;text-decoration:none;">
+${p.title}
+</a>
+<div style="opacity:.6;font-size:14px;">
+${p.readTime} min read
+</div>
+</li>`).join("");
+
+const topicPage = `
+<!doctype html>
+<html lang="en">
+<head>
+
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<title>${topic} Reviews | ReviewLab</title>
+
+<link rel="canonical" href="${SITE_URL}/topics/${topic}.html">
+
+<meta name="description" content="Expert ${topic} reviews and comparisons on ReviewLab.">
+
+<meta property="og:title" content="${topic} Reviews | ReviewLab">
+<meta property="og:type" content="website">
+<meta property="og:url" content="${SITE_URL}/topics/${topic}.html">
+<meta property="og:image" content="${CTA}">
+<meta property="og:site_name" content="ReviewLab">
+
+</head>
+
+<body style="max-width:760px;margin:auto;font-family:system-ui;padding:40px;line-height:1.7;">
+
+<h1>${topic} Reviews</h1>
+
+<p style="opacity:.7;">
+Curated expert reviews focused on ${topic}.
+</p>
+
+<ul style="list-style:none;padding:0;">
+${list}
+</ul>
+
+</body>
+</html>
+`;
+
+fs.writeFileSync(`topics/${topic}.html`,topicPage);
+}
 
 /* =========================
 PHASE 25–28 — DISCOVERY + FRESHNESS
@@ -402,8 +498,6 @@ Allow: /
 Sitemap: ${SITE_URL}/sitemap.xml
 `);
 
-/* INDEXNOW + GOOGLE/BING PING */
-
 try{
 await fetch("https://www.google.com/ping?sitemap="+SITE_URL+"/sitemap.xml");
 await fetch("https://www.bing.com/ping?sitemap="+SITE_URL+"/sitemap.xml");
@@ -424,4 +518,4 @@ urlList:posts.map(p=>p.url)
 });
 }catch{}
 
-console.log("✅ PHASE 25–28 COMPLETE — OG FIXED, AUTHORITY + DISCOVERY MAXED");
+console.log("✅ PHASE 25–29 COMPLETE — AUTHORITY ENGINE ACTIVATED");
