@@ -9,7 +9,6 @@ const SITE_URL = "https://justingerad05.github.io/reviewlab-static";
 const CTA = `${SITE_URL}/og-cta-tested.jpg`;
 const DEFAULT = `${SITE_URL}/og-default.jpg`;
 
-/* CLEAN PREVIOUS BUILDS */
 fs.rmSync("posts", { recursive: true, force: true });
 fs.rmSync("_data", { recursive: true, force: true });
 
@@ -17,7 +16,6 @@ fs.mkdirSync("posts", { recursive: true });
 fs.mkdirSync("_data", { recursive: true });
 fs.mkdirSync("og-images", { recursive: true });
 
-/* FETCH POSTS */
 const parser = new XMLParser({ ignoreAttributes: false });
 const xml = await (await fetch(FEED_URL)).text();
 const data = parser.parse(xml);
@@ -25,18 +23,15 @@ const data = parser.parse(xml);
 let entries = data.feed.entry || [];
 if (!Array.isArray(entries)) entries = [entries];
 
-/* GET YOUTUBE THUMBNAILS */
 async function getYouTubeImages(html, slug) {
   const match = html.match(/(?:youtube\.com\/embed\/|watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
   if (!match) return null;
-
   const id = match[1];
   const candidates = [
     `https://img.youtube.com/vi/${id}/maxresdefault.jpg`,
     `https://img.youtube.com/vi/${id}/sddefault.jpg`,
     `https://img.youtube.com/vi/${id}/hqdefault.jpg`
   ];
-
   const valid = [];
   for (const img of candidates) {
     try {
@@ -44,7 +39,6 @@ async function getYouTubeImages(html, slug) {
       if (res.ok) valid.push(img);
     } catch {}
   }
-
   if (valid.length === 0) {
     const upscaled = await upscaleToOG(`https://img.youtube.com/vi/${id}/hqdefault.jpg`, slug);
     if (upscaled) return [`${SITE_URL}/og-images/${slug}.jpg`];
@@ -53,18 +47,13 @@ async function getYouTubeImages(html, slug) {
   return valid;
 }
 
-/* EXTRACT KEYWORDS FOR SCHEMA */
 function extractCategories(text) {
   const words = text.toLowerCase().match(/\b[a-z]{4,}\b/g) || [];
   const freq = {};
   words.forEach(w => freq[w] = (freq[w] || 0) + 1);
-  return Object.entries(freq)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 3)
-    .map(e => e[0]);
+  return Object.entries(freq).sort((a, b) => b[1] - a[1]).slice(0, 3).map(e => e[0]);
 }
 
-/* BUILD POSTS ARRAY */
 const posts = [];
 
 for (const entry of entries) {
@@ -103,10 +92,8 @@ for (const entry of entries) {
   posts.push({ title, slug, html, url, description, og: primaryOG, thumb, readTime, date: entry.published, schema: JSON.stringify(schema), categories });
 }
 
-/* SORT POSTS BY DATE */
 posts.sort((a, b) => new Date(b.date) - new Date(a.date));
 
-/* BUILD POST PAGES */
 for (const post of posts) {
   fs.mkdirSync(`posts/${post.slug}`, { recursive: true });
 
@@ -115,8 +102,8 @@ for (const post of posts) {
     .slice(0, 4)
     .map(p => `
 <li style="margin-bottom:14px;">
-<a href="${p.url}" style="display:flex;align-items:center;gap:10px;text-decoration:none;" class="related-link">
-<img src="${p.thumb}" width="110" alt="${p.title}" class="related-thumb" style="border-radius:8px;opacity:0;transition:opacity .3s;">
+<a href="${p.url}" class="related-link">
+<img src="${p.thumb}" data-src="${p.thumb}" width="100" class="lazy" alt="${p.title}" />
 <span>${p.title} (~${p.readTime} min)</span>
 </a>
 </li>`).join("");
@@ -134,8 +121,9 @@ for (const post of posts) {
 <meta property="og:image" content="${post.og}">
 <script type="application/ld+json">${post.schema}</script>
 <style>
-.hover-preview{position:absolute;display:none;max-width:260px;border:2px solid #ccc;z-index:9999;pointer-events:none;transition:opacity .2s;}
-.related-thumb.loaded{opacity:1;}
+.lazy { opacity:0; transition:opacity .3s; display:inline-block; }
+.lazy.loaded { opacity:1; }
+.hover-preview { position:absolute; display:none; max-width:260px; border:2px solid #ccc; z-index:9999; pointer-events:none; }
 </style>
 </head>
 <body style="max-width:760px;margin:auto;font-family:system-ui;padding:40px;line-height:1.7;">
@@ -147,45 +135,58 @@ ${post.html}
 <ul style="list-style:none;padding:0;">${related}</ul>
 <img id="hoverPreview" class="hover-preview"/>
 <script>
-const hover=document.getElementById("hoverPreview");
-
-// FIX: Related thumbnail fade-in immediately
-document.querySelectorAll(".related-thumb").forEach(img=>{
-  img.src = img.getAttribute("src"); // ensure src is set
-  img.onload = ()=>img.classList.add("loaded");
-  if(img.complete) img.classList.add("loaded"); // immediate fade-in for cached images
-});
-
-// Hover & mobile support
-document.querySelectorAll(".related-link").forEach(link=>{
-  const img = link.querySelector("img");
-  if(!img) return;
-
-  let touchTimer=null;
-
-  link.addEventListener("mouseenter",e=>{
-    hover.src = img.src;
-    hover.style.display="block";
+document.addEventListener("DOMContentLoaded", () => {
+  // Lazy-load related thumbnails (fix for missing small images)
+  const lazyImgs = document.querySelectorAll(".lazy");
+  const io = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        const img = e.target;
+        img.src = img.dataset.src;
+        img.onload = () => img.classList.add("loaded");
+        io.unobserve(img);
+      }
+    });
   });
-  link.addEventListener("mousemove",e=>{
-    hover.style.top=e.pageY+"px";
-    hover.style.left=e.pageX+"px";
-  });
-  link.addEventListener("mouseleave",()=>{
-    hover.style.display="none";
-    clearTimeout(touchTimer);
-  });
+  lazyImgs.forEach(img => io.observe(img));
 
-  link.addEventListener("touchstart",()=>{
-    touchTimer=setTimeout(()=>{
-      hover.src=img.src;
-      hover.style.display="block";
-    },300);
-  });
-  link.addEventListener("touchend",()=>{
-    hover.style.display="none";
-    clearTimeout(touchTimer);
-    window.location.href = link.href;
+  // Hover preview & mobile tap
+  const hover = document.getElementById("hoverPreview");
+  document.querySelectorAll(".related-link").forEach(link => {
+    let touchTimer = null;
+    link.addEventListener("mouseover", e => {
+      const img = link.querySelector("img");
+      if (!img) return;
+      hover.src = img.dataset.src;
+      hover.style.display = "block";
+      hover.style.top = e.pageY + "px";
+      hover.style.left = e.pageX + "px";
+    });
+    link.addEventListener("mousemove", e => {
+      hover.style.top = e.pageY + "px";
+      hover.style.left = e.pageX + "px";
+    });
+    link.addEventListener("mouseout", () => {
+      hover.style.display = "none";
+      clearTimeout(touchTimer);
+    });
+
+    // Mobile long-press
+    link.addEventListener("touchstart", e => {
+      e.preventDefault();
+      touchTimer = setTimeout(() => {
+        const img = link.querySelector("img");
+        if (img) {
+          hover.src = img.dataset.src;
+          hover.style.display = "block";
+        }
+      }, 300);
+    });
+    link.addEventListener("touchend", () => {
+      clearTimeout(touchTimer);
+      hover.style.display = "none";
+      window.location.href = link.href;
+    });
   });
 });
 </script>
@@ -195,7 +196,6 @@ document.querySelectorAll(".related-link").forEach(link=>{
   fs.writeFileSync(`posts/${post.slug}/index.html`, page);
 }
 
-/* SAVE POSTS JSON */
 fs.writeFileSync("_data/posts.json", JSON.stringify(posts, null, 2));
 
-console.log("✅ PHASE 23 COMPLETE — RELATED THUMBNAILS DISPLAY + HOVER + MOBILE TAP FIXED");
+console.log("✅ PHASE 23 COMPLETE — RELATED THUMBNAILS FIXED WITH HOVER + MOBILE TAP");
