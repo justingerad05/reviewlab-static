@@ -209,7 +209,7 @@ reviewSchema
 
 posts.sort((a,b)=> new Date(b.date)-new Date(a.date));
 
-/* BUILD POSTS — HOVER RESTORED */
+/* BUILD POSTS — OG HARDENED */
 
 for(const post of posts){
 
@@ -227,7 +227,7 @@ const related = posts
 </li>`).join("");
 
 const page = `<!doctype html>
-<html>
+<html lang="en">
 <head>
 
 <meta charset="utf-8">
@@ -235,48 +235,37 @@ const page = `<!doctype html>
 
 <title>${post.title}</title>
 
+<link rel="canonical" href="${post.url}">
+
 <meta name="description" content="${post.description}">
+<meta name="robots" content="index,follow">
+
+<!-- OPEN GRAPH (FIXED) -->
+<meta property="og:title" content="${post.title}">
+<meta property="og:description" content="${post.description}">
+<meta property="og:type" content="article">
+<meta property="og:url" content="${post.url}">
 <meta property="og:image" content="${post.og}">
+<meta property="og:site_name" content="ReviewLab">
+
+<!-- TWITTER -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="${post.title}">
+<meta name="twitter:description" content="${post.description}">
+<meta name="twitter:image" content="${post.og}">
 
 <script type="application/ld+json">
 ${post.schemas}
 </script>
 
 <style>
-
-.lazy{
-opacity:0;
-transition:opacity .3s;
-border-radius:10px;
-}
-
-.lazy.loaded{
-opacity:1;
-}
-
-.related-link{
-display:flex;
-align-items:center;
-gap:14px;
-text-decoration:none;
-color:inherit;
-padding:12px 0;
-}
-
-.hover-preview{
-position:absolute;
-display:none;
-max-width:420px;
-border-radius:12px;
-box-shadow:0 20px 60px rgba(0,0,0,.25);
-z-index:9999;
-pointer-events:none;
-}
-
+.lazy{opacity:0;transition:opacity .3s;border-radius:10px;}
+.lazy.loaded{opacity:1;}
+.related-link{display:flex;align-items:center;gap:14px;text-decoration:none;color:inherit;padding:12px 0;}
+.hover-preview{position:absolute;display:none;max-width:420px;border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,.25);z-index:9999;pointer-events:none;}
 </style>
 
 </head>
-
 <body style="max-width:760px;margin:auto;font-family:system-ui;padding:40px;line-height:1.7;">
 
 <nav style="font-size:14px;margin-bottom:20px;">
@@ -302,11 +291,7 @@ ${related}
 <img id="hoverPreview" class="hover-preview"/>
 
 <script>
-
 document.addEventListener("DOMContentLoaded",()=>{
-
-/* LAZY */
-
 const lazyImgs=document.querySelectorAll(".lazy");
 
 const io=new IntersectionObserver(entries=>{
@@ -322,17 +307,13 @@ io.unobserve(img);
 
 lazyImgs.forEach(img=>io.observe(img));
 
-/* HOVER — STABLE VERSION */
-
 const hover=document.getElementById("hoverPreview");
 
 document.querySelectorAll(".related-link").forEach(link=>{
-
 const img=link.querySelector("img");
-
 let touchTimer;
 
-link.addEventListener("mouseover",e=>{
+link.addEventListener("mouseover",()=>{
 hover.src=img.dataset.src;
 hover.style.display="block";
 });
@@ -342,11 +323,7 @@ hover.style.top=(e.pageY+20)+"px";
 hover.style.left=(e.pageX+20)+"px";
 });
 
-link.addEventListener("mouseout",()=>{
-hover.style.display="none";
-});
-
-/* MOBILE */
+link.addEventListener("mouseout",()=>hover.style.display="none");
 
 link.addEventListener("touchstart",()=>{
 touchTimer=setTimeout(()=>{
@@ -362,11 +339,8 @@ link.addEventListener("touchend",()=>{
 clearTimeout(touchTimer);
 hover.style.display="none";
 });
-
 });
-
 });
-
 </script>
 
 </body>
@@ -379,7 +353,7 @@ fs.writeFileSync(`posts/${post.slug}/index.html`,page);
 
 fs.writeFileSync("_data/posts.json",JSON.stringify(posts,null,2));
 
-/* AUTHOR PAGE (UNCHANGED AUTHORITY SIGNAL) */
+/* AUTHOR PAGE */
 
 fs.writeFileSync("author/index.html",`
 <!doctype html>
@@ -388,6 +362,10 @@ fs.writeFileSync("author/index.html",`
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Justin Gerald</title>
+<link rel="canonical" href="${SITE_URL}/author/">
+<meta property="og:title" content="Justin Gerald">
+<meta property="og:type" content="profile">
+<meta property="og:url" content="${SITE_URL}/author/">
 </head>
 <body style="max-width:760px;margin:auto;font-family:system-ui;padding:40px;line-height:1.8;">
 <h1>Justin Gerald</h1>
@@ -397,12 +375,13 @@ fs.writeFileSync("author/index.html",`
 `);
 
 /* =========================
-PHASE 25 + 26 — DISCOVERY
+PHASE 25–28 — DISCOVERY + FRESHNESS
 ========================= */
 
 const urls = posts.map(p=>`
 <url>
 <loc>${p.url}</loc>
+<lastmod>${new Date().toISOString()}</lastmod>
 <changefreq>weekly</changefreq>
 <priority>0.8</priority>
 </url>`).join("");
@@ -411,6 +390,7 @@ fs.writeFileSync("sitemap.xml",`<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 <url>
 <loc>${SITE_URL}</loc>
+<lastmod>${new Date().toISOString()}</lastmod>
 <priority>1.0</priority>
 </url>
 ${urls}
@@ -421,6 +401,13 @@ User-agent: *
 Allow: /
 Sitemap: ${SITE_URL}/sitemap.xml
 `);
+
+/* INDEXNOW + GOOGLE/BING PING */
+
+try{
+await fetch("https://www.google.com/ping?sitemap="+SITE_URL+"/sitemap.xml");
+await fetch("https://www.bing.com/ping?sitemap="+SITE_URL+"/sitemap.xml");
+}catch{}
 
 const key = crypto.randomBytes(16).toString("hex");
 fs.writeFileSync(`${key}.txt`,key);
@@ -437,4 +424,4 @@ urlList:posts.map(p=>p.url)
 });
 }catch{}
 
-console.log("✅ PHASE 25 + 26 COMPLETE — ZERO REGRESSION BUILD");
+console.log("✅ PHASE 25–28 COMPLETE — OG FIXED, AUTHORITY + DISCOVERY MAXED");
