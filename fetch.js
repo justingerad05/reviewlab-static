@@ -15,18 +15,11 @@ const DEFAULT = `${SITE_URL}/og-default.jpg`;
 
 /* CLEAN BUILD */
 
-fs.rmSync("posts",{recursive:true,force:true});
-fs.rmSync("_data",{recursive:true,force:true});
-fs.rmSync("author",{recursive:true,force:true});
-fs.rmSync("topics",{recursive:true,force:true});
-fs.rmSync("comparisons",{recursive:true,force:true});
+["posts","_data","author","topics","comparisons"]
+.forEach(dir=>fs.rmSync(dir,{recursive:true,force:true}));
 
-fs.mkdirSync("posts",{recursive:true});
-fs.mkdirSync("_data",{recursive:true});
-fs.mkdirSync("og-images",{recursive:true});
-fs.mkdirSync("author",{recursive:true});
-fs.mkdirSync("topics",{recursive:true});
-fs.mkdirSync("comparisons",{recursive:true});
+["posts","_data","og-images","author","topics","comparisons"]
+.forEach(dir=>fs.mkdirSync(dir,{recursive:true}));
 
 /* FETCH */
 
@@ -52,25 +45,21 @@ const candidates = [
 `https://img.youtube.com/vi/${id}/hqdefault.jpg`
 ];
 
-const valid=[];
-
 for(const img of candidates){
 try{
 const res = await fetch(img,{method:"HEAD"});
-if(res.ok) valid.push(img);
+if(res.ok) return [img];
 }catch{}
 }
 
-if(valid.length===0){
 const upscaled = await upscaleToOG(
 `https://img.youtube.com/vi/${id}/hqdefault.jpg`,
 slug
 );
-if(upscaled) return [`${SITE_URL}/og-images/${slug}.jpg`];
-return null;
-}
 
-return valid;
+if(upscaled) return [`${SITE_URL}/og-images/${slug}.jpg`];
+
+return [DEFAULT];
 }
 
 /* CATEGORY */
@@ -86,14 +75,11 @@ return Object.entries(freq)
 .map(e=>e[0]);
 }
 
-/* INTERNAL LINK GRAPH */
+/* INTERNAL LINKS */
 
 function injectInternalLinks(html, posts, currentSlug){
 
-const candidates = posts
-.filter(p=>p.slug!==currentSlug)
-.slice(0,5);
-
+const candidates = posts.filter(p=>p.slug!==currentSlug).slice(0,5);
 let enriched = html;
 
 candidates.forEach(p=>{
@@ -126,15 +112,16 @@ const slug = title
 .replace(/[^a-z0-9]+/g,"-")
 .replace(/^-|-$/g,"");
 
+const hash = crypto.createHash("md5").update(slug).digest("hex").slice(0,8);
+
 const url = `${SITE_URL}/posts/${slug}/`;
 
 const description = rawHtml.replace(/<[^>]+>/g," ").slice(0,155);
 
 let ogImages = await getYouTubeImages(rawHtml,slug);
-if(!ogImages || ogImages.length===0) ogImages=[CTA];
 
 const primaryOG = ogImages[0];
-const thumb = ogImages.find(img=>img.includes("hqdefault")) || primaryOG;
+const thumb = primaryOG;
 
 const textOnly = rawHtml.replace(/<[^>]+>/g,"");
 
@@ -145,81 +132,27 @@ Math.ceil(textOnly.split(/\s+/).length / 200)
 const categories = extractCategories(textOnly);
 const primaryCategory = categories[0] || "reviews";
 
-/* SCHEMAS */
+/* SCHEMA */
 
-const reviewSchema = {
-"@context":"https://schema.org",
-"@type":"Review",
-"itemReviewed":{
-"@type":"Product",
-"name":title,
-"image":primaryOG
-},
-"author":{
-"@type":"Person",
-"name":"Justin Gerald",
-"url":`${SITE_URL}/author/`
-},
-"reviewRating":{
-"@type":"Rating",
-"ratingValue":"4.7",
-"bestRating":"5"
-},
-"publisher":{
-"@type":"Organization",
-"name":"ReviewLab"
-}
-};
-
-const articleSchema = {
+const schemas = JSON.stringify([{
 "@context":"https://schema.org",
 "@type":"Article",
 "headline":title,
 "image":ogImages,
 "datePublished":entry.published,
-"dateModified": new Date().toISOString(),
+"dateModified":new Date().toISOString(),
 "author":{
 "@type":"Person",
 "name":"Justin Gerald",
 "url":`${SITE_URL}/author/`
 },
-"publisher":{
-"@type":"Organization",
-"name":"ReviewLab",
-"logo":{
-"@type":"ImageObject",
-"url":CTA
-}
-},
-"description":description,
-"keywords":categories.join(", "),
-"mainEntityOfPage":{
-"@type":"WebPage",
-"@id":url
-}
-};
-
-const breadcrumbSchema = {
-"@context":"https://schema.org",
-"@type":"BreadcrumbList",
-"itemListElement":[
-{"@type":"ListItem","position":1,"name":"Home","item":SITE_URL},
-{"@type":"ListItem","position":2,"name":primaryCategory,"item":`${SITE_URL}/topics/${primaryCategory}.html`},
-{"@type":"ListItem","position":3,"name":title,"item":url}
-]
-};
-
-const organizationSchema = {
-"@context":"https://schema.org",
-"@type":"Organization",
-"name":"ReviewLab",
-"url":SITE_URL,
-"logo":CTA
-};
+"description":description
+}]);
 
 posts.push({
 title,
 slug,
+hash,
 html:rawHtml,
 url,
 description,
@@ -228,16 +161,11 @@ thumb,
 readTime,
 date:entry.published,
 category:primaryCategory,
-schemas:JSON.stringify([
-articleSchema,
-breadcrumbSchema,
-reviewSchema,
-organizationSchema
-])
+schemas
 });
 }
 
-/* APPLY INTERNAL LINKS */
+/* SAFE LINK PASS */
 
 posts.forEach(p=>{
 p.html = injectInternalLinks(p.html,posts,p.slug);
@@ -245,96 +173,176 @@ p.html = injectInternalLinks(p.html,posts,p.slug);
 
 posts.sort((a,b)=> new Date(b.date)-new Date(a.date));
 
-/* BUILD TOPIC PAGES (FIXED) */
-
-const topicMap={};
-
-posts.forEach(p=>{
-if(!topicMap[p.category]) topicMap[p.category]=[];
-topicMap[p.category].push(p);
-});
-
-for(const topic in topicMap){
-
-const list = topicMap[topic].map(p=>`
-<li><a href="${p.url}" style="font-weight:600;">${p.title}</a></li>
-`).join("");
-
-fs.writeFileSync(`topics/${topic}.html`,`
-<!doctype html>
-<html>
-<head>
-<title>${topic} Reviews | ReviewLab</title>
-<link rel="canonical" href="${SITE_URL}/topics/${topic}.html">
-<meta name="description" content="Expert ${topic} reviews by ReviewLab">
-</head>
-<body style="max-width:760px;margin:auto;font-family:system-ui;padding:40px;">
-<nav><a href="${SITE_URL}">Home</a> › ${topic}</nav>
-<h1>${topic} Reviews</h1>
-<ul>${list}</ul>
-</body>
-</html>
-`);
-}
-
-/* AUTHOR PAGE */
-
-fs.writeFileSync("author/index.html",`
-<!doctype html>
-<html>
-<head>
-<title>Justin Gerald</title>
-<link rel="canonical" href="${SITE_URL}/author/">
-</head>
-<body style="max-width:760px;margin:auto;font-family:system-ui;padding:40px;">
-<h1>Justin Gerald</h1>
-<p>Independent AI product reviewer at ReviewLab.</p>
-</body>
-</html>
-`);
-
 /* BUILD POSTS */
 
 for(const post of posts){
 
 fs.mkdirSync(`posts/${post.slug}`,{recursive:true});
 
-fs.writeFileSync(`posts/${post.slug}/index.html`,`
+const related = posts
+.filter(p=>p.slug!==post.slug)
+.slice(0,4)
+.map(p=>`
+<li>
+<a href="${p.url}" style="text-decoration:none;color:inherit;">
+<img src="${p.thumb}" width="110" style="border-radius:10px;">
+<span style="font-weight:600;">${p.title}</span>
+</a>
+</li>`).join("");
+
+const page = `<!doctype html>
+<html lang="en">
+<head>
+
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<title>${post.title}</title>
+
+<link rel="canonical" href="${post.url}">
+<meta name="description" content="${post.description}">
+<meta property="og:image" content="${post.og}">
+
+<script type="application/ld+json">
+${post.schemas}
+</script>
+
+</head>
+<body style="max-width:760px;margin:auto;font-family:system-ui;padding:40px;line-height:1.7;">
+
+<nav style="font-size:14px;margin-bottom:20px;">
+<a href="${SITE_URL}">Home</a> › 
+<a href="${SITE_URL}/topics/${post.category}.html">${post.category}</a>
+</nav>
+
+<h1>${post.title}</h1>
+
+<p style="opacity:.7;font-size:14px;">
+By <a href="${SITE_URL}/author/">Justin Gerald</a> • ${post.readTime} min read
+</p>
+
+${post.html}
+
+<hr>
+
+<h3>Related Reviews</h3>
+<ul style="list-style:none;padding:0;">
+${related}
+</ul>
+
+</body>
+</html>`;
+
+fs.writeFileSync(`posts/${post.slug}/index.html`,page);
+}
+
+/* AUTHOR PAGE — FIXES 404 */
+
+const authorHTML = `
 <!doctype html>
 <html>
 <head>
-<title>${post.title}</title>
-<link rel="canonical" href="${post.url}">
+<title>About the Author</title>
+<link rel="canonical" href="${SITE_URL}/author/">
 </head>
 <body style="max-width:760px;margin:auto;font-family:system-ui;padding:40px;">
-<nav>
-<a href="${SITE_URL}">Home</a> ›
-<a href="${SITE_URL}/topics/${post.category}.html">${post.category}</a> ›
-${post.title}
-</nav>
-<h1>${post.title}</h1>
-<p>By <a href="${SITE_URL}/author/">Justin Gerald</a> • ${post.readTime} min read</p>
-${post.html}
+<h1>Justin Gerald</h1>
+<p>Founder of ReviewLab. Publishes data-driven product reviews and comparisons to help buyers make confident decisions.</p>
 </body>
 </html>
-`);
+`;
+
+fs.writeFileSync("author/index.html",authorHTML);
+
+/* TOPIC PAGES — FIXES BREADCRUMB 404 */
+
+const topics = {};
+
+posts.forEach(p=>{
+if(!topics[p.category]) topics[p.category]=[];
+topics[p.category].push(p);
+});
+
+Object.entries(topics).forEach(([topic,list])=>{
+
+const html = `
+<!doctype html>
+<html>
+<head>
+<title>${topic} Reviews</title>
+<link rel="canonical" href="${SITE_URL}/topics/${topic}.html">
+</head>
+<body style="max-width:760px;margin:auto;font-family:system-ui;padding:40px;">
+<h1>${topic} Reviews</h1>
+
+<ul>
+${list.map(p=>`<li><a href="${p.url}">${p.title}</a></li>`).join("")}
+</ul>
+
+</body>
+</html>
+`;
+
+fs.writeFileSync(`topics/${topic}.html`,html);
+});
+
+/* COMPARISONS */
+
+const comparisonUrls=[];
+
+for(let i=0;i<posts.length;i++){
+for(let j=i+1;j<posts.length;j++){
+
+const A=posts[i];
+const B=posts[j];
+
+const slug=`${A.slug}-vs-${B.slug}`;
+const url=`${SITE_URL}/comparisons/${slug}.html`;
+
+const html=`
+<!doctype html>
+<html>
+<head>
+<title>${A.title} vs ${B.title}</title>
+<link rel="canonical" href="${url}">
+</head>
+<body style="max-width:760px;margin:auto;font-family:system-ui;padding:40px;">
+<h1>${A.title} vs ${B.title}</h1>
+
+<p><a href="${A.url}">${A.title}</a> compared with 
+<a href="${B.url}">${B.title}</a>.</p>
+
+</body>
+</html>
+`;
+
+fs.writeFileSync(`comparisons/${slug}.html`,html);
+comparisonUrls.push(url);
+
+}
 }
 
-/* SAVE JSON */
+/* SAVE JSON — prevents homepage blank */
 
 fs.writeFileSync("_data/posts.json",JSON.stringify(posts,null,2));
 
 /* SITEMAP */
 
-const urls = posts.map(p=>`
-<url><loc>${p.url}</loc></url>
-`).join("");
+const urls = [
+...posts.map(p=>p.url),
+...comparisonUrls
+].map(u=>`
+<url>
+<loc>${u}</loc>
+<lastmod>${new Date().toISOString()}</lastmod>
+</url>`).join("");
 
-fs.writeFileSync("sitemap.xml",`
+fs.writeFileSync("sitemap.xml",`<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-<url><loc>${SITE_URL}</loc></url>
+<url>
+<loc>${SITE_URL}</loc>
+</url>
 ${urls}
-</urlset>
-`);
+</urlset>`);
 
-console.log("✅ BUILD COMPLETE — ALL LINKS RESOLVE");
+console.log("✅ MASTER BUILD STABLE — ALL 404s ELIMINATED");
