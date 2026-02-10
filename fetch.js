@@ -1,8 +1,7 @@
 import fs from "fs";
 import fetch from "node-fetch";
 import { XMLParser } from "fast-xml-parser";
-import crypto from "crypto";
-import { generateOG, upscaleToOG } from "./generate-og.js";
+import { upscaleToOG } from "./generate-og.js";
 
 const FEED_URL =
 "https://honestproductreviewlab.blogspot.com/feeds/posts/default?alt=atom";
@@ -11,22 +10,32 @@ const SITE_URL =
 "https://justingerad05.github.io/reviewlab-static";
 
 const CTA = `${SITE_URL}/og-cta-tested.jpg`;
-const DEFAULT = `${SITE_URL}/og-default.jpg`;
 
-/* FORCE GITHUB */
+/* FORCE GITHUB + ELEVENTY PASSTHROUGH */
+
 fs.writeFileSync(".nojekyll","");
+
+fs.writeFileSync(".eleventy.js",`
+module.exports = function(eleventyConfig){
+eleventyConfig.addPassthroughCopy("topics");
+eleventyConfig.addPassthroughCopy("author");
+eleventyConfig.addPassthroughCopy("comparisons");
+eleventyConfig.addPassthroughCopy("og-images");
+return { dir:{ output:"docs" } };
+};
+`);
 
 /* SAFE CLEAN */
 
 fs.rmSync("posts",{recursive:true,force:true});
-fs.rmSync("author",{recursive:true,force:true});
 fs.rmSync("topics",{recursive:true,force:true});
+fs.rmSync("author",{recursive:true,force:true});
 fs.rmSync("comparisons",{recursive:true,force:true});
 fs.rmSync("og-images",{recursive:true,force:true});
 
 fs.mkdirSync("posts",{recursive:true});
-fs.mkdirSync("author",{recursive:true});
 fs.mkdirSync("topics",{recursive:true});
+fs.mkdirSync("author",{recursive:true});
 fs.mkdirSync("comparisons",{recursive:true});
 fs.mkdirSync("og-images",{recursive:true});
 fs.mkdirSync("_data",{recursive:true});
@@ -37,89 +46,48 @@ const parser = new XMLParser({ignoreAttributes:false});
 const xml = await (await fetch(FEED_URL)).text();
 const data = parser.parse(xml);
 
-let entries = data?.feed?.entry;
-
-if(!entries){
-console.error("FEED FAILED — aborting build to protect site.");
-process.exit(1);
-}
-
+let entries = data.feed.entry;
 if(!Array.isArray(entries)) entries=[entries];
+
+/* CATEGORY NORMALIZER (CRITICAL) */
+
+function normalizeCategory(word){
+
+word = word.toLowerCase();
+
+if(word.includes("review")) return "reviews";
+if(word.includes("suite")) return "software";
+if(word.includes("tool")) return "software";
+if(word.includes("ai")) return "ai-tools";
+
+return "software"; // authority fallback
+}
 
 /* YOUTUBE */
 
 async function getYouTubeImages(html,slug){
 
-const match = html.match(/(?:youtube\.com\/embed\/|watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
-if(!match) return null;
+const match = html.match(/(?:youtube\\.com\\/embed\\/|watch\\?v=|youtu\\.be\\/)([a-zA-Z0-9_-]{11})/);
+if(!match) return [CTA];
 
 const id = match[1];
 
-const candidates = [
-`https://img.youtube.com/vi/${id}/maxresdefault.jpg`,
-`https://img.youtube.com/vi/${id}/sddefault.jpg`,
-`https://img.youtube.com/vi/${id}/hqdefault.jpg`
-];
+const img = `https://img.youtube.com/vi/${id}/hqdefault.jpg`;
 
-const valid=[];
-
-for(const img of candidates){
 try{
 const res = await fetch(img,{method:"HEAD"});
-if(res.ok) valid.push(img);
+if(res.ok) return [img];
 }catch{}
-}
 
-if(valid.length===0){
-const upscaled = await upscaleToOG(
-`https://img.youtube.com/vi/${id}/hqdefault.jpg`,
-slug
-);
+const upscaled = await upscaleToOG(img,slug);
 if(upscaled) return [`${SITE_URL}/og-images/${slug}.jpg`];
-return null;
-}
 
-return valid;
-}
-
-/* CATEGORY */
-
-function extractCategories(text){
-const words = text.toLowerCase().match(/\b[a-z]{4,}\b/g) || [];
-const freq={};
-words.forEach(w=>freq[w]=(freq[w]||0)+1);
-
-return Object.entries(freq)
-.sort((a,b)=>b[1]-a[1])
-.slice(0,3)
-.map(e=>e[0]);
-}
-
-function injectInternalLinks(html, posts, currentSlug){
-
-const candidates = posts
-.filter(p=>p.slug!==currentSlug)
-.slice(0,5);
-
-let enriched = html;
-
-candidates.forEach(p=>{
-const keyword = p.title.split(" ")[0];
-const regex = new RegExp(`\\b(${keyword})\\b`,"i");
-
-if(regex.test(enriched)){
-enriched = enriched.replace(regex,
-`<a href="${p.url}" style="font-weight:600;">$1</a>`
-);
-}
-});
-
-return enriched;
+return [CTA];
 }
 
 const posts=[];
 
-/* BUILD POSTS DATA */
+/* BUILD DATA */
 
 for(const entry of entries){
 
@@ -135,115 +103,47 @@ const slug = title
 
 const url = `${SITE_URL}/posts/${slug}/`;
 
-const description = rawHtml.replace(/<[^>]+>/g," ").slice(0,155);
-
-let ogImages = await getYouTubeImages(rawHtml,slug);
-if(!ogImages || ogImages.length===0) ogImages=[CTA];
-
-const primaryOG = ogImages[0];
-const thumb = ogImages.find(img=>img.includes("hqdefault")) || primaryOG;
-
 const textOnly = rawHtml.replace(/<[^>]+>/g,"");
 
-const readTime = Math.max(1,
-Math.ceil(textOnly.split(/\s+/).length / 200)
-);
+const category = normalizeCategory(textOnly.split(" ")[0]);
 
-const categories = extractCategories(textOnly);
-const primaryCategory = categories[0] || "reviews";
+const og = (await getYouTubeImages(rawHtml,slug))[0];
 
 posts.push({
 title,
 slug,
 html:rawHtml,
 url,
-description,
-og:primaryOG,
-thumb,
-readTime,
+og,
+thumb:og,
 date:entry.published,
-category:primaryCategory
+readTime:Math.max(1,Math.ceil(textOnly.split(/\s+/).length/200)),
+category
 });
 }
-
-/* INTERNAL LINKS */
-
-posts.forEach(p=>{
-p.html = injectInternalLinks(p.html,posts,p.slug);
-});
 
 posts.sort((a,b)=> new Date(b.date)-new Date(a.date));
 
 /* =========================
-HIGH AUTHORITY AUTHOR PAGE
+AUTHOR PAGE
 ========================= */
 
 fs.writeFileSync("author/index.html",`
 <!doctype html>
-<html lang="en">
+<html>
 <head>
-
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-
-<title>Justin Gerald — Independent AI Software Reviewer</title>
-
+<title>Justin Gerald — AI Software Analyst</title>
 <link rel="canonical" href="${SITE_URL}/author/">
-
-<meta name="description"
-content="Justin Gerald is an independent software reviewer specializing in AI tools, SaaS platforms, and emerging automation technology.">
-
-<meta property="og:title"
-content="Justin Gerald — Trusted AI Software Reviewer">
-
-<meta property="og:type" content="profile">
-<meta property="og:url" content="${SITE_URL}/author/">
+<meta property="og:title" content="Justin Gerald — Trusted AI Reviewer">
 <meta property="og:image" content="${CTA}">
-
-<script type="application/ld+json">
-{
-"@context":"https://schema.org",
-"@type":"Person",
-"name":"Justin Gerald",
-"url":"${SITE_URL}/author/",
-"jobTitle":"Software Reviewer",
-"worksFor":{
- "@type":"Organization",
- "name":"ReviewLab"
-},
-"description":"Independent reviewer publishing deeply tested AI software analysis."
-}
-</script>
-
 </head>
-
-<body style="max-width:820px;margin:auto;font-family:system-ui;padding:40px;line-height:1.8;">
-
+<body style="max-width:820px;margin:auto;font-family:system-ui;padding:40px;">
 <h1>Justin Gerald</h1>
-
-<p><strong>Independent AI Software Reviewer</strong></p>
-
-<p>
-Justin Gerald is the lead analyst behind ReviewLab,
-publishing deeply researched evaluations of AI platforms,
-automation software, and digital productivity tools.
-</p>
-
-<h2>Editorial Principles</h2>
-
-<ul>
-<li>No sponsored rankings</li>
-<li>No artificial score inflation</li>
-<li>No recycled vendor claims</li>
-<li>Real testing only</li>
-</ul>
+<p>Independent analyst publishing deeply tested AI software reviews.</p>
 
 <h2>Latest Reviews</h2>
-
 <ul>
-${posts.slice(0,8).map(p=>`
-<li><a href="${p.url}">${p.title}</a></li>
-`).join("")}
+${posts.slice(0,10).map(p=>`<li><a href="${p.url}">${p.title}</a></li>`).join("")}
 </ul>
 
 </body>
@@ -251,7 +151,7 @@ ${posts.slice(0,8).map(p=>`
 `);
 
 /* =========================
-TOPIC PAGES (FIX 404)
+TOPIC PAGES — NOW GUARANTEED TO DEPLOY
 ========================= */
 
 const topicMap={};
@@ -276,6 +176,7 @@ fs.writeFileSync(`topics/${topic}.html`,`
 <meta property="og:title" content="${topic} Reviews">
 <meta property="og:type" content="website">
 <meta property="og:url" content="${SITE_URL}/topics/${topic}.html">
+<meta property="og:image" content="${CTA}">
 </head>
 <body style="max-width:760px;margin:auto;font-family:system-ui;padding:40px;">
 <h1>${topic} Reviews</h1>
@@ -285,7 +186,9 @@ fs.writeFileSync(`topics/${topic}.html`,`
 `);
 });
 
-/* BUILD POSTS */
+/* =========================
+POST BUILDER (HOVER SAFE)
+========================= */
 
 for(const post of posts){
 
@@ -297,45 +200,30 @@ const related = posts
 .map(p=>`
 <li>
 <a href="${p.url}" class="related-link">
-<img data-src="${p.thumb}" width="110" class="lazy related-thumb" alt="${p.title}">
-<span style="font-weight:600;">${p.title} (~${p.readTime} min)</span>
+<img data-src="${p.thumb}" class="lazy related-thumb">
+<span style="font-weight:600;">${p.title}</span>
 </a>
 </li>`).join("");
 
-const page = `<!doctype html>
-<html lang="en">
+fs.writeFileSync(`posts/${post.slug}/index.html`,`
+<!doctype html>
+<html>
 <head>
 
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-
 <title>${post.title}</title>
-
 <link rel="canonical" href="${post.url}">
 
-<meta name="description" content="${post.description}">
-<meta property="og:title" content="${post.title}">
-<meta property="og:image" content="${post.og}">
-
 <style>
-
-.lazy{opacity:0;transition:.3s;border-radius:10px;}
-.lazy.loaded{opacity:1;}
-
-.related-link{
-display:flex;
-align-items:center;
-gap:14px;
-text-decoration:none;
-color:inherit;
-padding:12px 0;
-}
 
 .related-thumb{
 width:110px;
 height:62px;
 object-fit:cover;
+border-radius:10px;
 }
+
+.lazy{opacity:0;transition:.3s;}
+.lazy.loaded{opacity:1;}
 
 .hover-preview{
 position:absolute;
@@ -351,7 +239,7 @@ pointer-events:none;
 
 </head>
 
-<body style="max-width:760px;margin:auto;font-family:system-ui;padding:40px;line-height:1.7;">
+<body style="max-width:760px;margin:auto;font-family:system-ui;padding:40px;">
 
 <nav>
 <a href="${SITE_URL}">Home</a> › 
@@ -359,8 +247,6 @@ pointer-events:none;
 </nav>
 
 <h1>${post.title}</h1>
-
-<p>By <a href="${SITE_URL}/author/">Justin Gerald</a> • ${post.readTime} min read</p>
 
 ${post.html}
 
@@ -378,20 +264,17 @@ ${related}
 
 document.addEventListener("DOMContentLoaded",()=>{
 
-const lazy=document.querySelectorAll(".lazy");
-
 const io=new IntersectionObserver(entries=>{
 entries.forEach(e=>{
 if(e.isIntersecting){
 const img=e.target;
 img.src=img.dataset.src;
 img.onload=()=>img.classList.add("loaded");
-io.unobserve(img);
 }
 });
 });
 
-lazy.forEach(i=>io.observe(i));
+document.querySelectorAll(".lazy").forEach(i=>io.observe(i));
 
 const hover=document.getElementById("hoverPreview");
 
@@ -399,8 +282,6 @@ document.querySelectorAll(".related-link").forEach(link=>{
 
 const img=link.querySelector("img");
 let timer;
-
-/* desktop hover */
 
 link.addEventListener("mouseenter",()=>{
 hover.src=img.dataset.src;
@@ -415,8 +296,6 @@ hover.style.left=(e.pageX+20)+"px";
 link.addEventListener("mouseleave",()=>{
 hover.style.display="none";
 });
-
-/* mobile long press */
 
 link.addEventListener("touchstart",()=>{
 timer=setTimeout(()=>{
@@ -441,13 +320,12 @@ hover.style.transform="";
 </script>
 
 </body>
-</html>`;
-
-fs.writeFileSync(`posts/${post.slug}/index.html`,page);
+</html>
+`);
 }
 
 /* SAVE JSON */
 
 fs.writeFileSync("_data/posts.json",JSON.stringify(posts,null,2));
 
-console.log("✅ BUILD COMPLETE — AUTHORITY MODE ACTIVE");
+console.log("🚀 ZERO-404 BUILD COMPLETE");
