@@ -10,11 +10,11 @@ const FEED_URL =
 const SITE_URL =
 "https://justingerad05.github.io/reviewlab-static";
 
+const AUTHOR_NAME = "Justin Gerald";
+const AUTHOR_PATH = `${SITE_URL}/author/index.html`;
+
 const CTA = `${SITE_URL}/og-cta-tested.jpg`;
 const DEFAULT = `${SITE_URL}/og-default.jpg`;
-
-/* FORCE GITHUB PAGES ROUTING */
-fs.writeFileSync(".nojekyll","");
 
 /* CLEAN BUILD */
 
@@ -37,7 +37,7 @@ const parser = new XMLParser({ignoreAttributes:false});
 const xml = await (await fetch(FEED_URL)).text();
 const data = parser.parse(xml);
 
-let entries = data.feed.entry || [];
+let entries = data?.feed?.entry || [];
 if(!Array.isArray(entries)) entries=[entries];
 
 /* YOUTUBE */
@@ -89,7 +89,7 @@ return Object.entries(freq)
 .map(e=>e[0]);
 }
 
-/* INTERNAL LINK GRAPH */
+/* INTERNAL LINKS */
 
 function injectInternalLinks(html, posts, currentSlug){
 
@@ -119,7 +119,7 @@ const posts=[];
 
 for(const entry of entries){
 
-const rawHtml = entry.content?.["#text"];
+const rawHtml = entry?.content?.["#text"];
 if(!rawHtml) continue;
 
 const title = entry.title["#text"];
@@ -131,10 +131,14 @@ const slug = title
 
 const url = `${SITE_URL}/posts/${slug}/`;
 
-const description = rawHtml.replace(/<[^>]+>/g," ").slice(0,155);
+const description = rawHtml
+.replace(/<[^>]+>/g," ")
+.replace(/\s+/g," ")
+.trim()
+.slice(0,155);
 
 let ogImages = await getYouTubeImages(rawHtml,slug);
-if(!ogImages || ogImages.length===0) ogImages=[CTA];
+if(!ogImages || ogImages.length===0) ogImages=[CTA || DEFAULT];
 
 const primaryOG = ogImages[0];
 const thumb = ogImages.find(img=>img.includes("hqdefault")) || primaryOG;
@@ -153,10 +157,25 @@ const primaryCategory = categories[0] || "reviews";
 const reviewSchema = {
 "@context":"https://schema.org",
 "@type":"Review",
-"itemReviewed":{"@type":"Product","name":title,"image":primaryOG},
-"author":{"@type":"Person","name":"Justin Gerald","url":`${SITE_URL}/author/`},
-"reviewRating":{"@type":"Rating","ratingValue":"4.7","bestRating":"5"},
-"publisher":{"@type":"Organization","name":"ReviewLab"}
+"itemReviewed":{
+"@type":"Product",
+"name":title,
+"image":primaryOG
+},
+"author":{
+"@type":"Person",
+"name":AUTHOR_NAME,
+"url":AUTHOR_PATH
+},
+"reviewRating":{
+"@type":"Rating",
+"ratingValue":"4.7",
+"bestRating":"5"
+},
+"publisher":{
+"@type":"Organization",
+"name":"ReviewLab"
+}
 };
 
 const articleSchema = {
@@ -166,11 +185,50 @@ const articleSchema = {
 "image":ogImages,
 "datePublished":entry.published,
 "dateModified": new Date().toISOString(),
-"author":{"@type":"Person","name":"Justin Gerald","url":`${SITE_URL}/author/`},
-"publisher":{"@type":"Organization","name":"ReviewLab","logo":{"@type":"ImageObject","url":CTA}},
+"author":{
+"@type":"Person",
+"name":AUTHOR_NAME,
+"url":AUTHOR_PATH
+},
+"publisher":{
+"@type":"Organization",
+"name":"ReviewLab",
+"logo":{
+"@type":"ImageObject",
+"url":CTA
+}
+},
 "description":description,
 "keywords":categories.join(", "),
-"mainEntityOfPage":{"@type":"WebPage","@id":url}
+"mainEntityOfPage":{
+"@type":"WebPage",
+"@id":url
+}
+};
+
+const breadcrumbSchema = {
+"@context":"https://schema.org",
+"@type":"BreadcrumbList",
+"itemListElement":[
+{
+"@type":"ListItem",
+"position":1,
+"name":"Home",
+"item":SITE_URL
+},
+{
+"@type":"ListItem",
+"position":2,
+"name":primaryCategory,
+"item":`${SITE_URL}/topics/${primaryCategory}.html`
+},
+{
+"@type":"ListItem",
+"position":3,
+"name":title,
+"item":url
+}
+]
 };
 
 posts.push({
@@ -184,7 +242,11 @@ thumb,
 readTime,
 date:entry.published,
 category:primaryCategory,
-schemas:JSON.stringify([articleSchema,reviewSchema])
+schemas:JSON.stringify([
+articleSchema,
+breadcrumbSchema,
+reviewSchema
+])
 });
 }
 
@@ -196,57 +258,87 @@ p.html = injectInternalLinks(p.html,posts,p.slug);
 
 posts.sort((a,b)=> new Date(b.date)-new Date(a.date));
 
-/* ✅ CRITICAL FIX — WRITE POSTS.JSON SAFELY */
+/* BUILD AUTHOR PAGE — FIXES 404 */
 
-fs.writeFileSync(
-"_data/posts.json",
-JSON.stringify(posts,null,2),
-{encoding:"utf-8"}
-);
+const authorHTML = `
+<!doctype html>
+<html>
+<head>
+<title>${AUTHOR_NAME}</title>
+<link rel="canonical" href="${AUTHOR_PATH}">
+<meta name="robots" content="index,follow">
+</head>
+<body style="max-width:760px;margin:auto;font-family:system-ui;padding:40px;">
+<h1>${AUTHOR_NAME}</h1>
+<p>Founder of ReviewLab. Publishing data-driven product reviews and comparisons.</p>
 
-/* BUILD POST PAGES */
+<h2>Latest Reviews</h2>
+<ul>
+${posts.map(p=>`<li><a href="${p.url}">${p.title}</a></li>`).join("")}
+</ul>
+
+</body>
+</html>
+`;
+
+fs.writeFileSync("author/index.html",authorHTML);
+
+/* BUILD POSTS */
 
 for(const post of posts){
 
 fs.mkdirSync(`posts/${post.slug}`,{recursive:true});
 
-fs.writeFileSync(`posts/${post.slug}/index.html`,`
-<!doctype html>
-<html>
+const page = `<!doctype html>
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <title>${post.title}</title>
 <link rel="canonical" href="${post.url}">
-<meta property="og:title" content="${post.title}">
-<meta property="og:image" content="${post.og}">
+<meta name="description" content="${post.description}">
+
 <script type="application/ld+json">
 ${post.schemas}
 </script>
+
 </head>
 <body style="max-width:760px;margin:auto;font-family:system-ui;padding:40px;line-height:1.7;">
+
 <h1>${post.title}</h1>
-<p>By <a href="${SITE_URL}/author/">Justin Gerald</a> • ${post.readTime} min read</p>
+
+<p style="opacity:.7;font-size:14px;">
+By <a href="${AUTHOR_PATH}">${AUTHOR_NAME}</a> • ${post.readTime} min read
+</p>
+
 ${post.html}
+
 </body>
-</html>
-`);
+</html>`;
+
+fs.writeFileSync(`posts/${post.slug}/index.html`,page);
 }
 
-/* AUTHOR PAGE */
+/* SAVE JSON */
 
-fs.writeFileSync("author/index.html",`
-<!doctype html>
-<html>
-<head>
-<meta charset="utf-8">
-<title>Justin Gerald</title>
-<link rel="canonical" href="${SITE_URL}/author/">
-</head>
-<body style="max-width:760px;margin:auto;font-family:system-ui;padding:40px;">
-<h1>Justin Gerald</h1>
-<p>Independent product reviewer specializing in AI tools and digital platforms.</p>
-</body>
-</html>
-`);
+fs.writeFileSync("_data/posts.json",JSON.stringify(posts,null,2));
 
-console.log("✅ BUILD COMPLETE — POSTS RESTORED");
+/* SITEMAP */
+
+const urls = [
+SITE_URL,
+AUTHOR_PATH,
+...posts.map(p=>p.url)
+].map(u=>`
+<url>
+<loc>${u}</loc>
+<lastmod>${new Date().toISOString()}</lastmod>
+<changefreq>weekly</changefreq>
+<priority>0.8</priority>
+</url>`).join("");
+
+fs.writeFileSync("sitemap.xml",`<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${urls}
+</urlset>`);
+
+console.log("✅ BUILD COMPLETE — AUTHOR + SCHEMA 404 FIXED");
