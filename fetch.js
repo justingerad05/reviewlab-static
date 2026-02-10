@@ -5,10 +5,10 @@ import crypto from "crypto";
 import { generateOG, upscaleToOG } from "./generate-og.js";
 
 const FEED_URL =
-"https://honestproductreviewlab.blogspot.com/feeds/posts/default?alt=atom";
+"[https://honestproductreviewlab.blogspot.com/feeds/posts/default?alt=atom](https://honestproductreviewlab.blogspot.com/feeds/posts/default?alt=atom)";
 
 const SITE_URL =
-"https://justingerad05.github.io/reviewlab-static";
+"[https://justingerad05.github.io/reviewlab-static](https://justingerad05.github.io/reviewlab-static)";
 
 const CTA = `${SITE_URL}/og-cta-tested.jpg`;
 const DEFAULT = `${SITE_URL}/og-default.jpg`;
@@ -39,7 +39,7 @@ if(!Array.isArray(entries)) entries=[entries];
 
 async function getYouTubeImages(html,slug){
 
-const match = html.match(/(?:youtube\.com\/embed\/|watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+const match = html.match(/(?:youtube.com/embed/|watch?v=|youtu.be/)([a-zA-Z0-9_-]{11})/);
 if(!match) return null;
 
 const id = match[1];
@@ -129,8 +129,7 @@ const url = `${SITE_URL}/posts/${slug}/`;
 const description = rawHtml.replace(/<[^>]+>/g," ").slice(0,155);
 
 let ogImages = await getYouTubeImages(rawHtml,slug);
-if(!ogImages) ogImages=[CTA];
-if(!ogImages) ogImages=[DEFAULT];
+if(!ogImages || ogImages.length===0) ogImages=[CTA];
 
 const primaryOG = ogImages[0];
 const thumb = ogImages.find(img=>img.includes("hqdefault")) || primaryOG;
@@ -144,10 +143,10 @@ Math.ceil(textOnly.split(/\s+/).length / 200)
 const categories = extractCategories(textOnly);
 const primaryCategory = categories[0] || "reviews";
 
-/* SCHEMAS — UNTOUCHED */
+/* SCHEMAS */
 
 const reviewSchema = {
-"@context":"https://schema.org",
+"@context":"[https://schema.org](https://schema.org)",
 "@type":"Review",
 "itemReviewed":{
 "@type":"Product",
@@ -171,7 +170,7 @@ const reviewSchema = {
 };
 
 const articleSchema = {
-"@context":"https://schema.org",
+"@context":"[https://schema.org](https://schema.org)",
 "@type":"Article",
 "headline":title,
 "image":ogImages,
@@ -199,7 +198,7 @@ const articleSchema = {
 };
 
 const breadcrumbSchema = {
-"@context":"https://schema.org",
+"@context":"[https://schema.org](https://schema.org)",
 "@type":"BreadcrumbList",
 "itemListElement":[
 {"@type":"ListItem","position":1,"name":"Home","item":SITE_URL},
@@ -209,14 +208,14 @@ const breadcrumbSchema = {
 };
 
 const organizationSchema = {
-"@context":"https://schema.org",
+"@context":"[https://schema.org](https://schema.org)",
 "@type":"Organization",
 "name":"ReviewLab",
 "url":SITE_URL,
 "logo":CTA,
 "sameAs":[
-"https://twitter.com/",
-"https://facebook.com/"
+"[https://twitter.com/](https://twitter.com/)",
+"[https://facebook.com/](https://facebook.com/)"
 ]
 };
 
@@ -248,10 +247,12 @@ p.html = injectInternalLinks(p.html,posts,p.slug);
 
 posts.sort((a,b)=> new Date(b.date)-new Date(a.date));
 
-/* ✅ AUTHOR PAGE — FIXES 404 */
+/* AUTHOR PAGE */
 
 const authorHTML = `
+
 <!doctype html>
+
 <html>
 <head>
 <title>Justin Gerald</title>
@@ -270,7 +271,7 @@ ${posts.map(p=>`<li><a href="${p.url}">${p.title}</a></li>`).join("")}
 
 fs.writeFileSync("author/index.html",authorHTML);
 
-/* ✅ ELITE UPGRADE — TOPIC AUTHORITY PAGES */
+/* TOPIC PAGES */
 
 const topicMap={};
 
@@ -282,7 +283,9 @@ topicMap[p.category].push(p);
 Object.entries(topicMap).forEach(([topic,arr])=>{
 
 const html=`
+
 <!doctype html>
+
 <html>
 <head>
 <title>${topic} Reviews</title>
@@ -302,11 +305,66 @@ fs.writeFileSync(`topics/${topic}.html`,html);
 
 });
 
+/* =========================
+RESTORED — PROGRAMMATIC COMPARISONS
+========================= */
+
+const comparisonUrls=[];
+
+for(let i=0;i<posts.length;i++){
+for(let j=i+1;j<posts.length;j++){
+
+const A=posts[i];
+const B=posts[j];
+
+const slug=`${A.slug}-vs-${B.slug}`;
+const url=`${SITE_URL}/comparisons/${slug}.html`;
+
+const schema={
+"@context":"[https://schema.org](https://schema.org)",
+"@type":"Article",
+"headline":`${A.title} vs ${B.title}`,
+"author":{"@type":"Person","name":"Justin Gerald"},
+"datePublished":new Date().toISOString()
+};
+
+const html=`
+
+<!doctype html>
+
+<html>
+<head>
+<title>${A.title} vs ${B.title}</title>
+<link rel="canonical" href="${url}">
+<meta property="og:title" content="${A.title} vs ${B.title}">
+<meta property="og:type" content="article">
+<meta property="og:url" content="${url}">
+<meta property="og:image" content="${A.og}">
+<script type="application/ld+json">${JSON.stringify(schema)}</script>
+</head>
+<body style="max-width:760px;margin:auto;font-family:system-ui;padding:40px;line-height:1.7;">
+<h1>${A.title} vs ${B.title}</h1>
+
+<p><a href="${A.url}">${A.title}</a> compared with <a href="${B.url}">${B.title}</a>.</p>
+
+<h2>Quick Verdict</h2>
+<p>Both products are strong contenders. Choose based on features, pricing, and use-case preference.</p>
+
+</body>
+</html>
+`;
+
+fs.writeFileSync(`comparisons/${slug}.html`,html);
+comparisonUrls.push(url);
+
+}
+}
+
 /* SAVE JSON */
 
 fs.writeFileSync("_data/posts.json",JSON.stringify(posts,null,2));
 
-/* SITEMAP — NOW INCLUDES AUTHOR + TOPICS */
+/* SITEMAP */
 
 const topicUrls = Object.keys(topicMap)
 .map(t=>`${SITE_URL}/topics/${t}.html`);
@@ -316,21 +374,9 @@ const urls = [
 ...topicUrls,
 ...posts.map(p=>p.url),
 ...comparisonUrls
-].map(u=>`
-<url>
-<loc>${u}</loc>
-<lastmod>${new Date().toISOString()}</lastmod>
-<changefreq>weekly</changefreq>
-<priority>0.8</priority>
-</url>`).join("");
+].map(u=>` <url> <loc>${u}</loc> <lastmod>${new Date().toISOString()}</lastmod> <changefreq>weekly</changefreq> <priority>0.8</priority> </url>`).join("");
 
-fs.writeFileSync("sitemap.xml",`<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-<url>
-<loc>${SITE_URL}</loc>
-<priority>1.0</priority>
-</url>
-${urls}
-</urlset>`);
+fs.writeFileSync("sitemap.xml",`<?xml version="1.0" encoding="UTF-8"?> <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"> <url> <loc>${SITE_URL}</loc> <priority>1.0</priority> </url>
+${urls} </urlset>`);
 
-console.log("✅ PHASE 30 + 31 COMPLETE — 404 FIXED + ELITE AUTHORITY LAYER");
+console.log("✅ DEPLOY SAFE — AUTHOR + TOPICS + COMPARISONS RESTORED");
