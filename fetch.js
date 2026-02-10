@@ -11,33 +11,15 @@ const SITE_URL =
 
 const CTA = `${SITE_URL}/og-cta-tested.jpg`;
 
-/* FORCE GITHUB + ELEVENTY PASSTHROUGH */
-
-fs.writeFileSync(".nojekyll","");
-
-fs.writeFileSync(".eleventy.js",`
-module.exports = function(eleventyConfig){
-eleventyConfig.addPassthroughCopy("topics");
-eleventyConfig.addPassthroughCopy("author");
-eleventyConfig.addPassthroughCopy("comparisons");
-eleventyConfig.addPassthroughCopy("og-images");
-return { dir:{ output:"docs" } };
-};
-`);
-
 /* SAFE CLEAN */
 
 fs.rmSync("posts",{recursive:true,force:true});
 fs.rmSync("topics",{recursive:true,force:true});
 fs.rmSync("author",{recursive:true,force:true});
-fs.rmSync("comparisons",{recursive:true,force:true});
-fs.rmSync("og-images",{recursive:true,force:true});
 
 fs.mkdirSync("posts",{recursive:true});
 fs.mkdirSync("topics",{recursive:true});
 fs.mkdirSync("author",{recursive:true});
-fs.mkdirSync("comparisons",{recursive:true});
-fs.mkdirSync("og-images",{recursive:true});
 fs.mkdirSync("_data",{recursive:true});
 
 /* FETCH */
@@ -49,45 +31,46 @@ const data = parser.parse(xml);
 let entries = data.feed.entry;
 if(!Array.isArray(entries)) entries=[entries];
 
-/* CATEGORY NORMALIZER (CRITICAL) */
+/* CATEGORY AUTHORITY NORMALIZER */
 
-function normalizeCategory(word){
+function normalizeCategory(text){
 
-word = word.toLowerCase();
+text = text.toLowerCase();
 
-if(word.includes("review")) return "reviews";
-if(word.includes("suite")) return "software";
-if(word.includes("tool")) return "software";
-if(word.includes("ai")) return "ai-tools";
+if(text.includes("review")) return "reviews";
+if(text.includes("ai")) return "ai-tools";
+if(text.includes("software")) return "software";
+if(text.includes("tool")) return "software";
 
 return "software"; // authority fallback
 }
 
-/* YOUTUBE */
+/* YOUTUBE IMAGE */
 
-async function getYouTubeImages(html,slug){
+async function getImage(html,slug){
 
 const match = html.match(/(?:youtube\\.com\\/embed\\/|watch\\?v=|youtu\\.be\\/)([a-zA-Z0-9_-]{11})/);
-if(!match) return [CTA];
+
+if(!match) return CTA;
 
 const id = match[1];
 
-const img = `https://img.youtube.com/vi/${id}/hqdefault.jpg`;
+const img=`https://img.youtube.com/vi/${id}/hqdefault.jpg`;
 
 try{
 const res = await fetch(img,{method:"HEAD"});
-if(res.ok) return [img];
+if(res.ok) return img;
 }catch{}
 
 const upscaled = await upscaleToOG(img,slug);
-if(upscaled) return [`${SITE_URL}/og-images/${slug}.jpg`];
+if(upscaled) return `${SITE_URL}/og-images/${slug}.jpg`;
 
-return [CTA];
+return CTA;
 }
 
 const posts=[];
 
-/* BUILD DATA */
+/* BUILD POSTS DATA */
 
 for(const entry of entries){
 
@@ -105,28 +88,25 @@ const url = `${SITE_URL}/posts/${slug}/`;
 
 const textOnly = rawHtml.replace(/<[^>]+>/g,"");
 
-const category = normalizeCategory(textOnly.split(" ")[0]);
+const category = normalizeCategory(textOnly);
 
-const og = (await getYouTubeImages(rawHtml,slug))[0];
+const og = await getImage(rawHtml,slug);
 
 posts.push({
 title,
 slug,
-html:rawHtml,
 url,
-og,
+html:rawHtml,
 thumb:og,
+category,
 date:entry.published,
-readTime:Math.max(1,Math.ceil(textOnly.split(/\s+/).length/200)),
-category
+readTime:Math.max(1,Math.ceil(textOnly.split(/\s+/).length/200))
 });
 }
 
 posts.sort((a,b)=> new Date(b.date)-new Date(a.date));
 
-/* =========================
-AUTHOR PAGE
-========================= */
+/* AUTHOR PAGE */
 
 fs.writeFileSync("author/index.html",`
 <!doctype html>
@@ -145,14 +125,11 @@ fs.writeFileSync("author/index.html",`
 <ul>
 ${posts.slice(0,10).map(p=>`<li><a href="${p.url}">${p.title}</a></li>`).join("")}
 </ul>
-
 </body>
 </html>
 `);
 
-/* =========================
-TOPIC PAGES — NOW GUARANTEED TO DEPLOY
-========================= */
+/* TOPIC PAGES — NO MORE 404 */
 
 const topicMap={};
 
@@ -163,10 +140,6 @@ topicMap[p.category].push(p);
 
 Object.keys(topicMap).forEach(topic=>{
 
-const list = topicMap[topic]
-.map(p=>`<li><a href="${p.url}">${p.title}</a></li>`)
-.join("");
-
 fs.writeFileSync(`topics/${topic}.html`,`
 <!doctype html>
 <html>
@@ -174,21 +147,19 @@ fs.writeFileSync(`topics/${topic}.html`,`
 <title>${topic} Reviews — ReviewLab</title>
 <link rel="canonical" href="${SITE_URL}/topics/${topic}.html">
 <meta property="og:title" content="${topic} Reviews">
-<meta property="og:type" content="website">
-<meta property="og:url" content="${SITE_URL}/topics/${topic}.html">
 <meta property="og:image" content="${CTA}">
 </head>
 <body style="max-width:760px;margin:auto;font-family:system-ui;padding:40px;">
 <h1>${topic} Reviews</h1>
-<ul>${list}</ul>
+<ul>
+${topicMap[topic].map(p=>`<li><a href="${p.url}">${p.title}</a></li>`).join("")}
+</ul>
 </body>
 </html>
 `);
 });
 
-/* =========================
-POST BUILDER (HOVER SAFE)
-========================= */
+/* BUILD POST PAGES — HOVER SAFE */
 
 for(const post of posts){
 
@@ -209,9 +180,7 @@ fs.writeFileSync(`posts/${post.slug}/index.html`,`
 <!doctype html>
 <html>
 <head>
-
 <title>${post.title}</title>
-<link rel="canonical" href="${post.url}">
 
 <style>
 
@@ -236,7 +205,6 @@ pointer-events:none;
 }
 
 </style>
-
 </head>
 
 <body style="max-width:760px;margin:auto;font-family:system-ui;padding:40px;">
@@ -328,4 +296,4 @@ hover.style.transform="";
 
 fs.writeFileSync("_data/posts.json",JSON.stringify(posts,null,2));
 
-console.log("🚀 ZERO-404 BUILD COMPLETE");
+console.log("✅ BUILD STABLE — ZERO 404");
