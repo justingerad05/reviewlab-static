@@ -26,16 +26,12 @@ jobs:
         run: node fetch.js
 
       - name: Build Eleventy site
-        run: npm run build
+        run: npx @11ty/eleventy
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
         with:
-          # Use the PAT instead of default GITHUB_TOKEN
           personal_token: ${{ secrets.GH_PAT }}
-          # This is your Eleventy build output folder
           publish_dir: _site
-          # Branch to deploy
           publish_branch: gh-pages
-          # Optional: keep history
           keep_files: false
