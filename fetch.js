@@ -13,9 +13,6 @@ const SITE_URL =
 const CTA = `${SITE_URL}/og-cta-tested.jpg`;
 const DEFAULT = `${SITE_URL}/og-default.jpg`;
 
-/* FORCE GITHUB STATIC ROUTING */
-fs.writeFileSync(".nojekyll","");
-
 /* CLEAN BUILD */
 
 fs.rmSync("posts",{recursive:true,force:true});
@@ -29,7 +26,7 @@ fs.mkdirSync("_data",{recursive:true});
 fs.mkdirSync("og-images",{recursive:true});
 fs.mkdirSync("author",{recursive:true});
 fs.mkdirSync("topics",{recursive:true});
-fs.mkdirSync("comparisons",{recursive:true});
+fs.mkdirSync("comparisons",{recursive:true}); // ✅ PHASE 31
 
 /* FETCH */
 
@@ -43,74 +40,54 @@ if(!Array.isArray(entries)) entries=[entries];
 /* YOUTUBE */
 
 async function getYouTubeImages(html,slug){
-
-const match = html.match(/(?:youtube\.com\/embed\/|watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
-if(!match) return null;
-
-const id = match[1];
-
-const candidates = [
-`https://img.youtube.com/vi/${id}/maxresdefault.jpg`,
-`https://img.youtube.com/vi/${id}/sddefault.jpg`,
-`https://img.youtube.com/vi/${id}/hqdefault.jpg`
-];
-
-const valid=[];
-
-for(const img of candidates){
-try{
-const res = await fetch(img,{method:"HEAD"});
-if(res.ok) valid.push(img);
-}catch{}
-}
-
-if(valid.length===0){
-const upscaled = await upscaleToOG(
-`https://img.youtube.com/vi/${id}/hqdefault.jpg`,
-slug
-);
-if(upscaled) return [`${SITE_URL}/og-images/${slug}.jpg`];
-return null;
-}
-
-return valid;
+  const match = html.match(/(?:youtube\.com\/embed\/|watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+  if(!match) return null;
+  const id = match[1];
+  const candidates = [
+    `https://img.youtube.com/vi/${id}/maxresdefault.jpg`,
+    `https://img.youtube.com/vi/${id}/sddefault.jpg`,
+    `https://img.youtube.com/vi/${id}/hqdefault.jpg`
+  ];
+  const valid=[];
+  for(const img of candidates){
+    try{
+      const res = await fetch(img,{method:"HEAD"});
+      if(res.ok) valid.push(img);
+    }catch{}
+  }
+  if(valid.length===0){
+    const upscaled = await upscaleToOG(`https://img.youtube.com/vi/${id}/hqdefault.jpg`, slug);
+    if(upscaled) return [`${SITE_URL}/og-images/${slug}.jpg`];
+    return null;
+  }
+  return valid;
 }
 
 /* CATEGORY */
 
 function extractCategories(text){
-const words = text.toLowerCase().match(/\b[a-z]{4,}\b/g) || [];
-const freq={};
-words.forEach(w=>freq[w]=(freq[w]||0)+1);
-
-return Object.entries(freq)
-.sort((a,b)=>b[1]-a[1])
-.slice(0,3)
-.map(e=>e[0]);
+  const words = text.toLowerCase().match(/\b[a-z]{4,}\b/g) || [];
+  const freq={};
+  words.forEach(w=>freq[w]=(freq[w]||0)+1);
+  return Object.entries(freq)
+    .sort((a,b)=>b[1]-a[1])
+    .slice(0,3)
+    .map(e=>e[0]);
 }
 
-/* INTERNAL LINK GRAPH */
+/* ✅ PHASE 30 — INTERNAL LINK GRAPH */
 
 function injectInternalLinks(html, posts, currentSlug){
-
-const candidates = posts
-.filter(p=>p.slug!==currentSlug)
-.slice(0,5);
-
-let enriched = html;
-
-candidates.forEach(p=>{
-const keyword = p.title.split(" ")[0];
-const regex = new RegExp(`\\b(${keyword})\\b`,"i");
-
-if(regex.test(enriched)){
-enriched = enriched.replace(regex,
-`<a href="${p.url}" style="font-weight:600;">$1</a>`
-);
-}
-});
-
-return enriched;
+  const candidates = posts.filter(p=>p.slug!==currentSlug).slice(0,5);
+  let enriched = html;
+  candidates.forEach(p=>{
+    const keyword = p.title.split(" ")[0];
+    const regex = new RegExp(`\\b(${keyword})\\b`,"i");
+    if(regex.test(enriched)){
+      enriched = enriched.replace(regex, `<a href="${p.url}" style="font-weight:600;">$1</a>`);
+    }
+  });
+  return enriched;
 }
 
 const posts=[];
@@ -118,185 +95,201 @@ const posts=[];
 /* BUILD DATA */
 
 for(const entry of entries){
+  const rawHtml = entry.content?.["#text"];
+  if(!rawHtml) continue;
 
-const rawHtml = entry.content?.["#text"];
-if(!rawHtml) continue;
+  const title = entry.title["#text"];
+  const slug = title.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"");
+  const url = `${SITE_URL}/posts/${slug}/`;
+  const description = rawHtml.replace(/<[^>]+>/g," ").slice(0,155);
 
-const title = entry.title["#text"];
+  let ogImages = await getYouTubeImages(rawHtml,slug);
+  if(!ogImages) ogImages=[CTA];
+  if(!ogImages) ogImages=[DEFAULT];
 
-const slug = title
-.toLowerCase()
-.replace(/[^a-z0-9]+/g,"-")
-.replace(/^-|-$/g,"");
+  const primaryOG = ogImages[0];
+  const thumb = ogImages.find(img=>img.includes("hqdefault")) || primaryOG;
+  const textOnly = rawHtml.replace(/<[^>]+>/g,"");
+  const readTime = Math.max(1, Math.ceil(textOnly.split(/\s+/).length / 200));
+  const categories = extractCategories(textOnly);
+  const primaryCategory = categories[0] || "reviews";
 
-const url = `${SITE_URL}/posts/${slug}/`;
+  /* SCHEMAS */
+  const reviewSchema = {
+    "@context":"https://schema.org",
+    "@type":"Review",
+    itemReviewed:{"@type":"Product","name":title,"image":primaryOG},
+    author:{"@type":"Person","name":"Justin Gerald","url":`${SITE_URL}/author/`},
+    reviewRating:{"@type":"Rating","ratingValue":"4.7","bestRating":"5"},
+    publisher:{"@type":"Organization","name":"ReviewLab"}
+  };
 
-const description = rawHtml.replace(/<[^>]+>/g," ").slice(0,155);
+  const articleSchema = {
+    "@context":"https://schema.org",
+    "@type":"Article",
+    headline:title,
+    image:ogImages,
+    datePublished:entry.published,
+    dateModified:new Date().toISOString(),
+    author:{"@type":"Person","name":"Justin Gerald","url":`${SITE_URL}/author/`},
+    publisher:{"@type":"Organization","name":"ReviewLab","logo":{"@type":"ImageObject","url":CTA}},
+    description,
+    keywords:categories.join(", "),
+    mainEntityOfPage:{"@type":"WebPage","@id":url}
+  };
 
-let ogImages = await getYouTubeImages(rawHtml,slug);
-if(!ogImages) ogImages=[CTA];
-if(!ogImages) ogImages=[DEFAULT];
+  const breadcrumbSchema = {
+    "@context":"https://schema.org",
+    "@type":"BreadcrumbList",
+    itemListElement:[
+      {"@type":"ListItem","position":1,"name":"Home","item":SITE_URL},
+      {"@type":"ListItem","position":2,"name":primaryCategory,"item":`${SITE_URL}/topics/${primaryCategory}.html`},
+      {"@type":"ListItem","position":3,"name":title,"item":url}
+    ]
+  };
 
-const primaryOG = ogImages[0];
-const thumb = ogImages.find(img=>img.includes("hqdefault")) || primaryOG;
+  const organizationSchema = {
+    "@context":"https://schema.org",
+    "@type":"Organization",
+    name:"ReviewLab",
+    url:SITE_URL,
+    logo:CTA,
+    sameAs:["https://twitter.com/","https://facebook.com/"]
+  };
 
-const textOnly = rawHtml.replace(/<[^>]+>/g,"");
-
-const readTime = Math.max(1,
-Math.ceil(textOnly.split(/\s+/).length / 200)
-);
-
-const categories = extractCategories(textOnly);
-const primaryCategory = categories[0] || "reviews";
-
-/* SCHEMAS — UNTOUCHED */
-
-const reviewSchema = {
-"@context":"https://schema.org",
-"@type":"Review",
-"itemReviewed":{
-"@type":"Product",
-"name":title,
-"image":primaryOG
-},
-"author":{
-"@type":"Person",
-"name":"Justin Gerald",
-"url":`${SITE_URL}/author/`
-},
-"reviewRating":{
-"@type":"Rating",
-"ratingValue":"4.7",
-"bestRating":"5"
-},
-"publisher":{
-"@type":"Organization",
-"name":"ReviewLab"
-}
-};
-
-const articleSchema = {
-"@context":"https://schema.org",
-"@type":"Article",
-"headline":title,
-"image":ogImages,
-"datePublished":entry.published,
-"dateModified": new Date().toISOString(),
-"author":{
-"@type":"Person",
-"name":"Justin Gerald",
-"url":`${SITE_URL}/author/`
-},
-"publisher":{
-"@type":"Organization",
-"name":"ReviewLab",
-"logo":{
-"@type":"ImageObject",
-"url":CTA
-}
-},
-"description":description,
-"keywords":categories.join(", "),
-"mainEntityOfPage":{
-"@type":"WebPage",
-"@id":url
-}
-};
-
-const breadcrumbSchema = {
-"@context":"https://schema.org",
-"@type":"BreadcrumbList",
-"itemListElement":[
-{"@type":"ListItem","position":1,"name":"Home","item":SITE_URL},
-{"@type":"ListItem","position":2,"name":primaryCategory,"item":`${SITE_URL}/topics/${primaryCategory}.html`},
-{"@type":"ListItem","position":3,"name":title,"item":url}
-]
-};
-
-const organizationSchema = {
-"@context":"https://schema.org",
-"@type":"Organization",
-"name":"ReviewLab",
-"url":SITE_URL,
-"logo":CTA
-};
-
-posts.push({
-title,
-slug,
-html:rawHtml,
-url,
-description,
-og:primaryOG,
-thumb,
-readTime,
-date:entry.published,
-category:primaryCategory,
-schemas:JSON.stringify([
-articleSchema,
-breadcrumbSchema,
-reviewSchema,
-organizationSchema
-])
-});
+  posts.push({
+    title,
+    slug,
+    html:rawHtml,
+    url,
+    description,
+    og:primaryOG,
+    thumb,
+    readTime,
+    date:entry.published,
+    category:primaryCategory,
+    schemas:JSON.stringify([articleSchema,breadcrumbSchema,reviewSchema,organizationSchema])
+  });
 }
 
 /* APPLY INTERNAL LINKS */
-
-posts.forEach(p=>{
-p.html = injectInternalLinks(p.html,posts,p.slug);
-});
-
+posts.forEach(p=>{ p.html = injectInternalLinks(p.html,posts,p.slug); });
 posts.sort((a,b)=> new Date(b.date)-new Date(a.date));
 
-/* 🔥 SURGICAL FIX — BUILD TOPIC PAGES */
+/* BUILD POSTS */
+for(const post of posts){
+  fs.mkdirSync(`posts/${post.slug}`,{recursive:true});
+  const inlineRecs = posts.filter(p=>p.slug!==post.slug).slice(0,3).map(p=>`<li><a href="${p.url}" style="font-weight:600;">${p.title}</a></li>`).join("");
+  const related = posts.filter(p=>p.slug!==post.slug).slice(0,4).map(p=>`
+    <li>
+    <a href="${p.url}" class="related-link">
+    <img data-src="${p.thumb}" width="110" class="lazy" alt="${p.title}" />
+    <span style="font-weight:600;">${p.title} (~${p.readTime} min)</span>
+    </a>
+    </li>`).join("");
 
-const topicMap={};
+  const page = `<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>${post.title}</title>
+<link rel="canonical" href="${post.url}">
+<meta name="description" content="${post.description}">
+<meta property="og:title" content="${post.title}">
+<meta property="og:description" content="${post.description}">
+<meta property="og:type" content="article">
+<meta property="og:url" content="${post.url}">
+<meta property="og:image" content="${post.og}">
+<script type="application/ld+json">${post.schemas}</script>
+</head>
+<body style="max-width:760px;margin:auto;font-family:system-ui;padding:40px;line-height:1.7;">
+<nav style="font-size:14px;margin-bottom:20px;">
+<a href="${SITE_URL}">Home</a> › <a href="${SITE_URL}/topics/${post.category}.html">${post.category}</a> › ${post.title}
+</nav>
+<h1>${post.title}</h1>
+<p style="opacity:.7;font-size:14px;">By <a href="${SITE_URL}/author/">Justin Gerald</a> • ${post.readTime} min read</p>
+${post.html}
+<div style="margin:40px 0;padding:20px;border-radius:14px;background:#fafafa;">
+<strong>You may also like:</strong>
+<ul>${inlineRecs}</ul>
+</div>
+<hr>
+<h3>Related Reviews</h3>
+<ul>${related}</ul>
+</body>
+</html>`;
+  fs.writeFileSync(`posts/${post.slug}/index.html`,page);
+}
 
-posts.forEach(p=>{
-if(!topicMap[p.category]) topicMap[p.category]=[];
-topicMap[p.category].push(p);
-});
+/* AUTHOR PAGE FIXED */
+const authorHTML = `<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Justin Gerald</title>
+<link rel="canonical" href="${SITE_URL}/author/">
+<meta property="og:title" content="Justin Gerald">
+<meta property="og:type" content="profile">
+<meta property="og:url" content="${SITE_URL}/author/">
+</head>
+<body style="max-width:760px;margin:auto;font-family:system-ui;padding:40px;line-height:1.8;">
+<h1>Justin Gerald</h1>
+<p>Independent product reviewer specializing in AI tools and digital platforms.</p>
+</body>
+</html>`;
+fs.writeFileSync("author/index.html",authorHTML);
 
-for(const topic in topicMap){
-
-const list = topicMap[topic].map(p=>`
-<li>
-<a href="${p.url}" style="font-weight:600;">${p.title}</a>
-</li>
-`).join("");
-
-fs.writeFileSync(`topics/${topic}.html`,`
-<!doctype html>
+/* TOPIC PAGES FIXED */
+const grouped = {};
+posts.forEach(p=>{ if(!grouped[p.category]) grouped[p.category]=[]; grouped[p.category].push(p); });
+for(const topic in grouped){
+  const list = grouped[topic].map(p=>`<li><a href="${p.url}">${p.title}</a> (~${p.readTime} min)</li>`).join("");
+  const topicPage = `<!doctype html>
 <html>
 <head>
 <title>${topic} Reviews | ReviewLab</title>
 <link rel="canonical" href="${SITE_URL}/topics/${topic}.html">
-<meta name="robots" content="index,follow">
+<meta property="og:title" content="${topic} Reviews | ReviewLab">
+<meta property="og:type" content="website">
+<meta property="og:url" content="${SITE_URL}/topics/${topic}.html">
 </head>
-<body style="max-width:760px;margin:auto;font-family:system-ui;padding:40px;">
+<body style="max-width:760px;margin:auto;font-family:system-ui;padding:40px;line-height:1.7;">
 <h1>${topic} Reviews</h1>
 <ul>${list}</ul>
 </body>
-</html>
-`);
+</html>`;
+  fs.writeFileSync(`topics/${topic}.html`,topicPage);
 }
 
-/* AUTHOR PAGE — EXISTS NOW */
-
-fs.writeFileSync("author/index.html",`
-<!doctype html>
+/* PHASE 31 — COMPARISONS */
+const comparisonUrls=[];
+for(let i=0;i<posts.length;i++){
+  for(let j=i+1;j<posts.length;j++){
+    const A=posts[i], B=posts[j];
+    const slug=`${A.slug}-vs-${B.slug}`, url=`${SITE_URL}/comparisons/${slug}.html`;
+    const html=`<!doctype html>
 <html>
 <head>
-<title>Justin Gerald</title>
-<link rel="canonical" href="${SITE_URL}/author/">
-<meta name="robots" content="index,follow">
+<title>${A.title} vs ${B.title}</title>
+<link rel="canonical" href="${url}">
+<meta property="og:title" content="${A.title} vs ${B.title}">
 </head>
-<body style="max-width:760px;margin:auto;font-family:system-ui;padding:40px;">
-<h1>Justin Gerald</h1>
-<p>Independent product reviewer specializing in AI tools and digital platforms.</p>
+<body style="max-width:760px;margin:auto;font-family:system-ui;padding:40px;line-height:1.7;">
+<h1>${A.title} vs ${B.title}</h1>
+<p><a href="${A.url}">${A.title}</a> compared with <a href="${B.url}">${B.title}</a>.</p>
 </body>
-</html>
-`);
+</html>`;
+    fs.writeFileSync(`comparisons/${slug}.html`,html);
+    comparisonUrls.push(url);
+  }
+}
 
-/* REST OF YOUR SCRIPT CONTINUES UNCHANGED */
+/* SAVE JSON */
+fs.writeFileSync("_data/posts.json",JSON.stringify(posts,null,2));
+
+/* SITEMAP */
+const urls = [...posts.map(p=>p.url),...comparisonUrls].map(u=>`<url><loc>${u}</loc></url>`).join("");
+fs.writeFileSync("sitemap.xml",`<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${urls}</urlset>`);
+
+console.log("✅ FULL FIXED — AUTHOR + TOPIC + PHASE 31 COMPLETE");
