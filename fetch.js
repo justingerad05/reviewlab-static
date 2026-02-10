@@ -13,10 +13,10 @@ const SITE_URL =
 const CTA = `${SITE_URL}/og-cta-tested.jpg`;
 const DEFAULT = `${SITE_URL}/og-default.jpg`;
 
-/* FORCE GITHUB PAGES ROUTING */
+/* FORCE GITHUB */
 fs.writeFileSync(".nojekyll","");
 
-/* CLEAN BUILD — SAFE (DO NOT TOUCH _data) */
+/* SAFE CLEAN */
 
 fs.rmSync("posts",{recursive:true,force:true});
 fs.rmSync("author",{recursive:true,force:true});
@@ -29,7 +29,7 @@ fs.mkdirSync("author",{recursive:true});
 fs.mkdirSync("topics",{recursive:true});
 fs.mkdirSync("comparisons",{recursive:true});
 fs.mkdirSync("og-images",{recursive:true});
-fs.mkdirSync("_data",{recursive:true}); // safe ensure only
+fs.mkdirSync("_data",{recursive:true});
 
 /* FETCH */
 
@@ -37,12 +37,10 @@ const parser = new XMLParser({ignoreAttributes:false});
 const xml = await (await fetch(FEED_URL)).text();
 const data = parser.parse(xml);
 
-/* FEED SAFETY — NEVER NUKE SITE AGAIN */
-
 let entries = data?.feed?.entry;
 
 if(!entries){
-console.error("❌ FEED FAILED — build aborted to protect existing posts.");
+console.error("FEED FAILED — aborting build to protect site.");
 process.exit(1);
 }
 
@@ -97,8 +95,6 @@ return Object.entries(freq)
 .map(e=>e[0]);
 }
 
-/* INTERNAL LINK GRAPH */
-
 function injectInternalLinks(html, posts, currentSlug){
 
 const candidates = posts
@@ -123,7 +119,7 @@ return enriched;
 
 const posts=[];
 
-/* BUILD DATA */
+/* BUILD POSTS DATA */
 
 for(const entry of entries){
 
@@ -142,7 +138,6 @@ const url = `${SITE_URL}/posts/${slug}/`;
 const description = rawHtml.replace(/<[^>]+>/g," ").slice(0,155);
 
 let ogImages = await getYouTubeImages(rawHtml,slug);
-
 if(!ogImages || ogImages.length===0) ogImages=[CTA];
 
 const primaryOG = ogImages[0];
@@ -157,82 +152,6 @@ Math.ceil(textOnly.split(/\s+/).length / 200)
 const categories = extractCategories(textOnly);
 const primaryCategory = categories[0] || "reviews";
 
-/* SCHEMAS */
-
-const reviewSchema = {
-"@context":"https://schema.org",
-"@type":"Review",
-"itemReviewed":{
-"@type":"Product",
-"name":title,
-"image":primaryOG
-},
-"author":{
-"@type":"Person",
-"name":"Justin Gerald",
-"url":`${SITE_URL}/author/`
-},
-"reviewRating":{
-"@type":"Rating",
-"ratingValue":"4.7",
-"bestRating":"5"
-},
-"publisher":{
-"@type":"Organization",
-"name":"ReviewLab"
-}
-};
-
-const articleSchema = {
-"@context":"https://schema.org",
-"@type":"Article",
-"headline":title,
-"image":ogImages,
-"datePublished":entry.published,
-"dateModified": new Date().toISOString(),
-"author":{
-"@type":"Person",
-"name":"Justin Gerald",
-"url":`${SITE_URL}/author/`
-},
-"publisher":{
-"@type":"Organization",
-"name":"ReviewLab",
-"logo":{
-"@type":"ImageObject",
-"url":CTA
-}
-},
-"description":description,
-"keywords":categories.join(", "),
-"mainEntityOfPage":{
-"@type":"WebPage",
-"@id":url
-}
-};
-
-const breadcrumbSchema = {
-"@context":"https://schema.org",
-"@type":"BreadcrumbList",
-"itemListElement":[
-{"@type":"ListItem","position":1,"name":"Home","item":SITE_URL},
-{"@type":"ListItem","position":2,"name":primaryCategory,"item":`${SITE_URL}/topics/${primaryCategory}.html`},
-{"@type":"ListItem","position":3,"name":title,"item":url}
-]
-};
-
-const organizationSchema = {
-"@context":"https://schema.org",
-"@type":"Organization",
-"name":"ReviewLab",
-"url":SITE_URL,
-"logo":CTA,
-"sameAs":[
-"https://twitter.com/",
-"https://facebook.com/"
-]
-};
-
 posts.push({
 title,
 slug,
@@ -243,17 +162,11 @@ og:primaryOG,
 thumb,
 readTime,
 date:entry.published,
-category:primaryCategory,
-schemas:JSON.stringify([
-articleSchema,
-breadcrumbSchema,
-reviewSchema,
-organizationSchema
-])
+category:primaryCategory
 });
 }
 
-/* APPLY INTERNAL LINKS */
+/* INTERNAL LINKS */
 
 posts.forEach(p=>{
 p.html = injectInternalLinks(p.html,posts,p.slug);
@@ -261,26 +174,116 @@ p.html = injectInternalLinks(p.html,posts,p.slug);
 
 posts.sort((a,b)=> new Date(b.date)-new Date(a.date));
 
-/* AUTHOR PAGE — FIXED (NO MORE 404) */
+/* =========================
+HIGH AUTHORITY AUTHOR PAGE
+========================= */
 
 fs.writeFileSync("author/index.html",`
 <!doctype html>
-<html>
+<html lang="en">
 <head>
+
 <meta charset="utf-8">
-<title>Justin Gerald</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<title>Justin Gerald — Independent AI Software Reviewer</title>
+
 <link rel="canonical" href="${SITE_URL}/author/">
-<meta property="og:title" content="Justin Gerald">
+
+<meta name="description"
+content="Justin Gerald is an independent software reviewer specializing in AI tools, SaaS platforms, and emerging automation technology.">
+
+<meta property="og:title"
+content="Justin Gerald — Trusted AI Software Reviewer">
+
 <meta property="og:type" content="profile">
 <meta property="og:url" content="${SITE_URL}/author/">
 <meta property="og:image" content="${CTA}">
+
+<script type="application/ld+json">
+{
+"@context":"https://schema.org",
+"@type":"Person",
+"name":"Justin Gerald",
+"url":"${SITE_URL}/author/",
+"jobTitle":"Software Reviewer",
+"worksFor":{
+ "@type":"Organization",
+ "name":"ReviewLab"
+},
+"description":"Independent reviewer publishing deeply tested AI software analysis."
+}
+</script>
+
 </head>
-<body style="max-width:760px;margin:auto;font-family:system-ui;padding:40px;">
+
+<body style="max-width:820px;margin:auto;font-family:system-ui;padding:40px;line-height:1.8;">
+
 <h1>Justin Gerald</h1>
-<p>Independent product reviewer specializing in AI tools and digital platforms.</p>
+
+<p><strong>Independent AI Software Reviewer</strong></p>
+
+<p>
+Justin Gerald is the lead analyst behind ReviewLab,
+publishing deeply researched evaluations of AI platforms,
+automation software, and digital productivity tools.
+</p>
+
+<h2>Editorial Principles</h2>
+
+<ul>
+<li>No sponsored rankings</li>
+<li>No artificial score inflation</li>
+<li>No recycled vendor claims</li>
+<li>Real testing only</li>
+</ul>
+
+<h2>Latest Reviews</h2>
+
+<ul>
+${posts.slice(0,8).map(p=>`
+<li><a href="${p.url}">${p.title}</a></li>
+`).join("")}
+</ul>
+
 </body>
 </html>
 `);
+
+/* =========================
+TOPIC PAGES (FIX 404)
+========================= */
+
+const topicMap={};
+
+posts.forEach(p=>{
+if(!topicMap[p.category]) topicMap[p.category]=[];
+topicMap[p.category].push(p);
+});
+
+Object.keys(topicMap).forEach(topic=>{
+
+const list = topicMap[topic]
+.map(p=>`<li><a href="${p.url}">${p.title}</a></li>`)
+.join("");
+
+fs.writeFileSync(`topics/${topic}.html`,`
+<!doctype html>
+<html>
+<head>
+<title>${topic} Reviews — ReviewLab</title>
+<link rel="canonical" href="${SITE_URL}/topics/${topic}.html">
+<meta property="og:title" content="${topic} Reviews">
+<meta property="og:type" content="website">
+<meta property="og:url" content="${SITE_URL}/topics/${topic}.html">
+</head>
+<body style="max-width:760px;margin:auto;font-family:system-ui;padding:40px;">
+<h1>${topic} Reviews</h1>
+<ul>${list}</ul>
+</body>
+</html>
+`);
+});
 
 /* BUILD POSTS */
 
@@ -288,19 +291,13 @@ for(const post of posts){
 
 fs.mkdirSync(`posts/${post.slug}`,{recursive:true});
 
-const inlineRecs = posts
-.filter(p=>p.slug!==post.slug)
-.slice(0,3)
-.map(p=>`<li><a href="${p.url}" style="font-weight:600;">${p.title}</a></li>`)
-.join("");
-
 const related = posts
 .filter(p=>p.slug!==post.slug)
 .slice(0,4)
 .map(p=>`
 <li>
 <a href="${p.url}" class="related-link">
-<img data-src="${p.thumb}" width="110" class="lazy" alt="${p.title}" />
+<img data-src="${p.thumb}" width="110" class="lazy related-thumb" alt="${p.title}">
 <span style="font-weight:600;">${p.title} (~${p.readTime} min)</span>
 </a>
 </li>`).join("");
@@ -317,51 +314,55 @@ const page = `<!doctype html>
 <link rel="canonical" href="${post.url}">
 
 <meta name="description" content="${post.description}">
-<meta name="robots" content="index,follow">
-
 <meta property="og:title" content="${post.title}">
-<meta property="og:description" content="${post.description}">
-<meta property="og:type" content="article">
-<meta property="og:url" content="${post.url}">
 <meta property="og:image" content="${post.og}">
-<meta property="og:site_name" content="ReviewLab">
-
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="${post.title}">
-<meta name="twitter:description" content="${post.description}">
-<meta name="twitter:image" content="${post.og}">
-
-<script type="application/ld+json">
-${post.schemas}
-</script>
 
 <style>
-.lazy{opacity:0;transition:opacity .3s;border-radius:10px;}
+
+.lazy{opacity:0;transition:.3s;border-radius:10px;}
 .lazy.loaded{opacity:1;}
-.related-link{display:flex;align-items:center;gap:14px;text-decoration:none;color:inherit;padding:12px 0;}
+
+.related-link{
+display:flex;
+align-items:center;
+gap:14px;
+text-decoration:none;
+color:inherit;
+padding:12px 0;
+}
+
+.related-thumb{
+width:110px;
+height:62px;
+object-fit:cover;
+}
+
+.hover-preview{
+position:absolute;
+display:none;
+width:420px;
+border-radius:14px;
+box-shadow:0 30px 80px rgba(0,0,0,.35);
+z-index:9999;
+pointer-events:none;
+}
+
 </style>
 
 </head>
+
 <body style="max-width:760px;margin:auto;font-family:system-ui;padding:40px;line-height:1.7;">
 
-<nav style="font-size:14px;margin-bottom:20px;">
-<a href="${SITE_URL}">Home</a> › <a href="${SITE_URL}/topics/${post.category}.html">${post.category}</a> › ${post.title}
+<nav>
+<a href="${SITE_URL}">Home</a> › 
+<a href="${SITE_URL}/topics/${post.category}.html">${post.category}</a>
 </nav>
 
 <h1>${post.title}</h1>
 
-<p style="opacity:.7;font-size:14px;">
-By <a href="${SITE_URL}/author/">Justin Gerald</a> • ${post.readTime} min read
-</p>
+<p>By <a href="${SITE_URL}/author/">Justin Gerald</a> • ${post.readTime} min read</p>
 
 ${post.html}
-
-<div style="margin:40px 0;padding:20px;border-radius:14px;background:#fafafa;">
-<strong>You may also like:</strong>
-<ul style="margin-top:10px;">
-${inlineRecs}
-</ul>
-</div>
 
 <hr>
 
@@ -370,6 +371,74 @@ ${inlineRecs}
 <ul style="list-style:none;padding:0;">
 ${related}
 </ul>
+
+<img id="hoverPreview" class="hover-preview"/>
+
+<script>
+
+document.addEventListener("DOMContentLoaded",()=>{
+
+const lazy=document.querySelectorAll(".lazy");
+
+const io=new IntersectionObserver(entries=>{
+entries.forEach(e=>{
+if(e.isIntersecting){
+const img=e.target;
+img.src=img.dataset.src;
+img.onload=()=>img.classList.add("loaded");
+io.unobserve(img);
+}
+});
+});
+
+lazy.forEach(i=>io.observe(i));
+
+const hover=document.getElementById("hoverPreview");
+
+document.querySelectorAll(".related-link").forEach(link=>{
+
+const img=link.querySelector("img");
+let timer;
+
+/* desktop hover */
+
+link.addEventListener("mouseenter",()=>{
+hover.src=img.dataset.src;
+hover.style.display="block";
+});
+
+link.addEventListener("mousemove",e=>{
+hover.style.top=(e.pageY+20)+"px";
+hover.style.left=(e.pageX+20)+"px";
+});
+
+link.addEventListener("mouseleave",()=>{
+hover.style.display="none";
+});
+
+/* mobile long press */
+
+link.addEventListener("touchstart",()=>{
+timer=setTimeout(()=>{
+hover.src=img.dataset.src;
+hover.style.display="block";
+hover.style.top="50%";
+hover.style.left="50%";
+hover.style.transform="translate(-50%,-50%)";
+},350);
+});
+
+link.addEventListener("touchend",()=>{
+clearTimeout(timer);
+hover.style.display="none";
+hover.style.transform="";
+});
+
+});
+
+});
+
+</script>
 
 </body>
 </html>`;
@@ -381,4 +450,4 @@ fs.writeFileSync(`posts/${post.slug}/index.html`,page);
 
 fs.writeFileSync("_data/posts.json",JSON.stringify(posts,null,2));
 
-console.log("✅ BUILD STABLE — POSTS SAFE — AUTHOR FIXED");
+console.log("✅ BUILD COMPLETE — AUTHORITY MODE ACTIVE");
