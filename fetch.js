@@ -21,8 +21,8 @@ fs.writeFileSync(".nojekyll","");
 fs.rmSync("posts",{recursive:true,force:true});
 fs.rmSync("_data",{recursive:true,force:true});
 fs.rmSync("author",{recursive:true,force:true});
-fs.rmSync("topics",{recursive:true,force:true});        // ✅ FIX
-fs.rmSync("comparisons",{recursive:true,force:true});   // ✅ FIX
+fs.rmSync("topics",{recursive:true,force:true});
+fs.rmSync("comparisons",{recursive:true,force:true});
 
 fs.mkdirSync("posts",{recursive:true});
 fs.mkdirSync("_data",{recursive:true});
@@ -101,7 +101,6 @@ let enriched = html;
 
 candidates.forEach(p=>{
 const keyword = p.title.split(" ")[0];
-
 const regex = new RegExp(`\\b(${keyword})\\b`,"i");
 
 if(regex.test(enriched)){
@@ -135,8 +134,6 @@ const url = `${SITE_URL}/posts/${slug}/`;
 const description = rawHtml.replace(/<[^>]+>/g," ").slice(0,155);
 
 let ogImages = await getYouTubeImages(rawHtml,slug);
-
-/* ✅ DEAD FALLBACK FIX */
 if(!ogImages || ogImages.length===0) ogImages=[CTA];
 
 const primaryOG = ogImages[0];
@@ -151,30 +148,15 @@ Math.ceil(textOnly.split(/\s+/).length / 200)
 const categories = extractCategories(textOnly);
 const primaryCategory = categories[0] || "reviews";
 
-/* SCHEMAS (UNCHANGED) */
+/* SCHEMAS */
 
 const reviewSchema = {
 "@context":"https://schema.org",
 "@type":"Review",
-"itemReviewed":{
-"@type":"Product",
-"name":title,
-"image":primaryOG
-},
-"author":{
-"@type":"Person",
-"name":"Justin Gerald",
-"url":`${SITE_URL}/author/`
-},
-"reviewRating":{
-"@type":"Rating",
-"ratingValue":"4.7",
-"bestRating":"5"
-},
-"publisher":{
-"@type":"Organization",
-"name":"ReviewLab"
-}
+"itemReviewed":{"@type":"Product","name":title,"image":primaryOG},
+"author":{"@type":"Person","name":"Justin Gerald","url":`${SITE_URL}/author/`},
+"reviewRating":{"@type":"Rating","ratingValue":"4.7","bestRating":"5"},
+"publisher":{"@type":"Organization","name":"ReviewLab"}
 };
 
 const articleSchema = {
@@ -184,47 +166,11 @@ const articleSchema = {
 "image":ogImages,
 "datePublished":entry.published,
 "dateModified": new Date().toISOString(),
-"author":{
-"@type":"Person",
-"name":"Justin Gerald",
-"url":`${SITE_URL}/author/`
-},
-"publisher":{
-"@type":"Organization",
-"name":"ReviewLab",
-"logo":{
-"@type":"ImageObject",
-"url":CTA
-}
-},
+"author":{"@type":"Person","name":"Justin Gerald","url":`${SITE_URL}/author/`},
+"publisher":{"@type":"Organization","name":"ReviewLab","logo":{"@type":"ImageObject","url":CTA}},
 "description":description,
 "keywords":categories.join(", "),
-"mainEntityOfPage":{
-"@type":"WebPage",
-"@id":url
-}
-};
-
-const breadcrumbSchema = {
-"@context":"https://schema.org",
-"@type":"BreadcrumbList",
-"itemListElement":[
-{"@type":"ListItem","position":1,"name":"Home","item":SITE_URL},
-{"@type":"ListItem","position":2,"name":primaryCategory,"item":`${SITE_URL}/topics/${primaryCategory}.html`},
-{"@type":"ListItem","position":3,"name":title,"item":url}
-]
-};
-
-const organizationSchema = {
-"@context":"https://schema.org",
-"@type":"Organization",
-"name":"ReviewLab",
-"url":SITE_URL,
-"logo":CTA,
-"sameAs":[
-"https://twitter.com/",
-"https://facebook.com/"
-]
+"mainEntityOfPage":{"@type":"WebPage","@id":url}
 };
 
 posts.push({
@@ -238,12 +184,7 @@ thumb,
 readTime,
 date:entry.published,
 category:primaryCategory,
-schemas:JSON.stringify([
-articleSchema,
-breadcrumbSchema,
-reviewSchema,
-organizationSchema
-])
+schemas:JSON.stringify([articleSchema,reviewSchema])
 });
 }
 
@@ -255,7 +196,43 @@ p.html = injectInternalLinks(p.html,posts,p.slug);
 
 posts.sort((a,b)=> new Date(b.date)-new Date(a.date));
 
-/* AUTHOR PAGE (NOW INDEXABLE) */
+/* ✅ CRITICAL FIX — WRITE POSTS.JSON SAFELY */
+
+fs.writeFileSync(
+"_data/posts.json",
+JSON.stringify(posts,null,2),
+{encoding:"utf-8"}
+);
+
+/* BUILD POST PAGES */
+
+for(const post of posts){
+
+fs.mkdirSync(`posts/${post.slug}`,{recursive:true});
+
+fs.writeFileSync(`posts/${post.slug}/index.html`,`
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>${post.title}</title>
+<link rel="canonical" href="${post.url}">
+<meta property="og:title" content="${post.title}">
+<meta property="og:image" content="${post.og}">
+<script type="application/ld+json">
+${post.schemas}
+</script>
+</head>
+<body style="max-width:760px;margin:auto;font-family:system-ui;padding:40px;line-height:1.7;">
+<h1>${post.title}</h1>
+<p>By <a href="${SITE_URL}/author/">Justin Gerald</a> • ${post.readTime} min read</p>
+${post.html}
+</body>
+</html>
+`);
+}
+
+/* AUTHOR PAGE */
 
 fs.writeFileSync("author/index.html",`
 <!doctype html>
@@ -264,9 +241,6 @@ fs.writeFileSync("author/index.html",`
 <meta charset="utf-8">
 <title>Justin Gerald</title>
 <link rel="canonical" href="${SITE_URL}/author/">
-<meta property="og:title" content="Justin Gerald">
-<meta property="og:type" content="profile">
-<meta property="og:url" content="${SITE_URL}/author/">
 </head>
 <body style="max-width:760px;margin:auto;font-family:system-ui;padding:40px;">
 <h1>Justin Gerald</h1>
@@ -274,3 +248,5 @@ fs.writeFileSync("author/index.html",`
 </body>
 </html>
 `);
+
+console.log("✅ BUILD COMPLETE — POSTS RESTORED");
