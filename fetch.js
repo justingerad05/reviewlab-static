@@ -1,7 +1,6 @@
 import fs from "fs";
 import fetch from "node-fetch";
 import { XMLParser } from "fast-xml-parser";
-import crypto from "crypto";
 import { generateOG, upscaleToOG } from "./generate-og.js";
 
 const FEED_URL =
@@ -18,7 +17,7 @@ const DEFAULT = `${SITE_URL}/og-default.jpg`;
 fs.rmSync("posts",{recursive:true,force:true});
 fs.rmSync("_data",{recursive:true,force:true});
 fs.rmSync("author",{recursive:true,force:true});
-fs.rmSync("topics",{recursive:true,force:true}); // ✅ COMPLETELY REMOVED
+fs.rmSync("topics",{recursive:true,force:true});
 
 fs.mkdirSync("posts",{recursive:true});
 fs.mkdirSync("_data",{recursive:true});
@@ -26,14 +25,24 @@ fs.mkdirSync("og-images",{recursive:true});
 fs.mkdirSync("author",{recursive:true});
 fs.mkdirSync("comparisons",{recursive:true});
 
-/* FETCH */
+/* FETCH WITH HARD GUARD */
+
+let xml;
+
+try{
+const res = await fetch(FEED_URL);
+if(!res.ok) throw new Error("Feed unreachable");
+xml = await res.text();
+}catch{
+throw new Error("❌ Blogger feed failed — build stopped safely.");
+}
 
 const parser = new XMLParser({ignoreAttributes:false});
-const xml = await (await fetch(FEED_URL)).text();
 const data = parser.parse(xml);
 
-let entries = data.feed.entry || [];
+let entries = data.feed?.entry || [];
 if(!Array.isArray(entries)) entries=[entries];
+if(entries.length===0) throw new Error("❌ Feed returned zero posts.");
 
 /* YOUTUBE */
 
@@ -44,34 +53,12 @@ if(!match) return null;
 
 const id = match[1];
 
-const candidates = [
-`https://img.youtube.com/vi/${id}/maxresdefault.jpg`,
-`https://img.youtube.com/vi/${id}/sddefault.jpg`,
-`https://img.youtube.com/vi/${id}/hqdefault.jpg`
-];
-
-const valid=[];
-
-for(const img of candidates){
-try{
-const res = await fetch(img,{method:"HEAD"});
-if(res.ok) valid.push(img);
-}catch{}
+return {
+thumb:`https://img.youtube.com/vi/${id}/hqdefault.jpg`
+};
 }
 
-if(valid.length===0){
-const upscaled = await upscaleToOG(
-`https://img.youtube.com/vi/${id}/hqdefault.jpg`,
-slug
-);
-if(upscaled) return [`${SITE_URL}/og-images/${slug}.jpg`];
-return null;
-}
-
-return valid;
-}
-
-/* CATEGORY (kept only for schema keywords — NOT used for pages) */
+/* CATEGORY */
 
 function extractCategories(text){
 const words = text.toLowerCase().match(/\b[a-z]{4,}\b/g) || [];
@@ -117,23 +104,34 @@ for(const entry of entries){
 const rawHtml = entry.content?.["#text"];
 if(!rawHtml) continue;
 
-const title = entry.title["#text"];
+const title = entry.title?.["#text"] || "Untitled Post";
 
 const slug = title
 .toLowerCase()
 .replace(/[^a-z0-9]+/g,"-")
-.replace(/^-|-$/g,"");
+.replace(/^-|-$/g,"") || Date.now().toString();
 
 const url = `${SITE_URL}/posts/${slug}/`;
 
-const description = rawHtml.replace(/<[^>]+>/g," ").slice(0,155);
+const description = rawHtml
+.replace(/<[^>]+>/g," ")
+.replace(/\s+/g," ")
+.slice(0,155);
 
-let ogImages = await getYouTubeImages(rawHtml,slug);
-if(!ogImages) ogImages=[CTA];
-if(!ogImages) ogImages=[DEFAULT];
+/* OG GENERATION — ALWAYS SAFE FOR X */
 
-const primaryOG = ogImages[0];
-const thumb = ogImages.find(img=>img.includes("hqdefault")) || primaryOG;
+let ogLocal = `${SITE_URL}/og-images/${slug}.jpg`;
+
+try{
+await generateOG(title, slug);
+}catch{
+ogLocal = CTA;
+}
+
+const yt = await getYouTubeImages(rawHtml,slug);
+
+const primaryOG = ogLocal || CTA;
+const thumb = yt?.thumb || primaryOG;
 
 const textOnly = rawHtml.replace(/<[^>]+>/g,"");
 
@@ -173,7 +171,7 @@ const articleSchema = {
 "@context":"https://schema.org",
 "@type":"Article",
 "headline":title,
-"image":ogImages,
+"image":[primaryOG],
 "datePublished":entry.published,
 "dateModified": new Date().toISOString(),
 "author":{
@@ -197,14 +195,6 @@ const articleSchema = {
 }
 };
 
-const organizationSchema = {
-"@context":"https://schema.org",
-"@type":"Organization",
-"name":"ReviewLab",
-"url":SITE_URL,
-"logo":CTA
-};
-
 posts.push({
 title,
 slug,
@@ -217,8 +207,7 @@ readTime,
 date:entry.published,
 schemas:JSON.stringify([
 articleSchema,
-reviewSchema,
-organizationSchema
+reviewSchema
 ])
 });
 }
@@ -231,7 +220,7 @@ p.html = injectInternalLinks(p.html,posts,p.slug);
 
 posts.sort((a,b)=> new Date(b.date)-new Date(a.date));
 
-/* BUILD POSTS — UNTOUCHED STRUCTURE */
+/* BUILD POSTS */
 
 for(const post of posts){
 
@@ -261,9 +250,6 @@ const page = `<!doctype html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<link rel="preconnect" href="https://img.youtube.com">
-<link rel="dns-prefetch" href="https://img.youtube.com">
-
 <title>${post.title}</title>
 
 <link rel="canonical" href="${post.url}">
@@ -276,6 +262,9 @@ const page = `<!doctype html>
 <meta property="og:type" content="article">
 <meta property="og:url" content="${post.url}">
 <meta property="og:image" content="${post.og}">
+<meta property="og:image:secure_url" content="${post.og}">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
 <meta property="og:site_name" content="ReviewLab">
 
 <meta name="twitter:card" content="summary_large_image">
@@ -385,25 +374,7 @@ hover.style.display="none";
 fs.writeFileSync(`posts/${post.slug}/index.html`,page);
 }
 
-/* AUTHORITY AUTHOR PAGE — E-E-A-T */
-
-const authorSchema = {
-"@context":"https://schema.org",
-"@type":"Person",
-"name":"Justin Gerald",
-"url":`${SITE_URL}/author/`,
-"jobTitle":"Product Review Analyst",
-"worksFor":{
-"@type":"Organization",
-"name":"ReviewLab"
-},
-"knowsAbout":[
-"Software Reviews",
-"SaaS Analysis",
-"Affiliate Products",
-"Digital Tools"
-]
-};
+/* AUTHOR PAGE */
 
 const authorPosts = posts.map(p=>`
 <li style="margin-bottom:18px;">
@@ -416,29 +387,17 @@ fs.writeFileSync(`author/index.html`,`
 <html>
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Justin Gerald — Product Review Analyst</title>
 <link rel="canonical" href="${SITE_URL}/author/">
-<script type="application/ld+json">
-${JSON.stringify(authorSchema)}
-</script>
 </head>
 <body style="max-width:760px;margin:auto;font-family:system-ui;padding:40px;line-height:1.7;">
 
-<h1 style="font-size:42px;margin-bottom:6px;">Justin Gerald</h1>
-<p style="font-size:18px;opacity:.75;margin-top:0;">
-Independent product review analyst focused on deep research,
-real-world testing signals, and buyer-intent software evaluation.
-</p>
+<h1 style="font-size:42px;">Justin Gerald</h1>
 
-<div style="background:#fafafa;padding:20px;border-radius:14px;margin:26px 0;">
-<strong>Editorial Integrity:</strong>
-<p style="margin-top:8px;">
-Every review published on ReviewLab is created through structured analysis,
-feature verification, market comparison, and user-benefit evaluation.
-No automated ratings. No anonymous authorship.
+<p>
+Independent product review analyst focused on deep research,
+real-world testing, and buyer-intent evaluation.
 </p>
-</div>
 
 <h2>Latest Reviews</h2>
 
@@ -477,4 +436,4 @@ fs.writeFileSync("sitemap.xml",`<?xml version="1.0" encoding="UTF-8"?>
 ${urls}
 </urlset>`);
 
-console.log("✅ BUILD COMPLETE — SUITE & REVIEW FULLY REMOVED, AUTHORITY STACK ACTIVE");
+console.log("✅ BUILD COMPLETE — OG SAFE FOR X, ARCHITECTURE STABLE");
