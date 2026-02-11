@@ -132,38 +132,46 @@ if(!topicMap[post.category]) topicMap[post.category]=[];
 topicMap[post.category].push(post);
 });
 
+/* =============================
+GENERATE TOPIC FOLDERS (AUTHOR STYLE)
+============================= */
+
 for(const topic in topicMap){
 
 const topicPosts = topicMap[topic]
 .map(p=>`
-<li style="margin-bottom:18px;">
-<a href="${p.url}" style="font-weight:600;font-size:18px;">
+<li style="margin-bottom:20px;">
+<a href="${p.url}" style="font-size:20px;font-weight:600;">
 ${p.title}
 </a>
-<div style="opacity:.6;font-size:14px;">
+<div style="opacity:.6;">
 ${p.readTime} min read
 </div>
 </li>
 `).join("");
 
-const html = `
+fs.mkdirSync(`topics/${topic}`,{recursive:true});
+
+const topicHTML = `
 <!doctype html>
 <html>
 <head>
 <meta charset="utf-8">
 <title>${topic} Reviews | ReviewLab</title>
-<link rel="canonical" href="${SITE_URL}/topics/${topic}.html">
+<link rel="canonical" href="${SITE_URL}/topics/${topic}/">
 </head>
 
-<body style="max-width:760px;margin:auto;font-family:system-ui;padding:40px;">
+<body style="max-width:820px;margin:auto;font-family:system-ui;padding:40px;line-height:1.8;">
 
-<h1 style="font-size:42px;margin-bottom:10px;">
+<h1 style="font-size:46px;margin-bottom:0;">
 ${topic.charAt(0).toUpperCase()+topic.slice(1)} Reviews
 </h1>
 
-<p style="opacity:.7;margin-bottom:40px;">
-Expert analysis, comparisons, and deep research on the best ${topic} tools.
+<p style="font-size:20px;opacity:.7;margin-top:6px;">
+Curated research, deep comparisons, and expert buyer guidance.
 </p>
+
+<hr style="margin:30px 0;">
 
 <ul style="list-style:none;padding:0;">
 ${topicPosts}
@@ -173,7 +181,7 @@ ${topicPosts}
 </html>
 `;
 
-fs.writeFileSync(`topics/${topic}.html`,html);
+fs.writeFileSync(`topics/${topic}/index.html`,topicHTML);
 }
 
 /* =============================
