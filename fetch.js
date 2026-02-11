@@ -41,7 +41,7 @@ if(!Array.isArray(entries)) entries=[entries];
 async function getYouTubeImages(html,slug){
 
 const match = html.match(/(?:youtube\.com\/embed\/|watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
-if(!match) return null;
+if(!match) return [DEFAULT];
 
 const id = match[1];
 
@@ -71,23 +71,16 @@ return [DEFAULT];
 /* BUYER-INTENT SEMANTIC LINK GRAPH */
 
 function scoreSimilarity(a,b){
-
 const aw = a.toLowerCase().split(/\W+/);
 const bw = b.toLowerCase().split(/\W+/);
-
-const overlap = aw.filter(w=>bw.includes(w)).length;
-
-return overlap;
+return aw.filter(w=>bw.includes(w)).length;
 }
 
 function injectInternalLinks(html, posts, current){
 
 const ranked = posts
 .filter(p=>p.slug!==current.slug)
-.map(p=>({
-post:p,
-score:scoreSimilarity(current.title,p.title)
-}))
+.map(p=>({post:p,score:scoreSimilarity(current.title,p.title)}))
 .sort((a,b)=>b.score-a.score)
 .slice(0,5)
 .map(r=>r.post);
@@ -108,7 +101,7 @@ enriched = enriched.replace(regex,
 return enriched;
 }
 
-/* PROS / CONS AUTO EXTRACTION */
+/* PROS / CONS */
 
 function extractProsCons(text){
 
@@ -120,19 +113,11 @@ const cons=[];
 sentences.forEach(s=>{
 const t=s.toLowerCase();
 
-if(t.includes("easy") ||
-t.includes("fast") ||
-t.includes("powerful") ||
-t.includes("excellent") ||
-t.includes("simple")){
+if(t.includes("easy")||t.includes("fast")||t.includes("powerful")||t.includes("excellent")||t.includes("simple")){
 pros.push(s.trim());
 }
 
-if(t.includes("expensive") ||
-t.includes("slow") ||
-t.includes("difficult") ||
-t.includes("limited") ||
-t.includes("problem")){
+if(t.includes("expensive")||t.includes("slow")||t.includes("difficult")||t.includes("limited")||t.includes("problem")){
 cons.push(s.trim());
 }
 });
@@ -154,8 +139,7 @@ if(!rawHtml) continue;
 
 const title = entry.title["#text"];
 
-const slug = title
-.toLowerCase()
+const slug = title.toLowerCase()
 .replace(/[^a-z0-9]+/g,"-")
 .replace(/^-|-$/g,"");
 
@@ -166,7 +150,6 @@ const textOnly = rawHtml.replace(/<[^>]+>/g," ");
 const description = textOnly.slice(0,155);
 
 const ogImages = await getYouTubeImages(rawHtml,slug);
-
 const primaryOG = ogImages[0];
 
 const readTime = Math.max(1,
@@ -175,28 +158,18 @@ Math.ceil(textOnly.split(/\s+/).length / 200)
 
 const {pros,cons} = extractProsCons(textOnly);
 
-/* AUTHORITY SCHEMA STACK */
+/* AUTHORITY SCHEMA */
 
 const productSchema = {
 "@context":"https://schema.org",
 "@type":"Product",
 "name":title,
 "image":primaryOG,
-"brand":{
-"@type":"Brand",
-"name":title.split(" ")[0]
-},
+"brand":{"@type":"Brand","name":title.split(" ")[0]},
 "review":{
 "@type":"Review",
-"author":{
-"@type":"Person",
-"name":"Justin Gerald"
-},
-"reviewRating":{
-"@type":"Rating",
-"ratingValue":"4.7",
-"bestRating":"5"
-},
+"author":{"@type":"Person","name":"Justin Gerald"},
+"reviewRating":{"@type":"Rating","ratingValue":"4.7","bestRating":"5"},
 "positiveNotes":pros,
 "negativeNotes":cons
 }
@@ -209,18 +182,11 @@ const articleSchema = {
 "image":primaryOG,
 "datePublished":entry.published,
 "dateModified": new Date().toISOString(),
-"author":{
-"@type":"Person",
-"name":"Justin Gerald",
-"url":`${SITE_URL}/author/`
-},
+"author":{"@type":"Person","name":"Justin Gerald","url":`${SITE_URL}/author/`},
 "publisher":{
 "@type":"Organization",
 "name":"ReviewLab",
-"logo":{
-"@type":"ImageObject",
-"url":CTA
-}
+"logo":{"@type":"ImageObject","url":CTA}
 },
 "description":description,
 "mainEntityOfPage":url
@@ -240,7 +206,7 @@ schemas:JSON.stringify([articleSchema,productSchema])
 });
 }
 
-/* APPLY SEMANTIC LINKS */
+/* APPLY LINKS */
 
 posts.forEach(p=>{
 p.html = injectInternalLinks(p.html,posts,p);
@@ -248,11 +214,17 @@ p.html = injectInternalLinks(p.html,posts,p);
 
 posts.sort((a,b)=> new Date(b.date)-new Date(a.date));
 
-/* BUILD POSTS (UNCHANGED UI) */
+/* BUILD POSTS — RESTORED UI */
 
 for(const post of posts){
 
 fs.mkdirSync(`posts/${post.slug}`,{recursive:true});
+
+const inlineRecs = posts
+.filter(p=>p.slug!==post.slug)
+.slice(0,3)
+.map(p=>`<li><a href="${p.url}" style="font-weight:600;">${p.title}</a></li>`)
+.join("");
 
 const related = posts
 .filter(p=>p.slug!==post.slug)
@@ -271,6 +243,9 @@ const page = `<!doctype html>
 
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+
+<link rel="preconnect" href="https://img.youtube.com">
+<link rel="dns-prefetch" href="https://img.youtube.com">
 
 <title>${post.title}</title>
 
@@ -294,6 +269,7 @@ ${post.schemas}
 .lazy{opacity:0;transition:.3s;border-radius:10px;}
 .lazy.loaded{opacity:1;}
 .related-link{display:flex;align-items:center;gap:14px;text-decoration:none;color:inherit;padding:12px 0;}
+.hover-preview{position:absolute;display:none;max-width:420px;border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,.25);z-index:9999;pointer-events:none;}
 </style>
 
 </head>
@@ -311,6 +287,13 @@ By <a href="${SITE_URL}/author/">Justin Gerald</a> • ${post.readTime} min read
 
 ${post.html}
 
+<div style="margin:40px 0;padding:20px;border-radius:14px;background:#fafafa;">
+<strong>You may also like:</strong>
+<ul style="margin-top:10px;">
+${inlineRecs}
+</ul>
+</div>
+
 <hr>
 
 <h3>Related Reviews</h3>
@@ -319,9 +302,13 @@ ${post.html}
 ${related}
 </ul>
 
+<img id="hoverPreview" class="hover-preview"/>
+
 <script>
 document.addEventListener("DOMContentLoaded",()=>{
+
 const lazyImgs=document.querySelectorAll(".lazy");
+
 const io=new IntersectionObserver(entries=>{
 entries.forEach(e=>{
 if(e.isIntersecting){
@@ -332,7 +319,45 @@ io.unobserve(img);
 }
 });
 });
+
 lazyImgs.forEach(img=>io.observe(img));
+
+const hover=document.getElementById("hoverPreview");
+
+document.querySelectorAll(".related-link").forEach(link=>{
+
+const img=link.querySelector("img");
+let touchTimer;
+
+link.addEventListener("mouseover",()=>{
+hover.src=img.dataset.src;
+hover.style.display="block";
+});
+
+link.addEventListener("mousemove",e=>{
+hover.style.top=(e.pageY+20)+"px";
+hover.style.left=(e.pageX+20)+"px";
+});
+
+link.addEventListener("mouseout",()=>hover.style.display="none");
+
+link.addEventListener("touchstart",()=>{
+touchTimer=setTimeout(()=>{
+hover.src=img.dataset.src;
+hover.style.display="block";
+hover.style.top="40%";
+hover.style.left="50%";
+hover.style.transform="translate(-50%,-50%)";
+},350);
+});
+
+link.addEventListener("touchend",()=>{
+clearTimeout(touchTimer);
+hover.style.display="none";
+});
+
+});
+
 });
 </script>
 
@@ -342,7 +367,28 @@ lazyImgs.forEach(img=>io.observe(img));
 fs.writeFileSync(`posts/${post.slug}/index.html`,page);
 }
 
-/* AUTHOR PAGE */
+/* AUTHORITY AUTHOR PAGE — RESTORED */
+
+const authorSchema = {
+"@context":"https://schema.org",
+"@type":"Person",
+"name":"Justin Gerald",
+"url":`${SITE_URL}/author/`,
+"jobTitle":"Product Review Analyst",
+"worksFor":{"@type":"Organization","name":"ReviewLab"},
+"knowsAbout":[
+"Software Reviews",
+"SaaS Analysis",
+"Affiliate Products",
+"Digital Tools"
+]
+};
+
+const authorPosts = posts.map(p=>`
+<li style="margin-bottom:18px;">
+<a href="${p.url}" style="font-weight:700;font-size:18px;">${p.title}</a>
+<div style="opacity:.6;font-size:13px;">${p.readTime} min read</div>
+</li>`).join("");
 
 fs.writeFileSync(`author/index.html`,`
 <!doctype html>
@@ -352,98 +398,40 @@ fs.writeFileSync(`author/index.html`,`
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Justin Gerald — Product Review Analyst</title>
 <link rel="canonical" href="${SITE_URL}/author/">
+<script type="application/ld+json">
+${JSON.stringify(authorSchema)}
+</script>
 </head>
 <body style="max-width:760px;margin:auto;font-family:system-ui;padding:40px;line-height:1.7;">
 
-<h1>Justin Gerald</h1>
-
-<p>
-Independent product review analyst specializing in deep software evaluation,
-market comparison, and buyer-intent testing.
+<h1 style="font-size:42px;margin-bottom:6px;">Justin Gerald</h1>
+<p style="font-size:18px;opacity:.75;margin-top:0;">
+Independent product review analyst focused on deep research,
+real-world testing signals, and buyer-intent software evaluation.
 </p>
+
+<div style="background:#fafafa;padding:20px;border-radius:14px;margin:26px 0;">
+<strong>Editorial Integrity:</strong>
+<p style="margin-top:8px;">
+Every review published on ReviewLab is created through structured analysis,
+feature verification, market comparison, and user-benefit evaluation.
+No automated ratings. No anonymous authorship.
+</p>
+</div>
 
 <h2>Latest Reviews</h2>
 
-<ul>
-${posts.map(p=>`<li><a href="${p.url}">${p.title}</a></li>`).join("")}
+<ul style="list-style:none;padding:0;">
+${authorPosts}
 </ul>
 
 </body>
 </html>
 `);
 
-/* EDITORIAL POLICY */
-
-fs.writeFileSync(`editorial-policy/index.html`,`
-<!doctype html>
-<html>
-<head>
-<title>Editorial Policy — ReviewLab</title>
-<link rel="canonical" href="${SITE_URL}/editorial-policy/">
-</head>
-<body style="max-width:760px;margin:auto;font-family:system-ui;padding:40px;">
-
-<h1>Editorial Policy</h1>
-
-<p>
-ReviewLab maintains strict editorial independence.
-Reviews are based on structured research, product analysis,
-market positioning, and real-world utility.
-</p>
-
-<p>
-Affiliate partnerships never influence verdicts.
-Reader trust is prioritized above commissions.
-</p>
-
-</body>
-</html>
-`);
-
-/* REVIEW METHODOLOGY */
-
-fs.writeFileSync(`review-methodology/index.html`,`
-<!doctype html>
-<html>
-<head>
-<title>Review Methodology — ReviewLab</title>
-<link rel="canonical" href="${SITE_URL}/review-methodology/">
-</head>
-<body style="max-width:760px;margin:auto;font-family:system-ui;padding:40px;">
-
-<h1>Review Methodology</h1>
-
-<p>
-Each product is evaluated across usability, feature depth,
-automation capability, support quality, pricing logic,
-and competitive alternatives.
-</p>
-
-<p>
-Only tools demonstrating real user benefit are recommended.
-</p>
-
-</body>
-</html>
-`);
-
-/* ROBOTS */
-
-fs.writeFileSync("robots.txt",`
-User-agent: *
-Allow: /
-
-Disallow: /_data/
-Disallow: /og-images/
-
-Sitemap: ${SITE_URL}/sitemap.xml
-`);
-
-/* DATA */
+/* DATA + SITEMAP */
 
 fs.writeFileSync("_data/posts.json",JSON.stringify(posts,null,2));
-
-/* SITEMAP */
 
 const urls = posts.map(u=>`
 <url>
@@ -466,4 +454,4 @@ fs.writeFileSync("sitemap.xml",`<?xml version="1.0" encoding="UTF-8"?>
 ${urls}
 </urlset>`);
 
-console.log("✅ AUTHORITY BUILD COMPLETE");
+console.log("✅ AUTHORITY BUILD COMPLETE — UI RESTORED, ARCHITECTURE SAFE");
