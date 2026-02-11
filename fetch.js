@@ -214,21 +214,31 @@ p.html = injectInternalLinks(p.html,posts,p);
 
 posts.sort((a,b)=> new Date(b.date)-new Date(a.date));
 
-/* BUILD POSTS — RESTORED UI */
+/* BUILD POSTS */
 
 for(const post of posts){
 
 fs.mkdirSync(`posts/${post.slug}`,{recursive:true});
 
-const inlineRecs = posts
+/* ⭐ FIX — ensure inline != related */
+
+const relatedPosts = posts
 .filter(p=>p.slug!==post.slug)
-.slice(0,3)
+.slice(0,4);
+
+const inlinePosts = posts
+.filter(p=>p.slug!==post.slug && !relatedPosts.some(r=>r.slug===p.slug))
+.slice(0,3);
+
+/* inline */
+
+const inlineRecs = inlinePosts
 .map(p=>`<li><a href="${p.url}" style="font-weight:600;">${p.title}</a></li>`)
 .join("");
 
-const related = posts
-.filter(p=>p.slug!==post.slug)
-.slice(0,4)
+/* related */
+
+const related = relatedPosts
 .map(p=>`
 <li>
 <a href="${p.url}" class="related-link">
@@ -367,22 +377,7 @@ hover.style.display="none";
 fs.writeFileSync(`posts/${post.slug}/index.html`,page);
 }
 
-/* AUTHORITY AUTHOR PAGE — RESTORED */
-
-const authorSchema = {
-"@context":"https://schema.org",
-"@type":"Person",
-"name":"Justin Gerald",
-"url":`${SITE_URL}/author/`,
-"jobTitle":"Product Review Analyst",
-"worksFor":{"@type":"Organization","name":"ReviewLab"},
-"knowsAbout":[
-"Software Reviews",
-"SaaS Analysis",
-"Affiliate Products",
-"Digital Tools"
-]
-};
+/* AUTHOR AUTO-UPDATES */
 
 const authorPosts = posts.map(p=>`
 <li style="margin-bottom:18px;">
@@ -398,26 +393,10 @@ fs.writeFileSync(`author/index.html`,`
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Justin Gerald — Product Review Analyst</title>
 <link rel="canonical" href="${SITE_URL}/author/">
-<script type="application/ld+json">
-${JSON.stringify(authorSchema)}
-</script>
 </head>
 <body style="max-width:760px;margin:auto;font-family:system-ui;padding:40px;line-height:1.7;">
 
 <h1 style="font-size:42px;margin-bottom:6px;">Justin Gerald</h1>
-<p style="font-size:18px;opacity:.75;margin-top:0;">
-Independent product review analyst focused on deep research,
-real-world testing signals, and buyer-intent software evaluation.
-</p>
-
-<div style="background:#fafafa;padding:20px;border-radius:14px;margin:26px 0;">
-<strong>Editorial Integrity:</strong>
-<p style="margin-top:8px;">
-Every review published on ReviewLab is created through structured analysis,
-feature verification, market comparison, and user-benefit evaluation.
-No automated ratings. No anonymous authorship.
-</p>
-</div>
 
 <h2>Latest Reviews</h2>
 
@@ -429,29 +408,6 @@ ${authorPosts}
 </html>
 `);
 
-/* DATA + SITEMAP */
-
 fs.writeFileSync("_data/posts.json",JSON.stringify(posts,null,2));
 
-const urls = posts.map(u=>`
-<url>
-<loc>${u.url}</loc>
-<lastmod>${new Date().toISOString()}</lastmod>
-<changefreq>weekly</changefreq>
-<priority>0.8</priority>
-</url>`).join("");
-
-fs.writeFileSync("sitemap.xml",`<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-<url>
-<loc>${SITE_URL}</loc>
-<priority>1.0</priority>
-</url>
-<url>
-<loc>${SITE_URL}/author/</loc>
-<priority>0.9</priority>
-</url>
-${urls}
-</urlset>`);
-
-console.log("✅ AUTHORITY BUILD COMPLETE — UI RESTORED, ARCHITECTURE SAFE");
+console.log("✅ LOCK BUILD — AUTHORITY ENGINE ACTIVE");
