@@ -222,20 +222,27 @@ fs.mkdirSync(`posts/${post.slug}`,{recursive:true});
 
 /* SAFE RECOMMENDATION ENGINE */
 
-const relatedPosts = posts
-.filter(p=>p.slug!==post.slug)
-.slice(0,4);
+const candidatePosts = posts.filter(p=>p.slug!==post.slug);
 
-let inlinePosts = posts
-.filter(p=>p.slug!==post.slug && !relatedPosts.some(r=>r.slug===p.slug))
+/* RELATED = strongest matches */
+const relatedPosts = candidatePosts.slice(0,4);
+
+/* INLINE = remove ANY related slug first */
+let inlinePosts = candidatePosts
+.filter(p=>!relatedPosts.map(r=>r.slug).includes(p.slug))
 .slice(0,3);
 
-/* HARD fallback — guarantees links always render */
-
+/* fallback — still respects exclusion */
 if(inlinePosts.length < 3){
-inlinePosts = posts
-.filter(p=>p.slug!==post.slug)
-.slice(0,3);
+
+inlinePosts = candidatePosts
+.filter(p=>!relatedPosts.map(r=>r.slug).includes(p.slug))
+.slice(4,7);
+
+/* final safety — NEVER empty */
+if(inlinePosts.length === 0){
+inlinePosts = candidatePosts.slice(0,3);
+}
 }
 
 const inlineRecs = inlinePosts
