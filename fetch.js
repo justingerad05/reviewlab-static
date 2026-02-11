@@ -230,12 +230,12 @@ let inlinePosts = posts
 .filter(p=>p.slug!==post.slug && !relatedPosts.some(r=>r.slug===p.slug))
 .slice(0,3);
 
-/* fallback if site is still small */
+/* HARD fallback — guarantees links always render */
 
-if(inlinePosts.length === 0){
+if(inlinePosts.length < 3){
 inlinePosts = posts
 .filter(p=>p.slug!==post.slug)
-.slice(4,7);
+.slice(0,3);
 }
 
 const inlineRecs = inlinePosts
