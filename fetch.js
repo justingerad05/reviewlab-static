@@ -1,6 +1,7 @@
-import fs from "fs";
+"import fs from "fs";
 import fetch from "node-fetch";
 import { XMLParser } from "fast-xml-parser";
+import crypto from "crypto";
 import { generateOG, upscaleToOG } from "./generate-og.js";
 
 const FEED_URL =
@@ -17,7 +18,7 @@ const DEFAULT = `${SITE_URL}/og-default.jpg`;
 fs.rmSync("posts",{recursive:true,force:true});
 fs.rmSync("_data",{recursive:true,force:true});
 fs.rmSync("author",{recursive:true,force:true});
-fs.rmSync("topics",{recursive:true,force:true}); // 🔥 FULLY REMOVED
+fs.rmSync("topics",{recursive:true,force:true}); // ✅ COMPLETELY REMOVED
 
 fs.mkdirSync("posts",{recursive:true});
 fs.mkdirSync("_data",{recursive:true});
@@ -70,7 +71,20 @@ return null;
 return valid;
 }
 
-/* INTERNAL LINKS */
+/* CATEGORY (kept only for schema keywords — NOT used for pages) */
+
+function extractCategories(text){
+const words = text.toLowerCase().match(/\b[a-z]{4,}\b/g) || [];
+const freq={};
+words.forEach(w=>freq[w]=(freq[w]||0)+1);
+
+return Object.entries(freq)
+.sort((a,b)=>b[1]-a[1])
+.slice(0,3)
+.map(e=>e[0]);
+}
+
+/* INTERNAL LINK GRAPH */
 
 function injectInternalLinks(html, posts, currentSlug){
 
@@ -127,7 +141,9 @@ const readTime = Math.max(1,
 Math.ceil(textOnly.split(/\s+/).length / 200)
 );
 
-/* AUTHORITY SCHEMAS */
+const categories = extractCategories(textOnly);
+
+/* SCHEMAS */
 
 const reviewSchema = {
 "@context":"https://schema.org",
@@ -174,41 +190,19 @@ const articleSchema = {
 }
 },
 "description":description,
+"keywords":categories.join(", "),
 "mainEntityOfPage":{
 "@type":"WebPage",
 "@id":url
 }
 };
 
-const breadcrumbSchema = {
+const organizationSchema = {
 "@context":"https://schema.org",
-"@type":"BreadcrumbList",
-"itemListElement":[
-{
-"@type":"ListItem",
-"position":1,
-"name":"Home",
-"item":SITE_URL
-},
-{
-"@type":"ListItem",
-"position":2,
-"name":title,
-"item":url
-}
-]
-};
-
-const personSchema = {
-"@context":"https://schema.org",
-"@type":"Person",
-"name":"Justin Gerald",
-"url":`${SITE_URL}/author/`,
-"jobTitle":"Product Review Analyst",
-"worksFor":{
 "@type":"Organization",
-"name":"ReviewLab"
-}
+"name":"ReviewLab",
+"url":SITE_URL,
+"logo":CTA
 };
 
 posts.push({
@@ -223,14 +217,13 @@ readTime,
 date:entry.published,
 schemas:JSON.stringify([
 articleSchema,
-breadcrumbSchema,
 reviewSchema,
-personSchema
+organizationSchema
 ])
 });
 }
 
-/* APPLY LINKS */
+/* APPLY INTERNAL LINKS */
 
 posts.forEach(p=>{
 p.html = injectInternalLinks(p.html,posts,p.slug);
@@ -238,7 +231,7 @@ p.html = injectInternalLinks(p.html,posts,p.slug);
 
 posts.sort((a,b)=> new Date(b.date)-new Date(a.date));
 
-/* BUILD POSTS — UNTOUCHED LAYOUT */
+/* BUILD POSTS — UNTOUCHED STRUCTURE */
 
 for(const post of posts){
 
@@ -268,6 +261,9 @@ const page = `<!doctype html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
+<link rel="preconnect" href="https://img.youtube.com">
+<link rel="dns-prefetch" href="https://img.youtube.com">
+
 <title>${post.title}</title>
 
 <link rel="canonical" href="${post.url}">
@@ -280,8 +276,11 @@ const page = `<!doctype html>
 <meta property="og:type" content="article">
 <meta property="og:url" content="${post.url}">
 <meta property="og:image" content="${post.og}">
+<meta property="og:site_name" content="ReviewLab">
 
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="${post.title}">
+<meta name="twitter:description" content="${post.description}">
 <meta name="twitter:image" content="${post.og}">
 
 <script type="application/ld+json">
@@ -348,6 +347,7 @@ const hover=document.getElementById("hoverPreview");
 
 document.querySelectorAll(".related-link").forEach(link=>{
 const img=link.querySelector("img");
+let touchTimer;
 
 link.addEventListener("mouseover",()=>{
 hover.src=img.dataset.src;
@@ -360,6 +360,21 @@ hover.style.left=(e.pageX+20)+"px";
 });
 
 link.addEventListener("mouseout",()=>hover.style.display="none");
+
+link.addEventListener("touchstart",()=>{
+touchTimer=setTimeout(()=>{
+hover.src=img.dataset.src;
+hover.style.display="block";
+hover.style.top="40%";
+hover.style.left="50%";
+hover.style.transform="translate(-50%,-50%)";
+},350);
+});
+
+link.addEventListener("touchend",()=>{
+clearTimeout(touchTimer);
+hover.style.display="none";
+});
 });
 });
 </script>
@@ -370,54 +385,62 @@ link.addEventListener("mouseout",()=>hover.style.display="none");
 fs.writeFileSync(`posts/${post.slug}/index.html`,page);
 }
 
-/* AUTHOR — AUTHORITY PAGE */
+/* AUTHORITY AUTHOR PAGE — E-E-A-T */
 
 const authorSchema = {
 "@context":"https://schema.org",
 "@type":"Person",
 "name":"Justin Gerald",
 "url":`${SITE_URL}/author/`,
-"jobTitle":"Senior Product Analyst",
-"knowsAbout":[
-"Product Reviews",
-"Affiliate Marketing",
-"Consumer Technology"
-],
+"jobTitle":"Product Review Analyst",
 "worksFor":{
 "@type":"Organization",
 "name":"ReviewLab"
-}
+},
+"knowsAbout":[
+"Software Reviews",
+"SaaS Analysis",
+"Affiliate Products",
+"Digital Tools"
+]
 };
 
 const authorPosts = posts.map(p=>`
-<li style="margin-bottom:14px;">
-<a href="${p.url}" style="font-weight:600;">${p.title}</a>
-</li>
-`).join("");
+<li style="margin-bottom:18px;">
+<a href="${p.url}" style="font-weight:700;font-size:18px;">${p.title}</a>
+<div style="opacity:.6;font-size:13px;">${p.readTime} min read</div>
+</li>`).join("");
 
-fs.writeFileSync("author/index.html",`
+fs.writeFileSync(`author/index.html`,`
 <!doctype html>
 <html>
 <head>
-<title>Justin Gerald — Product Review Expert</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Justin Gerald — Product Review Analyst</title>
 <link rel="canonical" href="${SITE_URL}/author/">
-<meta property="og:title" content="Justin Gerald — Product Review Expert">
-<meta property="og:type" content="profile">
-<meta property="og:url" content="${SITE_URL}/author/">
-<meta property="og:image" content="${CTA}">
-<script type="application/ld+json">${JSON.stringify(authorSchema)}</script>
+<script type="application/ld+json">
+${JSON.stringify(authorSchema)}
+</script>
 </head>
 <body style="max-width:760px;margin:auto;font-family:system-ui;padding:40px;line-height:1.7;">
-<h1>Justin Gerald</h1>
 
-<p><strong>Senior Product Analyst at ReviewLab.</strong></p>
-
-<p>
-Justin specializes in hands-on product testing, real-world evaluation,
-and evidence-based recommendations designed to help consumers make confident buying decisions.
+<h1 style="font-size:42px;margin-bottom:6px;">Justin Gerald</h1>
+<p style="font-size:18px;opacity:.75;margin-top:0;">
+Independent product review analyst focused on deep research,
+real-world testing signals, and buyer-intent software evaluation.
 </p>
 
-<h2>Published Reviews</h2>
+<div style="background:#fafafa;padding:20px;border-radius:14px;margin:26px 0;">
+<strong>Editorial Integrity:</strong>
+<p style="margin-top:8px;">
+Every review published on ReviewLab is created through structured analysis,
+feature verification, market comparison, and user-benefit evaluation.
+No automated ratings. No anonymous authorship.
+</p>
+</div>
+
+<h2>Latest Reviews</h2>
 
 <ul style="list-style:none;padding:0;">
 ${authorPosts}
@@ -427,54 +450,31 @@ ${authorPosts}
 </html>
 `);
 
-/* COMPARISONS — UNTOUCHED */
-
-const comparisonUrls=[];
-
-for(let i=0;i<posts.length;i++){
-for(let j=i+1;j<posts.length;j++){
-
-const A=posts[i];
-const B=posts[j];
-
-const slug=`${A.slug}-vs-${B.slug}`;
-const url=`${SITE_URL}/comparisons/${slug}.html`;
-
-const schema={
-"@context":"https://schema.org",
-"@type":"Article",
-"headline":`${A.title} vs ${B.title}`,
-"author":{"@type":"Person","name":"Justin Gerald"},
-"datePublished":new Date().toISOString()
-};
-
-const html=`
-<!doctype html>
-<html>
-<head>
-<title>${A.title} vs ${B.title}</title>
-<link rel="canonical" href="${url}">
-<meta property="og:title" content="${A.title} vs ${B.title}">
-<meta property="og:type" content="article">
-<meta property="og:url" content="${url}">
-<meta property="og:image" content="${A.og}">
-<script type="application/ld+json">${JSON.stringify(schema)}</script>
-</head>
-<body style="max-width:760px;margin:auto;font-family:system-ui;padding:40px;">
-<h1>${A.title} vs ${B.title}</h1>
-<p><a href="${A.url}">${A.title}</a> compared with <a href="${B.url}">${B.title}</a>.</p>
-</body>
-</html>
-`;
-
-fs.writeFileSync(`comparisons/${slug}.html`,html);
-comparisonUrls.push(url);
-
-}
-}
-
-/* SAVE */
+/* SAVE JSON */
 
 fs.writeFileSync("_data/posts.json",JSON.stringify(posts,null,2));
 
-console.log("✅ BUILD COMPLETE — TOPICS REMOVED, AUTHORITY BOOSTED");
+/* SITEMAP */
+
+const urls = posts.map(u=>`
+<url>
+<loc>${u.url}</loc>
+<lastmod>${new Date().toISOString()}</lastmod>
+<changefreq>weekly</changefreq>
+<priority>0.8</priority>
+</url>`).join("");
+
+fs.writeFileSync("sitemap.xml",`<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<url>
+<loc>${SITE_URL}</loc>
+<priority>1.0</priority>
+</url>
+<url>
+<loc>${SITE_URL}/author/</loc>
+<priority>0.9</priority>
+</url>
+${urls}
+</urlset>`);
+
+console.log("✅ BUILD COMPLETE — SUITE & REVIEW FULLY REMOVED, AUTHORITY STACK ACTIVE");"
