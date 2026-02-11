@@ -350,6 +350,43 @@ fs.writeFileSync(`topics/${topic}.html`,`
 topicUrls.push(`${SITE_URL}/topics/${topic}.html`);
 });
 
+/* BUILD TOPIC PAGES — SURGICAL FIX */
+
+const topicMap = {};
+
+for(const post of posts){
+if(!topicMap[post.category]){
+topicMap[post.category] = [];
+}
+topicMap[post.category].push(post);
+}
+
+for(const topic in topicMap){
+
+const list = topicMap[topic]
+.map(p=>`<li><a href="${p.url}">${p.title}</a></li>`)
+.join("");
+
+const html = `<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>${topic} Topics</title>
+<link rel="canonical" href="${SITE_URL}/topics/${topic}.html">
+<meta name="robots" content="index,follow">
+</head>
+<body style="max-width:760px;margin:auto;font-family:system-ui;padding:40px;line-height:1.7;">
+<h1>${topic}</h1>
+<ul>
+${list}
+</ul>
+</body>
+</html>`;
+
+fs.writeFileSync(`topics/${topic}.html`, html);
+
+}
+
 /* SAVE JSON */
 
 fs.writeFileSync("_data/posts.json",JSON.stringify(posts,null,2));
