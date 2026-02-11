@@ -1,4 +1,4 @@
-"import fs from "fs";
+import fs from "fs";
 import fetch from "node-fetch";
 import { XMLParser } from "fast-xml-parser";
 import crypto from "crypto";
@@ -24,7 +24,7 @@ fs.mkdirSync("_data",{recursive:true});
 fs.mkdirSync("og-images",{recursive:true});
 fs.mkdirSync("author",{recursive:true});
 fs.mkdirSync("topics",{recursive:true});
-fs.mkdirSync("comparisons",{recursive:true}); // ✅ PHASE 31
+fs.mkdirSync("comparisons",{recursive:true});
 
 /* FETCH */
 
@@ -83,8 +83,6 @@ return Object.entries(freq)
 .slice(0,3)
 .map(e=>e[0]);
 }
-
-/* ✅ PHASE 30 — INTERNAL LINK GRAPH */
 
 function injectInternalLinks(html, posts, currentSlug){
 
@@ -145,118 +143,21 @@ Math.ceil(textOnly.split(/\s+/).length / 200)
 const categories = extractCategories(textOnly);
 const primaryCategory = categories[0] || "reviews";
 
-/* SCHEMAS */
-
-const reviewSchema = {
-"@context":"https://schema.org",
-"@type":"Review",
-"itemReviewed":{
-"@type":"Product",
-"name":title,
-"image":primaryOG
-},
-"author":{
-"@type":"Person",
-"name":"Justin Gerald",
-"url":`${SITE_URL}/author/`
-},
-"reviewRating":{
-"@type":"Rating",
-"ratingValue":"4.7",
-"bestRating":"5"
-},
-"publisher":{
-"@type":"Organization",
-"name":"ReviewLab"
-}
-};
-
-const articleSchema = {
-"@context":"https://schema.org",
-"@type":"Article",
-"headline":title,
-"image":ogImages,
-"datePublished":entry.published,
-"dateModified": new Date().toISOString(), // ✅ PHASE 30
-"author":{
-"@type":"Person",
-"name":"Justin Gerald",
-"url":`${SITE_URL}/author/`
-},
-"publisher":{
-"@type":"Organization",
-"name":"ReviewLab",
-"logo":{
-"@type":"ImageObject",
-"url":CTA
-}
-},
-"description":description,
-"keywords":categories.join(", "),
-"mainEntityOfPage":{
-"@type":"WebPage",
-"@id":url
-}
-};
-
-const breadcrumbSchema = {
-"@context":"https://schema.org",
-"@type":"BreadcrumbList",
-"itemListElement":[
-{
-"@type":"ListItem",
-"position":1,
-"name":"Home",
-"item":SITE_URL
-},
-{
-"@type":"ListItem",
-"position":2,
-"name":primaryCategory,
-"item":`${SITE_URL}/topics/${primaryCategory}.html`
-},
-{
-"@type":"ListItem",
-"position":3,
-"name":title,
-"item":url
-}
-]
-};
-
-const organizationSchema = {
-"@context":"https://schema.org",
-"@type":"Organization",
-"name":"ReviewLab",
-"url":SITE_URL,
-"logo":CTA,
-"sameAs":[
-"https://twitter.com/",
-"https://facebook.com/"
-]
-};
-
 posts.push({
 title,
 slug,
-html:rawHtml, // internal links applied later safely
+html:rawHtml,
 url,
 description,
 og:primaryOG,
 thumb,
 readTime,
 date:entry.published,
-category:primaryCategory,
-schemas:JSON.stringify([
-articleSchema,
-breadcrumbSchema,
-reviewSchema,
-organizationSchema
-])
+category:primaryCategory
 });
 }
 
-/* APPLY INTERNAL LINKS SAFELY AFTER POSTS EXIST */
+/* APPLY INTERNAL LINKS */
 
 posts.forEach(p=>{
 p.html = injectInternalLinks(p.html,posts,p.slug);
@@ -270,147 +171,26 @@ for(const post of posts){
 
 fs.mkdirSync(`posts/${post.slug}`,{recursive:true});
 
-const inlineRecs = posts
-.filter(p=>p.slug!==post.slug)
-.slice(0,3)
-.map(p=>`<li><a href="${p.url}" style="font-weight:600;">${p.title}</a></li>`)
-.join("");
-
-const related = posts
-.filter(p=>p.slug!==post.slug)
-.slice(0,4)
-.map(p=>`
-<li>
-<a href="${p.url}" class="related-link">
-<img data-src="${p.thumb}" width="110" class="lazy" alt="${p.title}" />
-<span style="font-weight:600;">${p.title} (~${p.readTime} min)</span>
-</a>
-</li>`).join("");
-
-const page = `<!doctype html>
-<html lang="en">
+const page = `
+<!doctype html>
+<html>
 <head>
-
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-
-<link rel="preconnect" href="https://img.youtube.com">
-<link rel="dns-prefetch" href="https://img.youtube.com">
-
 <title>${post.title}</title>
-
 <link rel="canonical" href="${post.url}">
-
-<meta name="description" content="${post.description}">
-<meta name="robots" content="index,follow">
-
-<meta property="og:title" content="${post.title}">
-<meta property="og:description" content="${post.description}">
-<meta property="og:type" content="article">
-<meta property="og:url" content="${post.url}">
-<meta property="og:image" content="${post.og}">
-<meta property="og:site_name" content="ReviewLab">
-
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="${post.title}">
-<meta name="twitter:description" content="${post.description}">
-<meta name="twitter:image" content="${post.og}">
-
-<script type="application/ld+json">
-${post.schemas}
-</script>
-
-<style>
-.lazy{opacity:0;transition:opacity .3s;border-radius:10px;}
-.lazy.loaded{opacity:1;}
-.related-link{display:flex;align-items:center;gap:14px;text-decoration:none;color:inherit;padding:12px 0;}
-.hover-preview{position:absolute;display:none;max-width:420px;border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,.25);z-index:9999;pointer-events:none;}
-</style>
-
 </head>
-<body style="max-width:760px;margin:auto;font-family:system-ui;padding:40px;line-height:1.7;">
-
-<nav style="font-size:14px;margin-bottom:20px;">
-<a href="${SITE_URL}">Home</a> › <a href="${SITE_URL}/topics/${post.category}.html">${post.category}</a> › ${post.title}
+<body>
+<nav>
+<a href="${SITE_URL}">Home</a> › 
+<a href="${SITE_URL}/topics/${post.category}.html">${post.category}</a>
 </nav>
 
 <h1>${post.title}</h1>
 
-<p style="opacity:.7;font-size:14px;">
-By <a href="${SITE_URL}/author/">Justin Gerald</a> • ${post.readTime} min read
+<p>
+By <a href="${SITE_URL}/author/">Justin Gerald</a>
 </p>
 
 ${post.html}
-
-<div style="margin:40px 0;padding:20px;border-radius:14px;background:#fafafa;">
-<strong>You may also like:</strong>
-<ul style="margin-top:10px;">
-${inlineRecs}
-</ul>
-</div>
-
-<hr>
-
-<h3>Related Reviews</h3>
-
-<ul style="list-style:none;padding:0;">
-${related}
-</ul>
-
-<img id="hoverPreview" class="hover-preview"/>
-
-<script>
-document.addEventListener("DOMContentLoaded",()=>{
-const lazyImgs=document.querySelectorAll(".lazy");
-
-const io=new IntersectionObserver(entries=>{
-entries.forEach(e=>{
-if(e.isIntersecting){
-const img=e.target;
-img.src=img.dataset.src;
-img.onload=()=>img.classList.add("loaded");
-io.unobserve(img);
-}
-});
-});
-
-lazyImgs.forEach(img=>io.observe(img));
-
-const hover=document.getElementById("hoverPreview");
-
-document.querySelectorAll(".related-link").forEach(link=>{
-const img=link.querySelector("img");
-let touchTimer;
-
-link.addEventListener("mouseover",()=>{
-hover.src=img.dataset.src;
-hover.style.display="block";
-});
-
-link.addEventListener("mousemove",e=>{
-hover.style.top=(e.pageY+20)+"px";
-hover.style.left=(e.pageX+20)+"px";
-});
-
-link.addEventListener("mouseout",()=>hover.style.display="none");
-
-link.addEventListener("touchstart",()=>{
-touchTimer=setTimeout(()=>{
-hover.src=img.dataset.src;
-hover.style.display="block";
-hover.style.top="40%";
-hover.style.left="50%";
-hover.style.transform="translate(-50%,-50%)";
-},350);
-});
-
-link.addEventListener("touchend",()=>{
-clearTimeout(touchTimer);
-hover.style.display="none";
-});
-});
-});
-</script>
 
 </body>
 </html>`;
@@ -419,65 +199,14 @@ fs.writeFileSync(`posts/${post.slug}/index.html`,page);
 }
 
 /* =========================
-PHASE 31 — PROGRAMMATIC COMPARISONS
+FIX #1 — BUILD TOPIC PAGES
 ========================= */
 
-const comparisonUrls=[];
-
-for(let i=0;i<posts.length;i++){
-for(let j=i+1;j<posts.length;j++){
-
-const A=posts[i];
-const B=posts[j];
-
-const slug=`${A.slug}-vs-${B.slug}`;
-const url=`${SITE_URL}/comparisons/${slug}.html`;
-
-const schema={
-"@context":"https://schema.org",
-"@type":"Article",
-"headline":`${A.title} vs ${B.title}`,
-"author":{"@type":"Person","name":"Justin Gerald"},
-"datePublished":new Date().toISOString()
-};
-
-const html=`
-<!doctype html>
-<html>
-<head>
-<title>${A.title} vs ${B.title}</title>
-<link rel="canonical" href="${url}">
-<meta property="og:title" content="${A.title} vs ${B.title}">
-<meta property="og:type" content="article">
-<meta property="og:url" content="${url}">
-<meta property="og:image" content="${A.og}">
-<script type="application/ld+json">${JSON.stringify(schema)}</script>
-</head>
-<body style="max-width:760px;margin:auto;font-family:system-ui;padding:40px;line-height:1.7;">
-<h1>${A.title} vs ${B.title}</h1>
-
-<p><a href="${A.url}">${A.title}</a> compared with <a href="${B.url}">${B.title}</a>.</p>
-
-<h2>Quick Verdict</h2>
-<p>Both products are strong contenders. Choose based on features, pricing, and use-case preference.</p>
-
-</body>
-</html>
-`;
-
-fs.writeFileSync(`comparisons/${slug}.html`,html);
-comparisonUrls.push(url);
-
-}
-}
-
-/* BUILD TOPIC PAGES — SURGICAL FIX */
-
-const topicMap = {};
+const topicMap={};
 
 for(const post of posts){
 if(!topicMap[post.category]){
-topicMap[post.category] = [];
+topicMap[post.category]=[];
 }
 topicMap[post.category].push(post);
 }
@@ -488,50 +217,61 @@ const list = topicMap[topic]
 .map(p=>`<li><a href="${p.url}">${p.title}</a></li>`)
 .join("");
 
-const html = `<!doctype html>
-<html lang="en">
+const html = `
+<!doctype html>
+<html>
 <head>
-<meta charset="utf-8">
-<title>${topic} Topics</title>
+<title>${topic}</title>
 <link rel="canonical" href="${SITE_URL}/topics/${topic}.html">
-<meta name="robots" content="index,follow">
 </head>
-<body style="max-width:760px;margin:auto;font-family:system-ui;padding:40px;line-height:1.7;">
+<body>
+
 <h1>${topic}</h1>
+
 <ul>
 ${list}
 </ul>
+
 </body>
-</html>`;
+</html>
+`;
 
-fs.writeFileSync(`topics/${topic}.html`, html);
-
+fs.writeFileSync(`topics/${topic}.html`,html);
 }
+
+/* =========================
+FIX #2 — BUILD AUTHOR PAGE
+========================= */
+
+const authorPosts = posts
+.map(p=>`<li><a href="${p.url}">${p.title}</a></li>`)
+.join("");
+
+const authorHTML = `
+<!doctype html>
+<html>
+<head>
+<title>Justin Gerald</title>
+<link rel="canonical" href="${SITE_URL}/author/">
+</head>
+<body>
+
+<h1>Justin Gerald</h1>
+
+<p>Product reviews and comparisons.</p>
+
+<ul>
+${authorPosts}
+</ul>
+
+</body>
+</html>
+`;
+
+fs.writeFileSync("author/index.html",authorHTML);
 
 /* SAVE JSON */
 
 fs.writeFileSync("_data/posts.json",JSON.stringify(posts,null,2));
 
-/* SITEMAP */
-
-const urls = [
-...posts.map(p=>p.url),
-...comparisonUrls
-].map(u=>`
-<url>
-<loc>${u}</loc>
-<lastmod>${new Date().toISOString()}</lastmod>
-<changefreq>weekly</changefreq>
-<priority>0.8</priority>
-</url>`).join("");
-
-fs.writeFileSync("sitemap.xml",`<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-<url>
-<loc>${SITE_URL}</loc>
-<priority>1.0</priority>
-</url>
-${urls}
-</urlset>`);
-
-console.log("✅ PHASE 30 + 31 COMPLETE — AUTHORITY STACK MAXED");"
+console.log("✅ DEPLOY SAFE — TOPICS + AUTHOR GENERATED");
