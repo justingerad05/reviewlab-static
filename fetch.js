@@ -168,11 +168,11 @@ const productSchema = {
 "image":primaryOG,
 "brand":{"@type":"Brand","name":title.split(" ")[0]},
 "review":{
-"@type":"Review",
-"author":{"@type":"Person","name":"Justin Gerald"},
-"reviewRating":{"@type":"Rating","ratingValue":"4.7","bestRating":"5"},
-"positiveNotes":pros,
-"negativeNotes":cons
+ "@type":"Review",
+ "author":{"@type":"Person","name":"Justin Gerald"},
+ "reviewBody": description,
+ "positiveNotes": pros,
+ "negativeNotes": cons
 }
 };
 
