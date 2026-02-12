@@ -10,6 +10,14 @@ module.exports = function(eleventyConfig) {
   eleventyConfig.addWatchTarget("./topics/");
   eleventyConfig.addWatchTarget("./author/");
 
+  const htmlmin = require("@11ty/eleventy-plugin-htmlmin");
+
+  eleventyConfig.addPlugin(htmlmin,{
+  collapseWhitespace:true,
+  removeComments:true,
+  useShortDoctype:true
+});
+
   return {
     dir:{
       input:".",
