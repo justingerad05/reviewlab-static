@@ -8,7 +8,7 @@ eleventyExcludeFromCollections: true
 
   <channel>
     <title>ReviewLab – Latest Reviews</title>
-    <link>https://justingerad05.github.io/reviewlab-static/</link>
+    <link>{{ site.url }}/</link>
     <description>Automated, honest product reviews.</description>
     <language>en-us</language>
     <lastBuildDate>{{ "now" | date: "%a, %d %b %Y %H:%M:%S %z" }}</lastBuildDate>
@@ -21,8 +21,8 @@ eleventyExcludeFromCollections: true
     {% for post in posts %}
     <item>
       <title><![CDATA[{{ post.title }}]]></title>
-      <link>{{ post.url }}</link>
-      <guid isPermaLink="true">{{ post.url }}</guid>
+      <link>{{ site.url }}{{ post.url }}</link>
+      <guid isPermaLink="true">{{ site.url }}{{ post.url }}</guid>
       <pubDate>{{ post.date | date: "%a, %d %b %Y %H:%M:%S %z" }}</pubDate>
     </item>
     {% endfor %}
