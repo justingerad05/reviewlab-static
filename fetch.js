@@ -216,6 +216,54 @@ p.html = injectInternalLinks(p.html,posts,p);
 
 posts.sort((a,b)=> new Date(b.date)-new Date(a.date));
 
+/* AUTO COMPARISON ENGINE */
+
+for(let i=0;i<posts.length;i++){
+ for(let j=i+1;j<posts.length;j++){
+
+   const A = posts[i];
+   const B = posts[j];
+
+   const slug = `${A.slug}-vs-${B.slug}`;
+
+   fs.mkdirSync(`posts/${slug}`,{recursive:true});
+
+   const html = `
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>${A.title} vs ${B.title}</title>
+<meta name="description" content="Compare ${A.title} vs ${B.title}. Features, speed, pricing, and verdict.">
+<link rel="canonical" href="${SITE_URL}/posts/${slug}/">
+</head>
+
+<body style="max-width:760px;margin:auto;font-family:system-ui;padding:40px;line-height:1.7;">
+
+<h1>${A.title} vs ${B.title}</h1>
+
+<h2>Overview</h2>
+<p>Both tools target similar users but differ in execution.</p>
+
+<h2>${A.title}</h2>
+<p>${A.description}</p>
+
+<h2>${B.title}</h2>
+<p>${B.description}</p>
+
+<h2>Final Verdict</h2>
+<p>If you want simplicity — choose one.  
+If you want power — choose the other.</p>
+
+</body>
+</html>
+`;
+
+   fs.writeFileSync(`posts/${slug}/index.html`,html);
+
+ }
+}
+
 /* BUILD POSTS */
 
 for(const post of posts){
