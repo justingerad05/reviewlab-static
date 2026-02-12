@@ -1,4 +1,4 @@
-"import fs from "fs";
+import fs from "fs";
 import fetch from "node-fetch";
 import { XMLParser } from "fast-xml-parser";
 import crypto from "crypto";
@@ -497,4 +497,4 @@ fs.writeFileSync("sitemap.xml",`<?xml version="1.0" encoding="UTF-8"?>
 ${urls}
 </urlset>`);
 
-console.log("✅ PHASE 30 + 31 COMPLETE — AUTHORITY STACK MAXED");"
+console.log("✅ PHASE 30 + 31 COMPLETE — AUTHORITY STACK MAXED");
