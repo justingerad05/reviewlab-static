@@ -203,6 +203,7 @@ og:primaryOG,
 thumb:primaryOG,
 readTime,
 date:entry.published,
+lastmod: new Date().toISOString(),
 schemas:JSON.stringify([articleSchema,productSchema])
 });
 }
