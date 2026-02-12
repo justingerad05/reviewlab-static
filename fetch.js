@@ -131,6 +131,22 @@ cons:cons.slice(0,3)
 
 const posts=[];
 
+function detectTopic(title){
+
+ const t = title.toLowerCase();
+
+ if(t.includes("writer") || t.includes("copy"))
+   return "ai-writing-tools";
+
+ if(t.includes("image") || t.includes("art"))
+   return "ai-image-generators";
+
+ if(t.includes("automation"))
+   return "automation-tools";
+
+ return "ai-tools";
+}
+
 /* BUILD DATA */
 
 for(const entry of entries){
@@ -204,6 +220,7 @@ thumb:primaryOG,
 readTime,
 date:entry.published,
 lastmod: new Date().toISOString(),
+topic: detectTopic(title),
 schemas:JSON.stringify([articleSchema,productSchema])
 });
 }
@@ -262,6 +279,47 @@ If you want power — choose the other.</p>
    fs.writeFileSync(`posts/${slug}/index.html`,html);
 
  }
+}
+
+/* TOPIC HUB GENERATOR */
+
+const topics = {};
+
+posts.forEach(p=>{
+ if(!topics[p.topic]) topics[p.topic]=[];
+ topics[p.topic].push(p);
+});
+
+fs.mkdirSync("topics",{recursive:true});
+
+for(const topic in topics){
+
+ const list = topics[topic]
+   .map(p=>`<li><a href="${p.url}">${p.title}</a></li>`)
+   .join("");
+
+ const html = `
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>${topic.replace(/-/g," ")}</title>
+<link rel="canonical" href="${SITE_URL}/topics/${topic}/">
+</head>
+
+<body style="max-width:760px;margin:auto;font-family:system-ui;padding:40px;">
+<h1>${topic.replace(/-/g," ")}</h1>
+
+<ul>
+${list}
+</ul>
+
+</body>
+</html>
+`;
+
+ fs.mkdirSync(`topics/${topic}`,{recursive:true});
+ fs.writeFileSync(`topics/${topic}/index.html`,html);
 }
 
 /* BUILD POSTS */
