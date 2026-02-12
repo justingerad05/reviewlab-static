@@ -394,6 +394,19 @@ fs.writeFileSync(`author/index.html`,`
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Justin Gerald — Product Review Analyst</title>
 <link rel="canonical" href="${SITE_URL}/author/">
+<script type="application/ld+json">
+{
+ "@context":"https://schema.org",
+ "@type":"Person",
+ "name":"Justin Gerald",
+ "url":"{{ site.url }}/author/",
+ "jobTitle":"Product Review Analyst",
+ "worksFor":{
+   "@type":"Organization",
+   "name":"ReviewLab"
+ }
+}
+</script>
 </head>
 <body style="max-width:760px;margin:auto;font-family:system-ui;padding:40px;line-height:1.7;">
 
