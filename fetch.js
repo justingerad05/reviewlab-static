@@ -89,7 +89,7 @@ const ranked = posts
 let enriched = html;
 
 ranked.forEach(p=>{
-const keyword = p.title.split(" ")[0];
+const keyword = p.title.split(" ").slice(0,2).join(" ");
 const regex = new RegExp(`\\b(${keyword})\\b`,"i");
 
 if(regex.test(enriched)){
