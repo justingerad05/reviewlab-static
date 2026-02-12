@@ -6,8 +6,9 @@ import { upscaleToOG } from "./generate-og.js";
 const FEED_URL =
 "https://honestproductreviewlab.blogspot.com/feeds/posts/default?alt=atom";
 
-const SITE_URL =
-"https://justingerad05.github.io/reviewlab-static";
+import site from "./_data/site.json" assert { type: "json" };
+
+const SITE_URL = site.url;
 
 const CTA = `${SITE_URL}/og-cta-tested.jpg`;
 const DEFAULT = `${SITE_URL}/og-default.jpg`;
