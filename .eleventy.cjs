@@ -3,10 +3,6 @@ const htmlmin = require("@11ty/eleventy-plugin-htmlmin");
 module.exports = function(eleventyConfig) {
 
   eleventyConfig.addPassthroughCopy("og-images");
-  eleventyConfig.addPassthroughCopy("topics");
-  eleventyConfig.addPassthroughCopy("author");
-  eleventyConfig.addPassthroughCopy("editorial-policy");
-  eleventyConfig.addPassthroughCopy("review-methodology");
   eleventyConfig.addPassthroughCopy("*.jpg");
   eleventyConfig.addPassthroughCopy("sitemap.xml");
 
@@ -21,9 +17,8 @@ module.exports = function(eleventyConfig) {
   });
 
   eleventyConfig.addCollection("aiWriting", function(collectionApi) {
-    return collectionApi.getFilteredByGlob("./posts/*writer*.md");
+  return collectionApi.getFilteredByGlob("./posts/**/*writer*/index.html");
   });
-
 
   return {
     dir:{
