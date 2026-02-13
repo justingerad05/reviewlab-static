@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-  "build": "npx @11ty/eleventy"
+  "build": "node fetch.js && npx @11ty/eleventy"
 },
   "dependencies": {
   "@11ty/eleventy": "2.0.1",
