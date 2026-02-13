@@ -280,47 +280,6 @@ If you want power — choose the other.</p>
  }
 }
 
-/* TOPIC HUB GENERATOR */
-
-const topics = {};
-
-posts.forEach(p=>{
- if(!topics[p.topic]) topics[p.topic]=[];
- topics[p.topic].push(p);
-});
-
-fs.mkdirSync("topics",{recursive:true});
-
-for(const topic in topics){
-
- const list = topics[topic]
-   .map(p=>`<li><a href="${p.url}">${p.title}</a></li>`)
-   .join("");
-
- const html = `
-<!doctype html>
-<html>
-<head>
-<meta charset="utf-8">
-<title>${topic.replace(/-/g," ")}</title>
-<link rel="canonical" href="${SITE_URL}/topics/${topic}/">
-</head>
-
-<body style="max-width:760px;margin:auto;font-family:system-ui;padding:40px;">
-<h1>${topic.replace(/-/g," ")}</h1>
-
-<ul>
-${list}
-</ul>
-
-</body>
-</html>
-`;
-
- fs.mkdirSync(`topics/${topic}`,{recursive:true});
- fs.writeFileSync(`topics/${topic}/index.html`,html);
-}
-
 /* BUILD POSTS */
 
 for(const post of posts){
