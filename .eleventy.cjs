@@ -19,11 +19,6 @@ module.exports = function(eleventyConfig) {
     useShortDoctype:true
   });
 
-  // Collection
-  eleventyConfig.addCollection("aiWriting", function(collectionApi) {
-    return collectionApi.getFilteredByGlob("./posts/**/*writer*/index.md");
-  });
-
   return {
     dir:{
       input: ".",
