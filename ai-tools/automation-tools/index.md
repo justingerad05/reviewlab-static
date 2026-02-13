@@ -2,7 +2,7 @@
 layout: base.njk
 title: Best Automation Tools (Expert Reviews)
 description: Explore the best automation software for scaling workflows, marketing, and online business operations.
-permalink: /topics/automation-tools/
+permalink: /ai-tools/automation-tools/
 ---
 
 <h1>Best Automation Tools</h1>
