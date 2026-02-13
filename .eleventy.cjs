@@ -24,6 +24,16 @@ module.exports = function(eleventyConfig) {
     return collectionApi.getFilteredByGlob("./posts/**/*writer*/index.md");
   });
 
+  // AI IMAGE TOOLS
+eleventyConfig.addCollection("aiImages", function(collectionApi) {
+  return collectionApi.getFilteredByGlob("./posts/**/*image*/index.md");
+});
+
+// AUTOMATION TOOLS
+eleventyConfig.addCollection("automation", function(collectionApi) {
+  return collectionApi.getFilteredByGlob("./posts/**/*automation*/index.md");
+});
+
   return {
     dir:{
       input: ".",
