@@ -9,6 +9,8 @@ on:
 
 jobs:
   build:
+    permissions:
+      contents: write
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -35,4 +37,7 @@ jobs:
           publish_dir: _site
           publish_branch: gh-pages
           keep_files: false
+
+      - name: Ping Google
+        run: curl https://www.google.com/ping?sitemap=https://justingerad05.github.io/reviewlab-static/sitemap.xml
 
