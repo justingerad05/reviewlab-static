@@ -36,6 +36,3 @@ jobs:
           publish_branch: gh-pages
           keep_files: false
 
-      - name: Ping Google
-        run: curl https://www.google.com/ping?sitemap=https://justingerad05.github.io/reviewlab-static/sitemap.xml
-
