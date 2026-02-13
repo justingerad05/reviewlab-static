@@ -16,7 +16,6 @@ const DEFAULT = `${SITE_URL}/og-default.jpg`;
 /* CLEAN BUILD */
 
 fs.rmSync("posts",{recursive:true,force:true});
-fs.rmSync("_data",{recursive:true,force:true});
 fs.rmSync("author",{recursive:true,force:true});
 fs.rmSync("editorial-policy",{recursive:true,force:true});
 fs.rmSync("review-methodology",{recursive:true,force:true});
