@@ -27,7 +27,7 @@ module.exports = function(eleventyConfig) {
   return {
     dir:{
       input: ".",
-      includes: ".", // ← ADD THIS (important clarity)
+      includes: "_includes", // ← ADD THIS (important clarity)
       output:"_site"
     }
   };
