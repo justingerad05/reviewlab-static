@@ -2,7 +2,6 @@
   "name": "reviewlab-static",
   "version": "1.0.0",
   "private": true,
-  "type": "module",
   "scripts": {
   "build": "node fetch.js && npx @11ty/eleventy"
 },
