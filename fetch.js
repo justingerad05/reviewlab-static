@@ -135,13 +135,13 @@ function detectTopic(title){
  const t = title.toLowerCase();
 
  if(t.includes("writer") || t.includes("copy"))
-   return "ai-writing-tools";
+   return "ai-tools/ai-writing-tools";
 
  if(t.includes("image") || t.includes("art"))
-   return "ai-image-generators";
+   return "ai-tools/ai-image-generators";
 
  if(t.includes("automation"))
-   return "automation-tools";
+   return "ai-tools/automation-tools";
 
  return "ai-tools";
 }
