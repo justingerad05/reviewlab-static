@@ -6,8 +6,9 @@ import { upscaleToOG } from "./generate-og.js";
 const FEED_URL =
 "https://honestproductreviewlab.blogspot.com/feeds/posts/default?alt=atom";
 
-const SITE_URL =
-"https://justingerad05.github.io/reviewlab-static";
+import site from "./_data/site.json" assert { type: "json" };
+
+const SITE_URL = site.url;
 
 const CTA = `${SITE_URL}/og-cta-tested.jpg`;
 const DEFAULT = `${SITE_URL}/og-default.jpg`;
@@ -15,7 +16,6 @@ const DEFAULT = `${SITE_URL}/og-default.jpg`;
 /* CLEAN BUILD */
 
 fs.rmSync("posts",{recursive:true,force:true});
-fs.rmSync("_data",{recursive:true,force:true});
 fs.rmSync("author",{recursive:true,force:true});
 fs.rmSync("editorial-policy",{recursive:true,force:true});
 fs.rmSync("review-methodology",{recursive:true,force:true});
@@ -88,7 +88,7 @@ const ranked = posts
 let enriched = html;
 
 ranked.forEach(p=>{
-const keyword = p.title.split(" ")[0];
+const keyword = p.title.split(" ").slice(0,2).join(" ");
 const regex = new RegExp(`\\b(${keyword})\\b`,"i");
 
 if(regex.test(enriched)){
@@ -130,6 +130,22 @@ cons:cons.slice(0,3)
 
 const posts=[];
 
+function detectTopic(title){
+
+ const t = title.toLowerCase();
+
+ if(t.includes("writer") || t.includes("copy"))
+   return "ai-writing-tools";
+
+ if(t.includes("image") || t.includes("art"))
+   return "ai-image-generators";
+
+ if(t.includes("automation"))
+   return "automation-tools";
+
+ return "ai-tools";
+}
+
 /* BUILD DATA */
 
 for(const entry of entries){
@@ -167,11 +183,11 @@ const productSchema = {
 "image":primaryOG,
 "brand":{"@type":"Brand","name":title.split(" ")[0]},
 "review":{
-"@type":"Review",
-"author":{"@type":"Person","name":"Justin Gerald"},
-"reviewRating":{"@type":"Rating","ratingValue":"4.7","bestRating":"5"},
-"positiveNotes":pros,
-"negativeNotes":cons
+ "@type":"Review",
+ "author":{"@type":"Person","name":"Justin Gerald"},
+ "reviewBody": description,
+ "positiveNotes": pros,
+ "negativeNotes": cons
 }
 };
 
@@ -202,6 +218,8 @@ og:primaryOG,
 thumb:primaryOG,
 readTime,
 date:entry.published,
+lastmod: new Date().toISOString(),
+topic: detectTopic(title),
 schemas:JSON.stringify([articleSchema,productSchema])
 });
 }
@@ -213,6 +231,95 @@ p.html = injectInternalLinks(p.html,posts,p);
 });
 
 posts.sort((a,b)=> new Date(b.date)-new Date(a.date));
+
+/* AUTO COMPARISON ENGINE */
+
+for(let i=0;i<posts.length;i++){
+ for(let j=i+1;j<posts.length;j++){
+
+   const A = posts[i];
+   const B = posts[j];
+
+   const slug = `${A.slug}-vs-${B.slug}`;
+
+   fs.mkdirSync(`posts/${slug}`,{recursive:true});
+
+   const html = `
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>${A.title} vs ${B.title}</title>
+<meta name="description" content="Compare ${A.title} vs ${B.title}. Features, speed, pricing, and verdict.">
+<link rel="canonical" href="${SITE_URL}/posts/${slug}/">
+</head>
+
+<body style="max-width:760px;margin:auto;font-family:system-ui;padding:40px;line-height:1.7;">
+
+<h1>${A.title} vs ${B.title}</h1>
+
+<h2>Overview</h2>
+<p>Both tools target similar users but differ in execution.</p>
+
+<h2>${A.title}</h2>
+<p>${A.description}</p>
+
+<h2>${B.title}</h2>
+<p>${B.description}</p>
+
+<h2>Final Verdict</h2>
+<p>If you want simplicity — choose one.  
+If you want power — choose the other.</p>
+
+</body>
+</html>
+`;
+
+   fs.writeFileSync(`posts/${slug}/index.html`,html);
+
+ }
+}
+
+/* TOPIC HUB GENERATOR */
+
+const topics = {};
+
+posts.forEach(p=>{
+ if(!topics[p.topic]) topics[p.topic]=[];
+ topics[p.topic].push(p);
+});
+
+fs.mkdirSync("topics",{recursive:true});
+
+for(const topic in topics){
+
+ const list = topics[topic]
+   .map(p=>`<li><a href="${p.url}">${p.title}</a></li>`)
+   .join("");
+
+ const html = `
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>${topic.replace(/-/g," ")}</title>
+<link rel="canonical" href="${SITE_URL}/topics/${topic}/">
+</head>
+
+<body style="max-width:760px;margin:auto;font-family:system-ui;padding:40px;">
+<h1>${topic.replace(/-/g," ")}</h1>
+
+<ul>
+${list}
+</ul>
+
+</body>
+</html>
+`;
+
+ fs.mkdirSync(`topics/${topic}`,{recursive:true});
+ fs.writeFileSync(`topics/${topic}/index.html`,html);
+}
 
 /* BUILD POSTS */
 
@@ -393,6 +500,19 @@ fs.writeFileSync(`author/index.html`,`
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Justin Gerald — Product Review Analyst</title>
 <link rel="canonical" href="${SITE_URL}/author/">
+<script type="application/ld+json">
+{
+ "@context":"https://schema.org",
+ "@type":"Person",
+ "name":"Justin Gerald",
+ "url":"{{ site.url }}/author/",
+ "jobTitle":"Product Review Analyst",
+ "worksFor":{
+   "@type":"Organization",
+   "name":"ReviewLab"
+ }
+}
+</script>
 </head>
 <body style="max-width:760px;margin:auto;font-family:system-ui;padding:40px;line-height:1.7;">
 
