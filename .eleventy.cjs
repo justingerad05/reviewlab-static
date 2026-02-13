@@ -9,7 +9,7 @@ module.exports = function(eleventyConfig) {
 
   // Watch targets (GOOD — keep these)
   eleventyConfig.addWatchTarget("./og-images/");
-  eleventyConfig.addWatchTarget("./topics/");
+  eleventyConfig.addWatchTarget("./ai-tools/");
   eleventyConfig.addWatchTarget("./author/");
 
   // HTML minification
