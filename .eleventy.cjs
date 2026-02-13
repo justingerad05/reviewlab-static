@@ -1,5 +1,3 @@
-const htmlmin = require("@11ty/eleventy-plugin-htmlmin");
-
 module.exports = function(eleventyConfig) {
 
   // Static assets
