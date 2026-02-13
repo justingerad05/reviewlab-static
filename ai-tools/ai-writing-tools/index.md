@@ -2,7 +2,7 @@
 layout: base.njk
 title: Best AI Writing Tools (Tested & Reviewed)
 description: In-depth reviews of the best AI writing tools for bloggers, marketers, and creators.
-permalink: /topics/ai-writing-tools/
+permalink: /ai-tools/ai-writing-tools/
 ---
 
 <h1>Best AI Writing Tools</h1>
