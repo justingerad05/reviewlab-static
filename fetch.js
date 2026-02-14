@@ -280,6 +280,53 @@ If you want power — choose the other.</p>
  }
 }
 
+/* AUTHORITY HUB GENERATOR */
+
+const topics = {};
+
+posts.forEach(p=>{
+ if(!topics[p.topic]) topics[p.topic]=[];
+ topics[p.topic].push(p);
+});
+
+for(const topic in topics){
+
+ const list = topics[topic]
+   .map(p=>`<li><a href="${p.url}">${p.title}</a></li>`)
+   .join("");
+
+ const html = `
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>${topic.replace(/-/g," ")}</title>
+<link rel="canonical" href="${SITE_URL}/${topic}/">
+<meta name="description" content="Expert reviews and comparisons for ${topic.replace(/-/g," ")}.">
+</head>
+
+<body style="max-width:760px;margin:auto;font-family:system-ui;padding:40px;line-height:1.7;">
+
+<nav>
+<a href="${SITE_URL}">Home</a> › 
+<a href="${SITE_URL}/ai-tools/">AI Tools</a>
+</nav>
+
+<h1>${topic.replace(/-/g," ")}</h1>
+
+<ul>
+${list}
+</ul>
+
+</body>
+</html>
+`;
+
+ fs.mkdirSync(`${topic}`,{recursive:true});
+ fs.writeFileSync(`${topic}/index.html`,html);
+}
+
 /* BUILD POSTS */
 
 for(const post of posts){
