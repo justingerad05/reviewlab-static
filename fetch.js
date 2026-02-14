@@ -405,10 +405,9 @@ const breadcrumb = `
 <a href="${SITE_URL}">Home</a> › 
 <a href="${SITE_URL}/ai-tools/">AI Tools</a> › 
 <a href="${SITE_URL}/${post.topic}/">${topicLabel}</a> › 
-${post.title}
+${breadcrumb}
 </nav>
-`;
-
+ 
 <h1>${post.title}</h1>
 
 <p style="opacity:.7;font-size:14px;">
