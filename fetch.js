@@ -231,6 +231,18 @@ p.html = injectInternalLinks(p.html,posts,p);
 
 posts.sort((a,b)=> new Date(b.date)-new Date(a.date));
 
+function injectInternalLinks(content, posts){
+
+ posts.forEach(p=>{
+   const regex = new RegExp(p.keyword,"gi");
+   content = content.replace(regex,
+     `<a href="${p.url}">${p.keyword}</a>`
+   );
+ });
+
+ return content;
+}
+
 /* AUTO COMPARISON ENGINE */
 
 for(let i=0;i<posts.length;i++){
@@ -279,6 +291,62 @@ If you want power — choose the other.</p>
  }
 }
 
+function generateComparison(postA, postB){
+
+ const slug = `${postA.slug}-vs-${postB.slug}`;
+
+ const html = `
+<h1>${postA.title} vs ${postB.title}</h1>
+
+<p>Detailed comparison between these two tools.</p>
+
+<h2>Feature Comparison</h2>
+
+<table border="1" cellpadding="8">
+<tr>
+<th>Feature</th>
+<th>${postA.title}</th>
+<th>${postB.title}</th>
+</tr>
+<tr>
+<td>Pricing</td>
+<td>${postA.pricing || "See review"}</td>
+<td>${postB.pricing || "See review"}</td>
+</tr>
+</table>
+`;
+
+ fs.mkdirSync(`posts/comparisons/${slug}`,{recursive:true});
+ fs.writeFileSync(`posts/comparisons/${slug}/index.html`,html);
+}
+
+for(let i=0;i<posts.length;i++){
+ for(let j=i+1;j<posts.length;j++){
+   generateComparison(posts[i],posts[j]);
+ }
+}
+
+function generateTopList(category, posts){
+
+ const filtered = posts.filter(p=>p.category===category);
+
+ const sorted = filtered.sort((a,b)=>b.rating-a.rating);
+
+ const top = sorted.slice(0,10);
+
+ const list = top.map((p,i)=>`
+<li>
+${i+1}. <a href="${p.url}">${p.title}</a> — ${p.rating}/10
+</li>`).join("");
+
+ const html = `
+<h1>Top 10 ${category.replace(/-/g," ")}</h1>
+<ol>${list}</ol>
+`;
+
+ fs.writeFileSync(`ai-tools/${category}/top-10.html`,html);
+}
+
 /* AUTHORITY HUB GENERATOR */
 
 const topics = {};
@@ -325,6 +393,8 @@ ${list}
  fs.mkdirSync(`${topic}`,{recursive:true});
  fs.writeFileSync(`${topic}/index.html`,html);
 }
+
+post.content = injectInternalLinks(post.content, posts);
 
 /* BUILD POSTS */
 
@@ -534,6 +604,15 @@ hover.style.display="none";
 
 fs.writeFileSync(`posts/${post.slug}/index.html`,page);
 }
+
+const revenueBlock = `
+<div style="margin-top:40px;padding:20px;border:1px solid #ddd;">
+<h3>Ready to Try ${post.title}?</h3>
+<a href="${post.affiliate}" target="_blank">Visit Official Site</a>
+</div>
+`;
+
+${revenueBlock}
 
 /* FULL AUTHORITY AUTHOR PAGE RESTORED */
 
