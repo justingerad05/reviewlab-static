@@ -2,7 +2,7 @@
 layout: base.njk
 title: Best AI Image Generators (Tested & Ranked)
 description: Discover the top AI image generators tested for quality, realism, speed, and commercial usability.
-permalink: /topics/ai-image-generators/
+permalink: /ai-tools/ai-image-generators/
 ---
 
 <h1>Best AI Image Generators</h1>
