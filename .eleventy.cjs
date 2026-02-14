@@ -34,6 +34,10 @@ eleventyConfig.addCollection("automation", function(collectionApi) {
   return collectionApi.getFilteredByGlob("./posts/**/*automation*/index.md");
 });
 
+eleventyConfig.addCollection("aiToolsCategories", function(collectionApi) {
+  return collectionApi.getFilteredByGlob("./ai-tools/*/index.*");
+});
+
   return {
     dir:{
       input: ".",
