@@ -400,14 +400,12 @@ ${post.schemas}
 
 const topicLabel = post.topic.split("/").pop().replace(/-/g," ");
 
-const breadcrumb = `
 <nav style="font-size:14px;margin-bottom:20px;">
 <a href="${SITE_URL}">Home</a> › 
 <a href="${SITE_URL}/ai-tools/">AI Tools</a> › 
 <a href="${SITE_URL}/${post.topic}/">${topicLabel}</a> › 
 ${post.title}
 </nav>
-`;
 
 <h1>${post.title}</h1>
 
