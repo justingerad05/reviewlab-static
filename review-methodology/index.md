@@ -1,6 +1,9 @@
-fs.mkdirSync("review-methodology",{recursive:true});
+---
+title: Review Methodology
+layout: none
+permalink: /review-methodology/
+---
 
-fs.writeFileSync("review-methodology/index.html",`
 <!doctype html>
 <html>
 <head>
