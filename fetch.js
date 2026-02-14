@@ -18,7 +18,6 @@ const DEFAULT = `${SITE_URL}/og-default.jpg`;
 fs.rmSync("posts",{recursive:true,force:true});
 fs.rmSync("author",{recursive:true,force:true});
 
-
 fs.mkdirSync("posts",{recursive:true});
 fs.mkdirSync("_data",{recursive:true});
 fs.mkdirSync("og-images",{recursive:true});
@@ -270,22 +269,33 @@ function generateTopList(category, posts){
 
  const filtered = posts.filter(p=>p.category===category);
 
- const sorted = filtered.sort((a,b)=>b.rating-a.rating);
-
- const top = sorted.slice(0,10);
+ const top = filtered.slice(0,10);
 
  const list = top.map((p,i)=>`
 <li>
-${i+1}. <a href="${p.url}">${p.title}</a> — ${p.rating}/10
+${i+1}. <a href="${p.url}">${p.title}</a>
 </li>`).join("");
 
- const html = `
+ fs.mkdirSync(`ai-tools/${category}`,{recursive:true});
+
+ fs.writeFileSync(`ai-tools/${category}/top-10.html`,`
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Top 10 ${category.replace(/-/g," ")}</title>
+</head>
+<body style="max-width:760px;margin:auto;font-family:system-ui;padding:40px;">
 <h1>Top 10 ${category.replace(/-/g," ")}</h1>
 <ol>${list}</ol>
-`;
-
- fs.writeFileSync(`ai-tools/${category}/top-10.html`,html);
+</body>
+</html>
+`);
 }
+
+generateTopList("ai-writing-tools", posts);
+generateTopList("ai-image-generators", posts);
+generateTopList("automation-tools", posts);
 
 /* AUTHORITY HUB GENERATOR */
 
