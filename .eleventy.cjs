@@ -4,6 +4,7 @@ module.exports = function(eleventyConfig) {
 
   // Static assets
   eleventyConfig.addPassthroughCopy("og-images");
+  eleventyConfig.addPassthroughCopy("assets");
   eleventyConfig.addPassthroughCopy("*.jpg");
   eleventyConfig.addPassthroughCopy("sitemap.xml");
 
