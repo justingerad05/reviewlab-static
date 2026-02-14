@@ -401,6 +401,7 @@ ${post.schemas}
 <nav style="font-size:14px;margin-bottom:20px;">
 <a href="${SITE_URL}">Home</a> › 
 <a href="${SITE_URL}/ai-tools/">AI Tools</a> › 
+${post.title}
 </nav>
  
 <h1>${post.title}</h1>
