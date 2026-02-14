@@ -25,7 +25,6 @@ fs.mkdirSync("_data",{recursive:true});
 fs.mkdirSync("og-images",{recursive:true});
 fs.mkdirSync("author",{recursive:true});
 fs.mkdirSync("editorial-policy",{recursive:true});
-fs.mkdirSync("review-methodology",{recursive:true});
 
 /* FETCH */
 
