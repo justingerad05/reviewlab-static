@@ -363,6 +363,53 @@ const related = relatedPosts
 </a>
 </li>`).join("");
 
+ const category = post.category || "ai-writing-tools";
+const categoryTitle = category.replace(/-/g," ");
+
+const breadcrumbHTML = `
+<nav style="font-size:14px;margin-bottom:20px;">
+<a href="${SITE_URL}">Home</a> › 
+<a href="${SITE_URL}/ai-tools/">AI Tools</a> › 
+<a href="${SITE_URL}/ai-tools/${category}/">${categoryTitle}</a> › 
+${post.title}
+</nav>
+`;
+
+const breadcrumbSchema = `
+<script type="application/ld+json">
+{
+"@context":"https://schema.org",
+"@type":"BreadcrumbList",
+"itemListElement":[
+{
+"@type":"ListItem",
+"position":1,
+"name":"Home",
+"item":"${SITE_URL}"
+},
+{
+"@type":"ListItem",
+"position":2,
+"name":"AI Tools",
+"item":"${SITE_URL}/ai-tools/"
+},
+{
+"@type":"ListItem",
+"position":3,
+"name":"${categoryTitle}",
+"item":"${SITE_URL}/ai-tools/${category}/"
+},
+{
+"@type":"ListItem",
+"position":4,
+"name":"${post.title}",
+"item":"${post.url}"
+}
+]
+}
+</script>
+`;
+
 const page = `<!doctype html>
 <html lang="en">
 <head>
@@ -378,7 +425,7 @@ const page = `<!doctype html>
 <meta property="og:description" content="${post.description}">
 <meta property="og:type" content="article">
 <meta property="og:url" content="${post.url}">
-<meta property="og:image" content="${post.og}">
+<meta property="og:image" content="${SITE_URL}/assets/og-default.jpg">
 
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="${post.og}">
@@ -397,11 +444,8 @@ ${post.schemas}
 </head>
 <body style="max-width:760px;margin:auto;font-family:system-ui;padding:40px;line-height:1.7;">
 
-<nav style="font-size:14px;margin-bottom:20px;">
-<a href="${SITE_URL}">Home</a> › 
-<a href="${SITE_URL}/ai-tools/">AI Tools</a> › 
-${post.title}
-</nav>
+${breadcrumbHTML}
+${breadcrumbSchema}
  
 <h1>${post.title}</h1>
 
