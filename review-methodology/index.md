@@ -5,13 +5,14 @@ permalink: /review-methodology/
 ---
 
 <!doctype html>
-<html>
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Review Methodology</title>
-<link rel="canonical" href="${SITE_URL}/review-methodology/">
+<link rel="canonical" href="{{ site.url }}/review-methodology/">
 </head>
+
 <body style="max-width:760px;margin:auto;font-family:system-ui;padding:40px;line-height:1.7;">
 
 <h1>Our Review Methodology</h1>
@@ -31,4 +32,3 @@ All evaluations are independent.
 
 </body>
 </html>
-`);
