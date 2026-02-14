@@ -398,12 +398,16 @@ ${post.schemas}
 </head>
 <body style="max-width:760px;margin:auto;font-family:system-ui;padding:40px;line-height:1.7;">
 
+const topicLabel = post.topic.split("/").pop().replace(/-/g," ");
+
+const breadcrumb = `
 <nav style="font-size:14px;margin-bottom:20px;">
 <a href="${SITE_URL}">Home</a> › 
 <a href="${SITE_URL}/ai-tools/">AI Tools</a> › 
 <a href="${SITE_URL}/${post.topic}/">${topicLabel}</a> › 
 ${post.title}
 </nav>
+`;
 
 <h1>${post.title}</h1>
 
