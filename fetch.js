@@ -17,14 +17,12 @@ const DEFAULT = `${SITE_URL}/og-default.jpg`;
 
 fs.rmSync("posts",{recursive:true,force:true});
 fs.rmSync("author",{recursive:true,force:true});
-fs.rmSync("editorial-policy",{recursive:true,force:true});
-fs.rmSync("review-methodology",{recursive:true,force:true});
+
 
 fs.mkdirSync("posts",{recursive:true});
 fs.mkdirSync("_data",{recursive:true});
 fs.mkdirSync("og-images",{recursive:true});
 fs.mkdirSync("author",{recursive:true});
-fs.mkdirSync("editorial-policy",{recursive:true});
 
 /* FETCH */
 
@@ -134,15 +132,15 @@ function detectTopic(title){
  const t = title.toLowerCase();
 
  if(t.includes("writer") || t.includes("copy"))
-   return "ai-tools/ai-writing-tools";
+   return "ai-writing-tools";
 
  if(t.includes("image") || t.includes("art"))
-   return "ai-tools/ai-image-generators";
+   return "ai-image-generators";
 
  if(t.includes("automation"))
-   return "ai-tools/automation-tools";
+   return "automation-tools";
 
- return "ai-tools";
+ return "ai-writing-tools";
 }
 
 /* BUILD DATA */
@@ -218,7 +216,7 @@ thumb:primaryOG,
 readTime,
 date:entry.published,
 lastmod: new Date().toISOString(),
-topic: detectTopic(title),
+category: detectTopic(title),
 schemas:JSON.stringify([articleSchema,productSchema])
 });
 }
@@ -231,65 +229,7 @@ p.html = injectInternalLinks(p.html,posts,p);
 
 posts.sort((a,b)=> new Date(b.date)-new Date(a.date));
 
-function injectInternalLinks(content, posts){
-
- posts.forEach(p=>{
-   const regex = new RegExp(p.keyword,"gi");
-   content = content.replace(regex,
-     `<a href="${p.url}">${p.keyword}</a>`
-   );
- });
-
- return content;
-}
-
 /* AUTO COMPARISON ENGINE */
-
-for(let i=0;i<posts.length;i++){
- for(let j=i+1;j<posts.length;j++){
-
-   const A = posts[i];
-   const B = posts[j];
-
-   const slug = `${A.slug}-vs-${B.slug}`;
-
-   fs.mkdirSync(`posts/${slug}`,{recursive:true});
-
-   const html = `
-<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<title>${A.title} vs ${B.title}</title>
-<meta name="description" content="Compare ${A.title} vs ${B.title}. Features, speed, pricing, and verdict.">
-<link rel="canonical" href="${SITE_URL}/posts/${slug}/">
-</head>
-
-<body style="max-width:760px;margin:auto;font-family:system-ui;padding:40px;line-height:1.7;">
-
-<h1>${A.title} vs ${B.title}</h1>
-
-<h2>Overview</h2>
-<p>Both tools target similar users but differ in execution.</p>
-
-<h2>${A.title}</h2>
-<p>${A.description}</p>
-
-<h2>${B.title}</h2>
-<p>${B.description}</p>
-
-<h2>Final Verdict</h2>
-<p>If you want simplicity — choose one.  
-If you want power — choose the other.</p>
-
-</body>
-</html>
-`;
-
-   fs.writeFileSync(`posts/${slug}/index.html`,html);
-
- }
-}
 
 function generateComparison(postA, postB){
 
@@ -393,8 +333,6 @@ ${list}
  fs.mkdirSync(`${topic}`,{recursive:true});
  fs.writeFileSync(`${topic}/index.html`,html);
 }
-
-post.content = injectInternalLinks(post.content, posts);
 
 /* BUILD POSTS */
 
@@ -604,15 +542,6 @@ hover.style.display="none";
 
 fs.writeFileSync(`posts/${post.slug}/index.html`,page);
 }
-
-const revenueBlock = `
-<div style="margin-top:40px;padding:20px;border:1px solid #ddd;">
-<h3>Ready to Try ${post.title}?</h3>
-<a href="${post.affiliate}" target="_blank">Visit Official Site</a>
-</div>
-`;
-
-${revenueBlock}
 
 /* FULL AUTHORITY AUTHOR PAGE RESTORED */
 
