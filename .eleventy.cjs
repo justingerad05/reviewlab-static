@@ -19,6 +19,10 @@ module.exports = function(eleventyConfig) {
     useShortDoctype:true
   });
 
+  eleventyConfig.addCollection("aiToolsCategories", function(collectionApi) {
+    return collectionApi.getFilteredByGlob("./ai-tools/*/index.*");
+  });
+
     // Collection
   eleventyConfig.addCollection("aiWriting", function(collectionApi) {
     return collectionApi.getFilteredByGlob("./posts/**/*writer*/index.md");
@@ -32,10 +36,6 @@ eleventyConfig.addCollection("aiImages", function(collectionApi) {
 // AUTOMATION TOOLS
 eleventyConfig.addCollection("automation", function(collectionApi) {
   return collectionApi.getFilteredByGlob("./posts/**/*automation*/index.md");
-});
-
-eleventyConfig.addCollection("aiToolsCategories", function(collectionApi) {
-  return collectionApi.getFilteredByGlob("./ai-tools/*/index.*");
 });
 
   return {
