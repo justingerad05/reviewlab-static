@@ -13,15 +13,17 @@ const SITE_URL = site.url;
 const CTA = `${SITE_URL}/og-cta-tested.jpg`;
 const DEFAULT = `${SITE_URL}/assets/og-default.jpg`;
 
-/* CLEAN BUILD */
+/* CLEAN FULL BUILD */
 
-fs.rmSync("_site/posts",{recursive:true,force:true});
-fs.rmSync("_site/author",{recursive:true,force:true});
+fs.rmSync("_site", { recursive: true, force: true });
+fs.mkdirSync("_site", { recursive: true });
 
-fs.mkdirSync("_site/posts",{recursive:true});
-fs.mkdirSync("_site/_data",{recursive:true});
-fs.mkdirSync("_site/og-images",{recursive:true});
-fs.mkdirSync("_site/author",{recursive:true});
+/* RECREATE REQUIRED FOLDERS */
+
+fs.mkdirSync("_site/posts", { recursive: true });
+fs.mkdirSync("_site/ai-tools", { recursive: true });
+fs.mkdirSync("_site/og-images", { recursive: true });
+fs.mkdirSync("_site/author", { recursive: true });
 
 /* FETCH */
 
