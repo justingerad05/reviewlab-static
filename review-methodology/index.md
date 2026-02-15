@@ -1,6 +1,6 @@
 ---
 title: Review Methodology
-layout: false
+layout: base.njk
 permalink: /review-methodology/
 ---
 
