@@ -293,10 +293,6 @@ ${i+1}. <a href="${p.url}">${p.title}</a>
 `);
 }
 
-generateTopList("ai-writing-tools", posts);
-generateTopList("ai-image-generators", posts);
-generateTopList("automation-tools", posts);
-
 /* AUTHORITY HUB GENERATOR */
 
 const topics = {};
@@ -381,7 +377,7 @@ const related = relatedPosts
 </a>
 </li>`).join("");
 
- const category = post.category || "ai-writing-tools";
+const category = post.category || "ai-writing-tools";
 const categoryTitle = category.replace(/-/g," ");
 
 const breadcrumbHTML = `
