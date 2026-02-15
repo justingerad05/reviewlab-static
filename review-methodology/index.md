@@ -1,6 +1,6 @@
 ---
 title: Review Methodology
-layout: none
+layout: false
 permalink: /review-methodology/
 ---
 
