@@ -310,6 +310,49 @@ posts.forEach(p=>{
 
 for(const post of posts){
 
+for (const topic in topics) {
+
+  const list = topics[topic]
+    .map(p => `<li><a href="${p.url}">${p.title}</a></li>`)
+    .join("");
+
+  const topicTitle = topic.replace(/-/g, " ");
+  const topicURL = `${site.url}/ai-tools/${topic}/`;
+
+  const html = `
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>${topicTitle}</title>
+<link rel="canonical" href="${topicURL}">
+<meta name="description" content="Expert reviews and comparisons for ${topicTitle}.">
+</head>
+
+<body style="max-width:760px;margin:auto;font-family:system-ui;padding:40px;line-height:1.7;">
+
+<nav>
+<a href="${site.url}/">Home</a> › 
+<a href="${site.url}/ai-tools/">AI Tools</a> › 
+${topicTitle}
+</nav>
+
+<h1>${topicTitle}</h1>
+
+<ul>
+${list}
+</ul>
+
+</body>
+</html>
+`;
+
+  const outputDir = `_site/ai-tools/${topic}`;
+  fs.mkdirSync(outputDir, { recursive: true });
+  fs.writeFileSync(`${outputDir}/index.html`, html);
+}
+
 fs.mkdirSync(`posts/${post.slug}`,{recursive:true});
 
 /* SAFE RECOMMENDATION ENGINE */
