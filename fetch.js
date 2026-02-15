@@ -310,7 +310,40 @@ posts.forEach(p=>{
 
 for(const post of posts){
 
-for (const topic in topics) {
+fs.mkdirSync(`posts/${post.slug}`,{recursive:true});
+
+/* SAFE RECOMMENDATION ENGINE */
+
+const relatedPosts = posts
+.filter(p=>p.slug!==post.slug)
+.slice(0,4);
+
+let inlinePosts = posts
+.filter(p=>p.slug!==post.slug && !relatedPosts.some(r=>r.slug===p.slug))
+.slice(0,3);
+
+/* HARD fallback — guarantees links always render */
+
+if(inlinePosts.length < 3){
+inlinePosts = posts
+.filter(p=>p.slug!==post.slug)
+.slice(0,3);
+}
+
+const inlineRecs = inlinePosts
+.map(p=>`<li><a href="${p.url}" style="font-weight:600;">${p.title}</a></li>`)
+.join("");
+
+const related = relatedPosts
+.map(p=>`
+<li>
+<a href="${p.url}" class="related-link">
+<img data-src="${p.thumb}" width="110" class="lazy" alt="${p.title}" />
+<span style="font-weight:600;">${p.title} (~${p.readTime} min)</span>
+</a>
+</li>`).join("");
+
+ for (const topic in topics) {
 
   const list = topics[topic]
     .map(p => `<li><a href="${p.url}">${p.title}</a></li>`)
@@ -352,39 +385,6 @@ ${list}
   fs.mkdirSync(outputDir, { recursive: true });
   fs.writeFileSync(`${outputDir}/index.html`, html);
 }
-
-fs.mkdirSync(`posts/${post.slug}`,{recursive:true});
-
-/* SAFE RECOMMENDATION ENGINE */
-
-const relatedPosts = posts
-.filter(p=>p.slug!==post.slug)
-.slice(0,4);
-
-let inlinePosts = posts
-.filter(p=>p.slug!==post.slug && !relatedPosts.some(r=>r.slug===p.slug))
-.slice(0,3);
-
-/* HARD fallback — guarantees links always render */
-
-if(inlinePosts.length < 3){
-inlinePosts = posts
-.filter(p=>p.slug!==post.slug)
-.slice(0,3);
-}
-
-const inlineRecs = inlinePosts
-.map(p=>`<li><a href="${p.url}" style="font-weight:600;">${p.title}</a></li>`)
-.join("");
-
-const related = relatedPosts
-.map(p=>`
-<li>
-<a href="${p.url}" class="related-link">
-<img data-src="${p.thumb}" width="110" class="lazy" alt="${p.title}" />
-<span style="font-weight:600;">${p.title} (~${p.readTime} min)</span>
-</a>
-</li>`).join("");
 
  const category = post.category || "ai-writing-tools";
 const categoryTitle = category.replace(/-/g," ");
