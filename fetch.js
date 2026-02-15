@@ -259,12 +259,6 @@ function generateComparison(postA, postB){
  fs.writeFileSync(`posts/comparisons/${slug}/index.html`,html);
 }
 
-for(let i=0;i<posts.length;i++){
- for(let j=i+1;j<posts.length;j++){
-   generateComparison(posts[i],posts[j]);
- }
-}
-
 function generateTopList(category, posts){
 
  const filtered = posts.filter(p=>p.category===category);
