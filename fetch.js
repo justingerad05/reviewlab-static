@@ -623,4 +623,44 @@ ${authorPosts}
 
 fs.writeFileSync("_data/posts.json",JSON.stringify(posts,null,2));
 
+/* HOMEPAGE GENERATOR */
+
+const homepagePosts = posts.slice(0, 20).map(p => `
+<li style="margin-bottom:20px;">
+<a href="${p.url}" style="font-size:20px;font-weight:700;text-decoration:none;">
+${p.title}
+</a>
+<div style="font-size:13px;opacity:.6;">
+${p.readTime} min read
+</div>
+</li>
+`).join("");
+
+const homepage = `
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ReviewLab – Honest AI Tool Reviews</title>
+<link rel="canonical" href="${SITE_URL}/">
+<meta name="description" content="Real testing. No hype. Just software that actually delivers.">
+</head>
+<body style="max-width:760px;margin:auto;font-family:system-ui;padding:40px;line-height:1.7;">
+
+<h1>Latest AI Tool Reviews</h1>
+<p style="opacity:.7;">Real testing. No hype. Just software that actually delivers.</p>
+
+<hr>
+
+<ul style="list-style:none;padding:0;">
+${homepagePosts}
+</ul>
+
+</body>
+</html>
+`;
+
+fs.writeFileSync("_site/index.html", homepage);
+
 console.log("✅ MASTER BUILD — STABLE, SAFE, AND FUTURE-PROOF");
