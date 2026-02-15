@@ -348,9 +348,9 @@ const categoryTitle = category.replace(/-/g," ");
 
 const breadcrumbHTML = `
 <nav style="font-size:14px;margin-bottom:20px;">
-<a href="/">Home</a> › 
-<a href="/ai-tools/">AI Tools</a> › 
-<a href="/ai-tools/${category}/">${categoryTitle}</a> › 
+<a href="{{ SITE_URL }}">Home</a> › 
+<a href="{{ SITE_URL }}/ai-tools/">AI Tools</a> › 
+<a href="{{ SITE_URL }}/ai-tools/${category}/">${categoryTitle}</a> › 
 ${post.title}
 </nav>
 `;
@@ -430,7 +430,7 @@ ${breadcrumbSchema}
 <h1>${post.title}</h1>
 
 <p style="opacity:.7;font-size:14px;">
-By <a href="/author/">Justin Gerald</a> • ${post.readTime} min read
+By <a href="{{ SITE_URL }}/author/">Justin Gerald</a> • ${post.readTime} min read
 </p>
 
 ${post.html}
