@@ -2,7 +2,7 @@ const htmlmin = require("@11ty/eleventy-plugin-htmlmin");
 
 module.exports = function(eleventyConfig) {
 
-  eleventyConfig.setTemplateFormats(["html"]);
+  eleventyConfig.setTemplateFormats(["html","md","njk"]);
 
   // Static assets
   eleventyConfig.addPassthroughCopy("og-images");
