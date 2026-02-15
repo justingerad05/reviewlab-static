@@ -637,10 +637,6 @@ ${p.readTime} min read
 `).join("");
 
 const homepage = `
----
-layout: null
----
-
 <!doctype html>
 <html lang="en">
 <head>
