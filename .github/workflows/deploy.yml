@@ -30,6 +30,9 @@ jobs:
       - name: Build Eleventy site
         run: npx @11ty/eleventy
 
+      - name: List files
+        run: ls -R
+
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
         with:
