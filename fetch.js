@@ -11,7 +11,7 @@ import site from "./_data/site.json" assert { type: "json" };
 const SITE_URL = site.url;
 
 const CTA = `${SITE_URL}/og-cta-tested.jpg`;
-const DEFAULT = `${SITE_URL}/og-default.jpg`;
+const DEFAULT = `${SITE_URL}/assets/og-default.jpg`;
 
 /* CLEAN BUILD */
 
@@ -306,6 +306,44 @@ posts.forEach(p=>{
  topics[p.category].push(p);
 });
 
+"for(const topic in topics){
+
+ const list = topics[topic]
+   .map(p=>`<li><a href="${p.url}">${p.title}</a></li>`)
+   .join("");
+
+ const html = `
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>${topic.replace(/-/g," ")}</title>
+<link rel="canonical" href="${SITE_URL}/${topic}/">
+<meta name="description" content="Expert reviews and comparisons for ${topic.replace(/-/g," ")}.">
+</head>
+
+<body style="max-width:760px;margin:auto;font-family:system-ui;padding:40px;line-height:1.7;">
+
+<nav>
+<a href="${SITE_URL}">Home</a> › 
+<a href="${SITE_URL}/ai-tools/">AI Tools</a>
+</nav>
+
+<h1>${topic.replace(/-/g," ")}</h1>
+
+<ul>
+${list}
+</ul>
+
+</body>
+</html>
+`;
+
+fs.mkdirSync(`ai-tools/${topic}`,{recursive:true});
+fs.writeFileSync(`ai-tools/${topic}/index.html`,html);
+}"
+ 
 /* BUILD POSTS */
 
 for(const post of posts){
