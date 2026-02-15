@@ -302,8 +302,8 @@ generateTopList("automation-tools", posts);
 const topics = {};
 
 posts.forEach(p=>{
- if(!topics[p.topic]) topics[p.topic]=[];
- topics[p.topic].push(p);
+ if(!topics[p.category]) topics[p.category]=[];
+ topics[p.category].push(p);
 });
 
 for(const topic in topics){
@@ -340,8 +340,8 @@ ${list}
 </html>
 `;
 
- fs.mkdirSync(`${topic}`,{recursive:true});
- fs.writeFileSync(`${topic}/index.html`,html);
+fs.mkdirSync(`ai-tools/${topic}`,{recursive:true});
+fs.writeFileSync(`ai-tools/${topic}/index.html`,html);
 }
 
 /* BUILD POSTS */
