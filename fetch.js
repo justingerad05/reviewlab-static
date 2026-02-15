@@ -306,7 +306,7 @@ posts.forEach(p=>{
  topics[p.category].push(p);
 });
 
-"for(const topic in topics){
+for(const topic in topics){
 
  const list = topics[topic]
    .map(p=>`<li><a href="${p.url}">${p.title}</a></li>`)
@@ -342,7 +342,7 @@ ${list}
 
 fs.mkdirSync(`ai-tools/${topic}`,{recursive:true});
 fs.writeFileSync(`ai-tools/${topic}/index.html`,html);
-}"
+}
  
 /* BUILD POSTS */
 
