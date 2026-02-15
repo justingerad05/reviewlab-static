@@ -381,53 +381,6 @@ const related = relatedPosts
 </a>
 </li>`).join("");
 
-const category = post.category || "ai-writing-tools";
-const categoryTitle = category.replace(/-/g," ");
-
-const breadcrumbHTML = `
-<nav style="font-size:14px;margin-bottom:20px;">
-<a href="${SITE_URL}">Home</a> › 
-<a href="${SITE_URL}/ai-tools/">AI Tools</a> › 
-<a href="${SITE_URL}/ai-tools/${category}/">${categoryTitle}</a> › 
-${post.title}
-</nav>
-`;
-
-const breadcrumbSchema = `
-<script type="application/ld+json">
-{
-"@context":"https://schema.org",
-"@type":"BreadcrumbList",
-"itemListElement":[
-{
-"@type":"ListItem",
-"position":1,
-"name":"Home",
-"item":"${SITE_URL}"
-},
-{
-"@type":"ListItem",
-"position":2,
-"name":"AI Tools",
-"item":"${SITE_URL}/ai-tools/"
-},
-{
-"@type":"ListItem",
-"position":3,
-"name":"${categoryTitle}",
-"item":"${SITE_URL}/ai-tools/${category}/"
-},
-{
-"@type":"ListItem",
-"position":4,
-"name":"${post.title}",
-"item":"${post.url}"
-}
-]
-}
-</script>
-`;
-
 const page = `<!doctype html>
 <html lang="en">
 <head>
