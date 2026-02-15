@@ -28,17 +28,17 @@ module.exports = function(eleventyConfig) {
 
     // Collection
   eleventyConfig.addCollection("aiWriting", function(collectionApi) {
-    return collectionApi.getFilteredByGlob("./posts/**/*writer*/index.md");
-  });
+  return collectionApi.getFilteredByGlob("./posts/**/*writer*/index.html");
+});
 
   // AI IMAGE TOOLS
 eleventyConfig.addCollection("aiImages", function(collectionApi) {
-  return collectionApi.getFilteredByGlob("./posts/**/*image*/index.md");
+  return collectionApi.getFilteredByGlob("./posts/**/*image*/index.html");
 });
 
 // AUTOMATION TOOLS
 eleventyConfig.addCollection("automation", function(collectionApi) {
-  return collectionApi.getFilteredByGlob("./posts/**/*automation*/index.md");
+  return collectionApi.getFilteredByGlob("./posts/**/*automation*/index.html");
 });
 
   return {
