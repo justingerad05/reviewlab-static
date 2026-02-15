@@ -293,6 +293,10 @@ ${i+1}. <a href="${p.url}">${p.title}</a>
 `);
 }
 
+generateTopList("ai-writing-tools", posts);
+generateTopList("ai-image-generators", posts);
+generateTopList("automation-tools", posts);
+
 /* AUTHORITY HUB GENERATOR */
 
 const topics = {};
