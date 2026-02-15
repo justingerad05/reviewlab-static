@@ -291,6 +291,7 @@ ${i+1}. <a href="${p.url}">${p.title}</a>
 </body>
 </html>
 `);
+}
 
 generateTopList("ai-writing-tools", posts);
 generateTopList("ai-image-generators", posts);
