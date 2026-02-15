@@ -255,8 +255,8 @@ function generateComparison(postA, postB){
 </table>
 `;
 
- fs.mkdirSync(`posts/comparisons/${slug}`,{recursive:true});
- fs.writeFileSync(`posts/comparisons/${slug}/index.html`,html);
+ fs.mkdirSync(`_site/posts/comparisons/${slug}`,{recursive:true});
+ fs.writeFileSync(`_site/posts/comparisons/${slug}/index.html`,html);
 }
 
 for(let i=0;i<posts.length;i++){
@@ -278,7 +278,7 @@ ${i+1}. <a href="${p.url}">${p.title}</a>
 
  fs.mkdirSync(`_site/ai-tools/${category}`,{recursive:true});
 
- fs.writeFileSync(`_site/ai-tools/${category}/top-10.html`, ...
+ fs.writeFileSync(`_site/ai-tools/${category}/top-10.html`, `
 <!doctype html>
 <html>
 <head>
@@ -291,7 +291,6 @@ ${i+1}. <a href="${p.url}">${p.title}</a>
 </body>
 </html>
 `);
-}
 
 generateTopList("ai-writing-tools", posts);
 generateTopList("ai-image-generators", posts);
@@ -568,7 +567,9 @@ const authorPosts = posts.map(p=>`
 <div style="opacity:.6;font-size:13px;">${p.readTime} min read</div>
 </li>`).join("");
 
-fs.writeFileSync(`author/index.html`,`
+fs.mkdirSync(`_site/author`,{recursive:true});
+ 
+fs.writeFileSync(`_site/author/index.html`,`
 <!doctype html>
 <html>
 <head>
