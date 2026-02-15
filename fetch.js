@@ -276,9 +276,9 @@ function generateTopList(category, posts){
 ${i+1}. <a href="${p.url}">${p.title}</a>
 </li>`).join("");
 
- fs.mkdirSync(`ai-tools/${category}`,{recursive:true});
+ fs.mkdirSync(`_site/ai-tools/${category}`,{recursive:true});
 
- fs.writeFileSync(`ai-tools/${category}/top-10.html`,`
+ fs.writeFileSync(`_site/ai-tools/${category}/top-10.html`, ...
 <!doctype html>
 <html>
 <head>
@@ -310,7 +310,7 @@ posts.forEach(p=>{
 
 for(const post of posts){
 
-fs.mkdirSync(`posts/${post.slug}`,{recursive:true});
+fs.mkdirSync(`_site/posts/${post.slug}`,{recursive:true});
 
 /* SAFE RECOMMENDATION ENGINE */
 
@@ -512,7 +512,7 @@ hover.style.display="none";
 </body>
 </html>`;
 
-fs.writeFileSync(`posts/${post.slug}/index.html`,page);
+fs.writeFileSync(`_site/posts/${post.slug}/index.html`,page);
 }
 
 /* BUILD CATEGORY (AI TOOLS) PAGES — RUN ONCE */
