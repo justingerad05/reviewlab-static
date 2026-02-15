@@ -583,7 +583,7 @@ fs.writeFileSync(`_site/author/index.html`,`
  "@context":"https://schema.org",
  "@type":"Person",
  "name":"Justin Gerald",
- "url":"{{ site.url }}/author/",
+ "url":"${SITE_URL}/author/",
  "jobTitle":"Product Review Analyst",
  "worksFor":{
    "@type":"Organization",
