@@ -343,49 +343,6 @@ const related = relatedPosts
 </a>
 </li>`).join("");
 
- for (const topic in topics) {
-
-  const list = topics[topic]
-    .map(p => `<li><a href="${p.url}">${p.title}</a></li>`)
-    .join("");
-
-  const topicTitle = topic.replace(/-/g, " ");
-  const topicURL = `${site.url}/ai-tools/${topic}/`;
-
-  const html = `
-<!doctype html>
-<html>
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>${topicTitle}</title>
-<link rel="canonical" href="${topicURL}">
-<meta name="description" content="Expert reviews and comparisons for ${topicTitle}.">
-</head>
-
-<body style="max-width:760px;margin:auto;font-family:system-ui;padding:40px;line-height:1.7;">
-
-<nav>
-<a href="${site.url}/">Home</a> › 
-<a href="${site.url}/ai-tools/">AI Tools</a> › 
-${topicTitle}
-</nav>
-
-<h1>${topicTitle}</h1>
-
-<ul>
-${list}
-</ul>
-
-</body>
-</html>
-`;
-
-  const outputDir = `_site/ai-tools/${topic}`;
-  fs.mkdirSync(outputDir, { recursive: true });
-  fs.writeFileSync(`${outputDir}/index.html`, html);
-}
-
  const category = post.category || "ai-writing-tools";
 const categoryTitle = category.replace(/-/g," ");
 
@@ -556,6 +513,51 @@ hover.style.display="none";
 </html>`;
 
 fs.writeFileSync(`posts/${post.slug}/index.html`,page);
+}
+
+/* BUILD CATEGORY (AI TOOLS) PAGES — RUN ONCE */
+
+for (const topic in topics) {
+
+  const list = topics[topic]
+    .map(p => `<li><a href="${p.url}">${p.title}</a></li>`)
+    .join("");
+
+  const topicTitle = topic.replace(/-/g, " ");
+  const topicURL = `${SITE_URL}/ai-tools/${topic}/`;
+
+  const html = `
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>${topicTitle}</title>
+<link rel="canonical" href="${topicURL}">
+<meta name="description" content="Expert reviews and comparisons for ${topicTitle}.">
+</head>
+
+<body style="max-width:760px;margin:auto;font-family:system-ui;padding:40px;line-height:1.7;">
+
+<nav>
+<a href="${SITE_URL}/">Home</a> › 
+<a href="${SITE_URL}/ai-tools/">AI Tools</a> › 
+${topicTitle}
+</nav>
+
+<h1>${topicTitle}</h1>
+
+<ul>
+${list}
+</ul>
+
+</body>
+</html>
+`;
+
+  const outputDir = `_site/ai-tools/${topic}`;
+  fs.mkdirSync(outputDir, { recursive: true });
+  fs.writeFileSync(`${outputDir}/index.html`, html);
 }
 
 /* FULL AUTHORITY AUTHOR PAGE RESTORED */
