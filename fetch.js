@@ -15,13 +15,13 @@ const DEFAULT = `${SITE_URL}/assets/og-default.jpg`;
 
 /* CLEAN BUILD */
 
-fs.rmSync("posts",{recursive:true,force:true});
-fs.rmSync("author",{recursive:true,force:true});
+fs.rmSync("_site/posts",{recursive:true,force:true});
+fs.rmSync("_site/author",{recursive:true,force:true});
 
-fs.mkdirSync("posts",{recursive:true});
-fs.mkdirSync("_data",{recursive:true});
-fs.mkdirSync("og-images",{recursive:true});
-fs.mkdirSync("author",{recursive:true});
+fs.mkdirSync("_site/posts",{recursive:true});
+fs.mkdirSync("_site/_data",{recursive:true});
+fs.mkdirSync("_site/og-images",{recursive:true});
+fs.mkdirSync("_site/author",{recursive:true});
 
 /* FETCH */
 
