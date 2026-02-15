@@ -876,68 +876,103 @@ h1{
 action="https://docs.google.com/forms/d/e/1FAIpQLSchzs0bE9se3YCR2TTiFl3Ohi0nbx0XPBjvK_dbANuI_eI1Aw/formResponse"
 method="POST"
 target="_blank"
->
+/* =========================
+   HOMEPAGE — YOUR ORIGINAL DESIGN (STATIC BUILD)
+========================= */
 
-<div class="form-row">
-
-<input
-type="email"
-name="entry.364499249"
-placeholder="Enter your email address"
-required
->
-
-<button type="submit">
-Get Free Reviews
-</button>
-
-</div>
-
-<div class="trust">
-Join smart readers staying ahead of AI.
-</div>
-
-</form>
-
-</section>
-
-
-<ul class="post-list">
-{% for post in posts %}
+const homepagePosts = posts.map(post => `
 <li class="post-card">
 
-<a href="{{ post.url }}" style="display:flex;align-items:center;gap:16px;text-decoration:none;color:inherit;">
+<a href="${post.url}" style="display:flex;align-items:center;gap:16px;text-decoration:none;color:inherit;">
 
-<img data-src="{{ post.thumb }}"
-alt="{{ post.title }}"
+<img data-src="${post.thumb}"
+alt="${post.title}"
 class="thumb lazy">
 
 <div>
 <div class="post-title">
-{{ post.title }} (~{{ post.readTime }} min)
+${post.title} (~${post.readTime} min)
 </div>
 
 <div class="meta">
-Published {{ post.date | date: "%B %d, %Y" }}
+Published ${new Date(post.date).toLocaleDateString("en-US",{year:"numeric",month:"long",day:"numeric"})}
 </div>
 </div>
 
 </a>
 
 </li>
-{% endfor %}
+`).join("");
+
+const homepage = `
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+
+<title>ReviewLab – Honest AI Tool Reviews</title>
+
+<meta name="description"
+content="ReviewLab publishes deeply tested AI software reviews, real verdicts, and zero-hype product analysis.">
+
+<meta name="viewport"
+content="width=device-width, initial-scale=1">
+
+<link rel="canonical"
+href="${SITE_URL}/">
+
+<meta property="og:type" content="website">
+<meta property="og:title" content="ReviewLab – Honest AI Tool Reviews">
+<meta property="og:description"
+content="Real testing. No hype. Just software that actually delivers.">
+<meta property="og:url" content="${SITE_URL}/">
+<meta property="og:image" content="${SITE_URL}/assets/og-default.jpg">
+
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="${SITE_URL}/assets/og-default.jpg">
+
+<style>
+${`
+body{
+  margin:0;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Inter,sans-serif;
+  background:#020617;
+  color:#e5e7eb;
+}
+.container{max-width:900px;margin:auto;padding:40px 20px;}
+h1{font-size:42px;margin-bottom:10px;}
+.sub{color:#94a3b8;margin-bottom:40px;}
+.post-list{list-style:none;padding:0;}
+.post-card{display:flex;align-items:center;gap:16px;padding:14px;border-radius:14px;transition:.25s;}
+.post-card:hover{background:#07122a;}
+.thumb{width:120px;height:68px;object-fit:cover;border-radius:10px;flex-shrink:0;}
+.lazy{opacity:0;transition:opacity .35s;}
+.lazy.loaded{opacity:1;}
+.post-title{color:#38bdf8;font-weight:700;font-size:20px;}
+.post-title:hover{text-decoration:underline;}
+.meta{font-size:13px;color:#94a3b8;margin-top:4px;}
+.hover-preview{position:absolute;display:none;width:340px;border-radius:14px;box-shadow:0 25px 70px rgba(0,0,0,.55);z-index:9999;pointer-events:none;}
+`}
+</style>
+
+</head>
+
+<body>
+<div class="container">
+
+<h1>Latest AI Tool Reviews & Honest Software Analysis</h1>
+<p class="sub">Real testing. No hype. Just software that actually delivers.</p>
+
+<ul class="post-list">
+${homepagePosts}
 </ul>
 
 <img id="hoverPreview" class="hover-preview"/>
 
 <script>
-
 document.addEventListener("DOMContentLoaded",()=>{
 
-/* LAZY LOAD */
-
 const lazyImgs=document.querySelectorAll(".lazy");
-
 const io=new IntersectionObserver(entries=>{
 entries.forEach(e=>{
 if(e.isIntersecting){
@@ -948,19 +983,12 @@ io.unobserve(img);
 }
 });
 });
-
 lazyImgs.forEach(img=>io.observe(img));
-
-/* HOVER + MOBILE LONG PRESS */
 
 const hover=document.getElementById("hoverPreview");
 
 document.querySelectorAll(".post-card a").forEach(link=>{
-
 const img=link.querySelector("img");
-let touchTimer;
-
-/* desktop */
 
 link.addEventListener("mouseover",()=>{
 hover.src=img.dataset.src;
@@ -975,33 +1003,11 @@ hover.style.left=(e.pageX+20)+"px";
 link.addEventListener("mouseout",()=>{
 hover.style.display="none";
 });
-
-/* mobile */
-
-link.addEventListener("touchstart",()=>{
-touchTimer=setTimeout(()=>{
-hover.src=img.dataset.src;
-hover.style.display="block";
-hover.style.top="50%";
-hover.style.left="50%";
-hover.style.transform="translate(-50%,-50%)";
-},350);
 });
-
-link.addEventListener("touchend",()=>{
-clearTimeout(touchTimer);
-hover.style.display="none";
-hover.style.transform="";
 });
-
-});
-
-});
-
 </script>
 
 </div>
-
 </body>
 </html>
 `;
