@@ -27,9 +27,6 @@ jobs:
       - name: Fetch Blogger posts
         run: node fetch.js
 
-      - name: Build Eleventy site
-        run: npx @11ty/eleventy
-
       - name: List files
         run: ls -R
 
