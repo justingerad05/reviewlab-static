@@ -430,7 +430,7 @@ ${breadcrumbSchema}
 <h1>${post.title}</h1>
 
 <p style="opacity:.7;font-size:14px;">
-By <a href="${SITE_URL}/author/">Justin Gerald</a> • ${post.readTime} min read
+By <a href="{{ site.url }}/author/">Justin Gerald</a> • ${post.readTime} min read
 </p>
 
 ${post.html}
