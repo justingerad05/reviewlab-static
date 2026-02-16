@@ -631,6 +631,37 @@ hover.style.display="none";
 fs.writeFileSync(`_site/posts/${post.slug}/index.html`,page);
 }
 
+function copyStaticPage(slug,title){
+
+const content = fs.readFileSync(`pages/${slug}.md`,"utf-8");
+
+const html = `
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>${title}</title>
+<link rel="canonical" href="${SITE_URL}/${slug}/">
+</head>
+<body style="max-width:760px;margin:auto;font-family:system-ui;padding:40px;">
+<h1>${title}</h1>
+<pre style="white-space:pre-wrap;font-family:inherit;">
+${content}
+</pre>
+</body>
+</html>
+`;
+
+fs.mkdirSync(`_site/${slug}`,{recursive:true});
+fs.writeFileSync(`_site/${slug}/index.html`,html);
+}
+
+copyStaticPage("about","About");
+copyStaticPage("contact","Contact");
+copyStaticPage("privacy","Privacy Policy");
+copyStaticPage("editorial-policy","Editorial Policy");
+copyStaticPage("review-methodology","Review Methodology");
+
 /* BUILD CATEGORY (AI TOOLS) PAGES — RUN ONCE */
 
 for (const topic in topics) {
