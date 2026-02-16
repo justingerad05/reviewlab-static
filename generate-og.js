@@ -5,7 +5,7 @@ import fetch from "node-fetch";
 
 /* Ensure folder */
 
-if(!fs.existsSync("./og-images")){
+if(!fs.existsSync("./_site/og-images")){
  fs.mkdirSync("./og-images",{recursive:true});
 }
 
@@ -60,8 +60,7 @@ export async function upscaleToOG(url,slug){
    const resvg = new Resvg(svg);
    const image = resvg.render();
 
-   fs.writeFileSync(
-     `./og-images/${slug}.jpg`,
+   fs.writeFileSync(`./_site/og-images/${slug}.jpg`,
      image.asJpeg(100)
    );
 
@@ -123,7 +122,7 @@ export async function generateOG(slug,title){
    const image=resvg.render();
 
    fs.writeFileSync(
-     `./og-images/${slug}.jpg`,
+     `./_site/og-images/${slug}.jpg`,
      image.asJpeg(100)
    );
 
