@@ -625,6 +625,15 @@ hover.style.display="none";
 });
 </script>
 
+<footer style="margin-top:60px;font-size:14px;opacity:.7;">
+<a href="${SITE_URL}/">Home</a> •
+<a href="${SITE_URL}/about/">About</a> •
+<a href="${SITE_URL}/">Contact</a> •
+<a href="${SITE_URL}/">Privacy</a> •
+<a href="${SITE_URL}/editorial-policy/">Editorial Policy</a> •
+<a href="${SITE_URL}/review-methodology/">Methodology</a>
+</footer>
+
 </body>
 </html>`;
 
@@ -666,15 +675,6 @@ copyStaticPage("contact","pages/contact.md");
 copyStaticPage("privacy","pages/privacy.md");
 copyStaticPage("editorial-policy","pages/editorial-policy/index.md");
 copyStaticPage("review-methodology","pages/review-methodology/index.md");
-
-<footer style="margin-top:60px;font-size:14px;opacity:.7;">
-<a href="${SITE_URL}/">Home</a> •
-<a href="${SITE_URL}/about/">About</a> •
-<a href="${SITE_URL}/">Contact</a> •
-<a href="${SITE_URL}/">Privacy</a> •
-<a href="${SITE_URL}/editorial-policy/">Editorial Policy</a> •
-<a href="${SITE_URL}/review-methodology/">Methodology</a>
-</footer>
 
 /* BUILD CATEGORY (AI TOOLS) PAGES — RUN ONCE */
 
