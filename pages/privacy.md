@@ -1,9 +1,3 @@
----
-layout: base.njk
-permalink: /privacy/
-title: Privacy Policy
----
-
 # Privacy Policy
 
 ReviewLab respects visitor privacy and collects minimal data necessary to operate this website.
