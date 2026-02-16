@@ -783,7 +783,7 @@ Sitemap: ${SITE_URL}/sitemap.xml
 `);
 
 fs.copyFileSync("assets/styles.css","_site/assets/styles.css");
-fs.copyFileSync("og-default.jpg","_site/assets/og-default.jpg");
+fs.copyFileSync("assets/og-default.jpg","_site/assets/og-default.jpg");
 
 /* =========================
    HOMEPAGE + PAGINATION
