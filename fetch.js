@@ -652,10 +652,6 @@ Published ${new Date(post.date).toLocaleDateString("en-US",{year:"numeric",month
 `).join("");
 
 const homepage = `
----
-layout: null
----
-
 <!doctype html>
 <html lang="en">
 <head>
@@ -666,8 +662,7 @@ layout: null
 <meta name="description"
 content="ReviewLab publishes deeply tested AI software reviews, real verdicts, and zero-hype product analysis.">
 
-<meta name="viewport"
-content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
 <link rel="canonical"
 href="https://justingerad05.github.io/reviewlab-static/">
@@ -676,16 +671,10 @@ href="https://justingerad05.github.io/reviewlab-static/">
 <meta property="og:title" content="ReviewLab – Honest AI Tool Reviews">
 <meta property="og:description"
 content="Real testing. No hype. Just software that actually delivers.">
-
 <meta property="og:url"
 content="https://justingerad05.github.io/reviewlab-static/">
-
 <meta property="og:image"
 content="https://justingerad05.github.io/reviewlab-static/og-default.jpg">
-
-<meta property="og:image:secure_url"
-content="https://justingerad05.github.io/reviewlab-static/og-default.jpg">
-
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 
@@ -693,38 +682,8 @@ content="https://justingerad05.github.io/reviewlab-static/og-default.jpg">
 <meta name="twitter:image"
 content="https://justingerad05.github.io/reviewlab-static/og-default.jpg">
 
-<script type="application/ld+json">
-{
-"@context":"https://schema.org",
-"@type":"Organization",
-"name":"ReviewLab",
-"url":"https://justingerad05.github.io/reviewlab-static/",
-"logo":"https://justingerad05.github.io/reviewlab-static/og-default.jpg"
-}
-</script>
-
-<script type="application/ld+json">
-{
-"@context":"https://schema.org",
-"@type":"WebSite",
-"url":"https://justingerad05.github.io/reviewlab-static/",
-"name":"ReviewLab",
-"potentialAction":{
- "@type":"SearchAction",
- "target":"https://justingerad05.github.io/reviewlab-static/?q={search_term_string}",
- "query-input":"required name=search_term_string"
-}
-}
-</script>
-
 <style>
-/* YOUR CSS IS 100% UNCHANGED */
-body{
-  margin:0;
-  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Inter,sans-serif;
-  background:#020617;
-  color:#e5e7eb;
-}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Inter,sans-serif;background:#020617;color:#e5e7eb;}
 .container{max-width:900px;margin:auto;padding:40px 20px;}
 h1{font-size:42px;margin-bottom:10px;}
 .sub{color:#94a3b8;margin-bottom:40px;}
@@ -762,38 +721,48 @@ h1{font-size:42px;margin-bottom:10px;}
 <form 
 action="https://docs.google.com/forms/d/e/1FAIpQLSchzs0bE9se3YCR2TTiFl3Ohi0nbx0XPBjvK_dbANuI_eI1Aw/formResponse"
 method="POST"
-target="_blank"
->
+target="_blank">
 <div class="form-row">
-<input type="email" name="entry.364499249" placeholder="Enter your email address" required>
+<input type="email" name="entry.364499249"
+placeholder="Enter your email address" required>
 <button type="submit">Get Free Reviews</button>
 </div>
 <div class="trust">Join smart readers staying ahead of AI.</div>
 </form>
 </section>
 
-<ul class="post-list">
-{% for post in site.data.posts %}
-<li class="post-card">
-<a href="{{ post.url }}" style="display:flex;align-items:center;gap:16px;text-decoration:none;color:inherit;">
-<img data-src="{{ post.thumb }}" alt="{{ post.title }}" class="thumb lazy">
-<div>
-<div class="post-title">
-{{ post.title }} (~{{ post.readTime }} min)
-</div>
-<div class="meta">
-Published {{ post.date }}
-</div>
-</div>
-</a>
-</li>
-{% endfor %}
-</ul>
+<ul class="post-list" id="postList"></ul>
 
 <img id="hoverPreview" class="hover-preview"/>
 
 <script>
-document.addEventListener("DOMContentLoaded",()=>{
+document.addEventListener("DOMContentLoaded", async () => {
+
+const res = await fetch("./_data/posts.json");
+const posts = await res.json();
+const list = document.getElementById("postList");
+
+posts.forEach(post => {
+const li = document.createElement("li");
+li.className = "post-card";
+
+li.innerHTML = `
+<a href="${post.url}" style="display:flex;align-items:center;gap:16px;text-decoration:none;color:inherit;">
+<img data-src="${post.thumb}" alt="${post.title}" class="thumb lazy">
+<div>
+<div class="post-title">
+${post.title} (~${post.readTime} min)
+</div>
+<div class="meta">
+Published ${post.date}
+</div>
+</div>
+</a>`;
+
+list.appendChild(li);
+});
+
+/* Lazy load */
 const lazyImgs=document.querySelectorAll(".lazy");
 const io=new IntersectionObserver(entries=>{
 entries.forEach(e=>{
@@ -806,6 +775,8 @@ io.unobserve(img);
 });
 });
 lazyImgs.forEach(img=>io.observe(img));
+
+/* Hover preview */
 const hover=document.getElementById("hoverPreview");
 document.querySelectorAll(".post-card a").forEach(link=>{
 const img=link.querySelector("img");
@@ -816,6 +787,7 @@ link.addEventListener("mouseout",()=>{hover.style.display="none";});
 link.addEventListener("touchstart",()=>{touchTimer=setTimeout(()=>{hover.src=img.dataset.src;hover.style.display="block";hover.style.top="50%";hover.style.left="50%";hover.style.transform="translate(-50%,-50%)";},350);});
 link.addEventListener("touchend",()=>{clearTimeout(touchTimer);hover.style.display="none";hover.style.transform="";});
 });
+
 });
 </script>
 
