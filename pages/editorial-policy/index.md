@@ -1,9 +1,3 @@
----
-layout: base.njk
-permalink: /editorial-policy/
-title: Editorial Policy
----
-
 # Editorial Policy
 
 ReviewLab publishes research-driven software reviews designed to help readers make confident purchasing decisions.
