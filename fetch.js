@@ -862,7 +862,6 @@ fs.mkdirSync(`_site/page/${page}`,{recursive:true});
 }
 
 fs.writeFileSync(outputPath, homepage);
-
 }
 
 console.log("✅ Homepage + Pagination Built Successfully");
