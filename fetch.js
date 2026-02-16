@@ -667,6 +667,15 @@ copyStaticPage("privacy","pages/privacy.md");
 copyStaticPage("editorial-policy","pages/editorial-policy/index.md");
 copyStaticPage("review-methodology","pages/review-methodology/index.md");
 
+<footer style="margin-top:60px;font-size:14px;opacity:.7;">
+<a href="${SITE_URL}/">Home</a> •
+<a href="${SITE_URL}/about/">About</a> •
+<a href="${SITE_URL}/">Contact</a> •
+<a href="${SITE_URL}/">Privacy</a> •
+<a href="${SITE_URL}/editorial-policy/">Editorial Policy</a> •
+<a href="${SITE_URL}/review-methodology/">Methodology</a>
+</footer>
+
 /* BUILD CATEGORY (AI TOOLS) PAGES — RUN ONCE */
 
 for (const topic in topics) {
@@ -698,6 +707,11 @@ ${topicTitle}
 </nav>
 
 <h1>${topicTitle}</h1>
+
+<p>
+This category covers in-depth reviews, comparisons, and real-world testing insights for ${topicTitle}. 
+Each review is independently analyzed for performance, usability, and ROI.
+</p>
 
 <ul>
 ${list}
