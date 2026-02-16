@@ -900,6 +900,19 @@ const homepage = `<!doctype html>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="canonical" href="${SITE_URL}/">
 <link rel="stylesheet" href="${SITE_URL}/assets/styles.css">
+<script type="application/ld+json">
+{
+"@context":"https://schema.org",
+"@type":"WebSite",
+"name":"ReviewLab",
+"url":"${SITE_URL}",
+"potentialAction":{
+"@type":"SearchAction",
+"target":"${SITE_URL}/?q={search_term_string}",
+"query-input":"required name=search_term_string"
+}
+}
+</script>
 </head>
 <body>
 <div class="container">
