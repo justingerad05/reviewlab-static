@@ -6,7 +6,7 @@ import { upscaleToOG } from "./generate-og.js";
 const FEED_URL =
 "https://honestproductreviewlab.blogspot.com/feeds/posts/default?alt=atom";
 
-import site from "./_data/site.json" assert { type: "json" };
+import site from "./_data/site.json" with { type: "json" };
 
 const SITE_URL = site.url;
 
@@ -849,6 +849,28 @@ ${homepagePosts}
 ${pagination}
 
 </div>
+
+<script>
+document.addEventListener("DOMContentLoaded",()=>{
+
+const lazyImgs=document.querySelectorAll(".lazy");
+
+const io=new IntersectionObserver(entries=>{
+entries.forEach(e=>{
+if(e.isIntersecting){
+const img=e.target;
+img.src=img.dataset.src;
+img.onload=()=>img.classList.add("loaded");
+io.unobserve(img);
+}
+});
+});
+
+lazyImgs.forEach(img=>io.observe(img));
+
+});
+</script>
+
 </body>
 </html>
 `;
