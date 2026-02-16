@@ -194,7 +194,7 @@ const productSchema = {
 
 const articleSchema = {
 "@context":"https://schema.org",
-"@type":"Article",
+"@type":"Review",
 "headline":title,
 "image":primaryOG,
 "datePublished":entry.published,
@@ -735,6 +735,13 @@ ${authorPosts}
 `);
 
 fs.writeFileSync("_data/posts.json",JSON.stringify(posts,null,2));
+
+fs.writeFileSync("_site/robots.txt",`
+User-agent: *
+Allow: /
+
+Sitemap: ${SITE_URL}/sitemap.xml
+`);
 
 /* =========================
    HOMEPAGE — FULL DESIGN, TOP 10 POSTS
