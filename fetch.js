@@ -631,23 +631,28 @@ hover.style.display="none";
 fs.writeFileSync(`_site/posts/${post.slug}/index.html`,page);
 }
 
-function copyStaticPage(slug,title){
+function copyStaticPage(slug, filePath){
 
-const content = fs.readFileSync(`pages/${slug}.md`,"utf-8");
+if(!fs.existsSync(filePath)){
+console.log(`⚠ Skipping missing file: ${filePath}`);
+return;
+}
+
+let content = fs.readFileSync(filePath,"utf-8");
+
+// Remove frontmatter
+content = content.replace(/---[\s\S]*?---/,"").trim();
 
 const html = `
 <!doctype html>
 <html>
 <head>
 <meta charset="utf-8">
-<title>${title}</title>
+<title>${slug.replace(/-/g," ")}</title>
 <link rel="canonical" href="${SITE_URL}/${slug}/">
 </head>
-<body style="max-width:760px;margin:auto;font-family:system-ui;padding:40px;">
-<h1>${title}</h1>
-<pre style="white-space:pre-wrap;font-family:inherit;">
+<body style="max-width:760px;margin:auto;font-family:system-ui;padding:40px;line-height:1.7;">
 ${content}
-</pre>
 </body>
 </html>
 `;
@@ -656,11 +661,11 @@ fs.mkdirSync(`_site/${slug}`,{recursive:true});
 fs.writeFileSync(`_site/${slug}/index.html`,html);
 }
 
-copyStaticPage("about","About");
-copyStaticPage("contact","Contact");
-copyStaticPage("privacy","Privacy Policy");
-copyStaticPage("editorial-policy","Editorial Policy");
-copyStaticPage("review-methodology","Review Methodology");
+copyStaticPage("about","pages/about.md");
+copyStaticPage("contact","pages/contact.md");
+copyStaticPage("privacy","pages/privacy.md");
+copyStaticPage("editorial-policy","pages/editorial-policy/index.md");
+copyStaticPage("review-methodology","pages/review-methodology/index.md");
 
 /* BUILD CATEGORY (AI TOOLS) PAGES — RUN ONCE */
 
@@ -781,8 +786,9 @@ fs.copyFileSync("assets/styles.css","_site/assets/styles.css");
 fs.copyFileSync("og-default.jpg","_site/assets/og-default.jpg");
 
 /* =========================
-   HOMEPAGE — FULL DESIGN, TOP 10 POSTS
+   HOMEPAGE + PAGINATION
 ========================= */
+
 for(let page=1; page<=totalPages; page++){
 
 const start = (page-1)*POSTS_PER_PAGE;
@@ -808,67 +814,19 @@ ${page<totalPages?`<a style="float:right" href="/page/${page+1}/">Next →</a>`:
 </div>
 `;
 
-const outputPath = page===1
-? "_site/index.html"
-: `_site/page/${page}/index.html`;
-
-if(page!==1){
-fs.mkdirSync(`_site/page/${page}`,{recursive:true});
-}
-
-fs.writeFileSync(outputPath, homepage.replace("${homepagePosts}",homepagePosts+pagination));
-}
-
 const homepage = `<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <title>ReviewLab – Honest AI Tool Reviews</title>
-<meta name="description" content="ReviewLab publishes deeply tested AI software reviews, real verdicts, and zero-hype product analysis.">
+<meta name="description" content="ReviewLab publishes deeply tested AI software reviews.">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="canonical" href="${SITE_URL}/">
-
-<!-- OG / Social -->
-<meta property="og:type" content="website">
-<meta property="og:title" content="ReviewLab – Honest AI Tool Reviews">
-<meta property="og:description" content="Real testing. No hype. Just software that actually delivers.">
-<meta property="og:url" content="${SITE_URL}/">
-<meta property="og:image" content="${SITE_URL}/assets/og-default.jpg">
-<meta property="og:image:width" content="1200">
-<meta property="og:image:height" content="630">
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="${SITE_URL}/assets/og-default.jpg">
-
-<!-- Organization & Website Schema -->
-<script type="application/ld+json">
-{
-  "@context":"https://schema.org",
-  "@type":"Organization",
-  "name":"ReviewLab",
-  "url":"${SITE_URL}/",
-  "logo":"${SITE_URL}/assets/og-default.jpg"
-}
-</script>
-
-<script type="application/ld+json">
-{
-  "@context":"https://schema.org",
-  "@type":"WebSite",
-  "url":"${SITE_URL}/",
-  "name":"ReviewLab",
-  "potentialAction":{
-    "@type":"SearchAction",
-    "target":"${SITE_URL}/?q={search_term_string}",
-    "query-input":"required name=search_term_string"
-  }
-}
-</script>
-
 <link rel="stylesheet" href="${SITE_URL}/assets/styles.css">
-
 </head>
 <body>
 <div class="container">
+
 <h1>Latest AI Tool Reviews & Honest Software Analysis</h1>
 <p class="sub">Real testing. No hype. Just software that actually delivers.</p>
 
@@ -888,39 +846,23 @@ const homepage = `<!doctype html>
 ${homepagePosts}
 </ul>
 
-<img id="hoverPreview" class="hover-preview"/>
-
-<script>
-document.addEventListener("DOMContentLoaded",()=>{
-  const lazyImgs=document.querySelectorAll(".lazy");
-  const io=new IntersectionObserver(entries=>{
-    entries.forEach(e=>{
-      if(e.isIntersecting){
-        const img=e.target;
-        img.src=img.dataset.src;
-        img.onload=()=>img.classList.add("loaded");
-        io.unobserve(img);
-      }
-    });
-  });
-  lazyImgs.forEach(img=>io.observe(img));
-
-  const hover=document.getElementById("hoverPreview");
-  document.querySelectorAll(".post-card a").forEach(link=>{
-    const img=link.querySelector("img");
-    let touchTimer;
-    link.addEventListener("mouseover",()=>{hover.src=img.dataset.src;hover.style.display="block";});
-    link.addEventListener("mousemove",e=>{hover.style.top=(e.pageY+20)+"px";hover.style.left=(e.pageX+20)+"px";});
-    link.addEventListener("mouseout",()=>{hover.style.display="none";});
-    link.addEventListener("touchstart",()=>{touchTimer=setTimeout(()=>{hover.src=img.dataset.src;hover.style.display="block";hover.style.top="50%";hover.style.left="50%";hover.style.transform="translate(-50%,-50%)";},350);});
-    link.addEventListener("touchend",()=>{clearTimeout(touchTimer);hover.style.display="none";hover.style.transform="";});
-  });
-});
-</script>
+${pagination}
 
 </div>
 </body>
 </html>
 `;
 
-console.log("✅ HOMEPAGE BUILT — TOP 10 POSTS, THUMBNAILS, HOVER, EMAIL BLOCK INTACT");
+const outputPath = page===1
+? "_site/index.html"
+: `_site/page/${page}/index.html`;
+
+if(page!==1){
+fs.mkdirSync(`_site/page/${page}`,{recursive:true});
+}
+
+fs.writeFileSync(outputPath, homepage);
+
+}
+
+console.log("✅ Homepage + Pagination Built Successfully");
