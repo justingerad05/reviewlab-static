@@ -302,9 +302,7 @@ fs.writeFileSync("_site/sitemap.xml",
 generatePostSitemap(posts);
 generatePageSitemap();
 generateCategorySitemap(topics);
-generateSitemapIndex(); {
- 
-  const urls = [];
+generateSitemapIndex();
  
   // Homepage
   urls.push({
