@@ -15,15 +15,18 @@ const DEFAULT = `${SITE_URL}/assets/og-default.jpg`;
 
 /* CLEAN FULL BUILD */
 
+// Reset entire build directory
 fs.rmSync("_site", { recursive: true, force: true });
 fs.mkdirSync("_site", { recursive: true });
 
-/* RECREATE REQUIRED FOLDERS */
-
+// Core folders
 fs.mkdirSync("_site/posts", { recursive: true });
+fs.mkdirSync("_site/posts/comparisons", { recursive: true });
 fs.mkdirSync("_site/ai-tools", { recursive: true });
-fs.mkdirSync("_site/og-images", { recursive: true });
 fs.mkdirSync("_site/author", { recursive: true });
+fs.mkdirSync("_site/og-images", { recursive: true });
+fs.mkdirSync("_site/assets", { recursive: true });
+fs.mkdirSync("_site/_data", { recursive: true });
 
 /* FETCH */
 
