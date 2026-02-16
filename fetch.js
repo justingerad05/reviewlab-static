@@ -740,9 +740,16 @@ fs.writeFileSync("_data/posts.json",JSON.stringify(posts,null,2));
    HOMEPAGE — FULL DESIGN, TOP 10 POSTS
 ========================= */
 
-const topPosts = posts.slice(0, 10); // latest 10
+const POSTS_PER_PAGE = 10;
+const totalPages = Math.ceil(posts.length / POSTS_PER_PAGE);
 
-const homepagePosts = topPosts.map(post => `
+for(let page=1; page<=totalPages; page++){
+
+const start = (page-1)*POSTS_PER_PAGE;
+const end = start+POSTS_PER_PAGE;
+const pagePosts = posts.slice(start,end);
+
+const homepagePosts = pagePosts.map(post => `
 <li class="post-card">
   <a href="${post.url}" style="display:flex;align-items:center;gap:16px;text-decoration:none;color:inherit;">
     <img data-src="${post.thumb}" alt="${post.title}" class="thumb lazy">
@@ -752,6 +759,26 @@ const homepagePosts = topPosts.map(post => `
     </div>
   </a>
 </li>
+`).join("");
+
+const pagination = `
+<div style="margin-top:40px;">
+${page>1?`<a href="${page===2?'/':'/page/'+(page-1)+'/'}">← Prev</a>`:''}
+${page<totalPages?`<a style="float:right" href="/page/${page+1}/">Next →</a>`:''}
+</div>
+`;
+
+const outputPath = page===1
+? "_site/index.html"
+: `_site/page/${page}/index.html`;
+
+if(page!==1){
+fs.mkdirSync(`_site/page/${page}`,{recursive:true});
+}
+
+fs.writeFileSync(outputPath, homepage.replace("${homepagePosts}",homepagePosts+pagination));
+}
+
 `).join("");
 
 const homepage = `<!doctype html>
