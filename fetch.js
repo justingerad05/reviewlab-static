@@ -739,10 +739,6 @@ fs.writeFileSync("_data/posts.json",JSON.stringify(posts,null,2));
 /* =========================
    HOMEPAGE — FULL DESIGN, TOP 10 POSTS
 ========================= */
-
-const POSTS_PER_PAGE = 10;
-const totalPages = Math.ceil(posts.length / POSTS_PER_PAGE);
-
 for(let page=1; page<=totalPages; page++){
 
 const start = (page-1)*POSTS_PER_PAGE;
@@ -778,6 +774,9 @@ fs.mkdirSync(`_site/page/${page}`,{recursive:true});
 
 fs.writeFileSync(outputPath, homepage.replace("${homepagePosts}",homepagePosts+pagination));
 }
+
+const POSTS_PER_PAGE = 10;
+const totalPages = Math.ceil(posts.length / POSTS_PER_PAGE);
 
 const homepage = `<!doctype html>
 <html lang="en">
