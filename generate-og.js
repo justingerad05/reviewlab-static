@@ -6,7 +6,7 @@ import fetch from "node-fetch";
 /* Ensure folder */
 
 if(!fs.existsSync("./_site/og-images")){
- fs.mkdirSync("./og-images",{recursive:true});
+ fs.mkdirSync("./_site/og-images",{recursive:true});
 }
 
 /* FONT SAFE LOAD */
@@ -132,7 +132,7 @@ export async function generateOG(slug,title){
 
    fs.copyFileSync(
      "og-default.jpg",
-     `./og-images/${slug}.jpg`
+     `./_site/og-images/${slug}.jpg`
    );
 
    return false;
