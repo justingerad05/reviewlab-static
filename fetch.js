@@ -233,6 +233,9 @@ p.html = injectInternalLinks(p.html,posts,p);
 
 posts.sort((a,b)=> new Date(b.date)-new Date(a.date));
 
+const POSTS_PER_PAGE = 10;
+const totalPages = Math.ceil(posts.length / POSTS_PER_PAGE);
+
  /* =========================
    DYNAMIC SITEMAP GENERATOR
 ========================= */
@@ -785,9 +788,6 @@ fs.mkdirSync(`_site/page/${page}`,{recursive:true});
 fs.writeFileSync(outputPath, homepage.replace("${homepagePosts}",homepagePosts+pagination));
 }
 
-const POSTS_PER_PAGE = 10;
-const totalPages = Math.ceil(posts.length / POSTS_PER_PAGE);
-
 const homepage = `<!doctype html>
 <html lang="en">
 <head>
@@ -891,7 +891,5 @@ document.addEventListener("DOMContentLoaded",()=>{
 </body>
 </html>
 `;
-
-fs.writeFileSync("_site/index.html", homepage);
 
 console.log("✅ HOMEPAGE BUILT — TOP 10 POSTS, THUMBNAILS, HOVER, EMAIL BLOCK INTACT");
