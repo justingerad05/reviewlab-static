@@ -743,6 +743,9 @@ Allow: /
 Sitemap: ${SITE_URL}/sitemap.xml
 `);
 
+fs.copyFileSync("assets/styles.css","_site/assets/styles.css");
+fs.copyFileSync("og-default.jpg","_site/assets/og-default.jpg");
+
 /* =========================
    HOMEPAGE — FULL DESIGN, TOP 10 POSTS
 ========================= */
@@ -830,29 +833,8 @@ const homepage = `<!doctype html>
 }
 </script>
 
-<style>
-body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Inter,sans-serif;background:#020617;color:#e5e7eb;}
-.container{max-width:900px;margin:auto;padding:40px 20px;}
-h1{font-size:42px;margin-bottom:10px;}
-.sub{color:#94a3b8;margin-bottom:40px;}
-.post-list{list-style:none;padding:0;}
-.post-card{display:flex;align-items:center;gap:16px;padding:14px;border-radius:14px;transition:.25s;}
-.post-card:hover{background:#07122a;}
-.thumb{width:120px;height:68px;object-fit:cover;border-radius:10px;flex-shrink:0;}
-.lazy{opacity:0;transition:opacity .35s;}
-.lazy.loaded{opacity:1;}
-.post-title{color:#38bdf8;text-decoration:none;font-weight:700;font-size:20px;}
-.post-title:hover{text-decoration:underline;}
-.meta{font-size:13px;color:#94a3b8;margin-top:4px;}
-.hover-preview{position:absolute;display:none;width:340px;border-radius:14px;box-shadow:0 25px 70px rgba(0,0,0,.55);z-index:9999;pointer-events:none;}
-.email-capture{margin:70px 0;padding:38px;border-radius:18px;background:linear-gradient(145deg,#020617,#07122a);border:1px solid #1e293b;box-shadow:0 10px 40px rgba(0,0,0,.45);text-align:center;}
-.email-capture h3{font-size:28px;margin-bottom:10px;}
-.email-capture p{color:#94a3b8;margin-bottom:22px;}
-.form-row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;}
-.email-capture input{padding:14px;border-radius:10px;border:1px solid #334155;background:#020617;color:white;min-width:260px;font-size:16px;}
-.email-capture button{padding:14px 20px;border-radius:10px;border:none;font-weight:700;cursor:pointer;background:#22c55e;color:#020617;}
-.trust{margin-top:12px;font-size:13px;color:#64748b;}
-</style>
+<link rel="stylesheet" href="${SITE_URL}/assets/styles.css">
+
 </head>
 <body>
 <div class="container">
