@@ -239,6 +239,11 @@ const totalPages = Math.ceil(posts.length / POSTS_PER_PAGE);
  /* =========================
    DYNAMIC SITEMAP GENERATOR
 ========================= */
+generatePostSitemap(posts);
+generatePageSitemap();
+generateCategorySitemap(topics);
+generateSitemapIndex(); 
+
 function generatePostSitemap(posts){
 const today = new Date().toISOString().split("T")[0];
 
@@ -298,11 +303,6 @@ fs.writeFileSync("_site/sitemap.xml",
 <sitemap><loc>${SITE_URL}/sitemap-categories.xml</loc></sitemap>
 </sitemapindex>`);
 }
-
-generatePostSitemap(posts);
-generatePageSitemap();
-generateCategorySitemap(topics);
-generateSitemapIndex();
  
   // Homepage
   urls.push({
