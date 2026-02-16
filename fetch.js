@@ -302,9 +302,7 @@ fs.writeFileSync("_site/sitemap.xml",
 generatePostSitemap(posts);
 generatePageSitemap();
 generateCategorySitemap(topics);
-generateSitemapIndex(); 
- 
- {
+generateSitemapIndex(); {
   const today = new Date().toISOString().split("T")[0];
 
   const urls = [];
