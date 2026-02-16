@@ -303,8 +303,7 @@ generatePostSitemap(posts);
 generatePageSitemap();
 generateCategorySitemap(topics);
 generateSitemapIndex(); {
-  const today = new Date().toISOString().split("T")[0];
-
+ 
   const urls = [];
  
   // Homepage
@@ -853,6 +852,9 @@ fs.writeFileSync("_data/posts.json",JSON.stringify(posts,null,2));
 fs.writeFileSync("_site/robots.txt",`
 User-agent: *
 Allow: /
+Disallow: /page/
+Disallow: /posts/comparisons/
+Crawl-delay: 5
 
 Sitemap: ${SITE_URL}/sitemap.xml
 `);
