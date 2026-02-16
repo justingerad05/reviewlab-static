@@ -240,7 +240,10 @@ const totalPages = Math.ceil(posts.length / POSTS_PER_PAGE);
    DYNAMIC SITEMAP GENERATOR
 ========================= */
 
-function generateSitemap({ posts, categories }) {
+function generatePostSitemap(posts);
+generatePageSitemap();
+generateCategorySitemap(topics);
+generateSitemapIndex(); {
 
   const today = new Date().toISOString().split("T")[0];
 
@@ -628,8 +631,8 @@ hover.style.display="none";
 <footer style="margin-top:60px;font-size:14px;opacity:.7;">
 <a href="${SITE_URL}/">Home</a> •
 <a href="${SITE_URL}/about/">About</a> •
-<a href="${SITE_URL}/">Contact</a> •
-<a href="${SITE_URL}/">Privacy</a> •
+<a href="${SITE_URL}/contact/">Contact</a> •
+<a href="${SITE_URL}/privacy/">Privacy</a> •
 <a href="${SITE_URL}/editorial-policy/">Editorial Policy</a> •
 <a href="${SITE_URL}/review-methodology/">Methodology</a>
 </footer>
