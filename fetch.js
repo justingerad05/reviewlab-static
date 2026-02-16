@@ -239,16 +239,77 @@ const totalPages = Math.ceil(posts.length / POSTS_PER_PAGE);
  /* =========================
    DYNAMIC SITEMAP GENERATOR
 ========================= */
-
-function generatePostSitemap(posts);
-generatePageSitemap();
-generateCategorySitemap(topics);
-generateSitemapIndex(); {
+function generateSitemap({ posts, categories: topics }); {
 
   const today = new Date().toISOString().split("T")[0];
 
   const urls = [];
 
+function generatePostSitemap(posts){
+const today = new Date().toISOString().split("T")[0];
+
+const urls = posts.map(post=>`
+<url>
+<loc>${post.url}</loc>
+<lastmod>${post.lastmod.split("T")[0]}</lastmod>
+<changefreq>weekly</changefreq>
+<priority>0.9</priority>
+</url>`).join("");
+
+fs.writeFileSync("_site/sitemap-posts.xml",
+`<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${urls}
+</urlset>`);
+}
+
+function generatePageSitemap(){
+const pages=["about","contact","privacy","editorial-policy","review-methodology","author"];
+
+const urls=pages.map(p=>`
+<url>
+<loc>${SITE_URL}/${p}/</loc>
+<changefreq>yearly</changefreq>
+<priority>0.4</priority>
+</url>`).join("");
+
+fs.writeFileSync("_site/sitemap-pages.xml",
+`<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${urls}
+</urlset>`);
+}
+
+function generateCategorySitemap(topics){
+const urls=Object.keys(topics).map(cat=>`
+<url>
+<loc>${SITE_URL}/ai-tools/${cat}/</loc>
+<changefreq>weekly</changefreq>
+<priority>0.8</priority>
+</url>`).join("");
+
+fs.writeFileSync("_site/sitemap-categories.xml",
+`<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${urls}
+</urlset>`);
+}
+
+function generateSitemapIndex(){
+fs.writeFileSync("_site/sitemap.xml",
+`<?xml version="1.0" encoding="UTF-8"?>
+<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<sitemap><loc>${SITE_URL}/sitemap-posts.xml</loc></sitemap>
+<sitemap><loc>${SITE_URL}/sitemap-pages.xml</loc></sitemap>
+<sitemap><loc>${SITE_URL}/sitemap-categories.xml</loc></sitemap>
+</sitemapindex>`);
+}
+
+generatePostSitemap(posts);
+generatePageSitemap();
+generateCategorySitemap(topics);
+generateSitemapIndex(); 
+ 
   // Homepage
   urls.push({
     loc: `${SITE_URL}/`,
