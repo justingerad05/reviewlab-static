@@ -779,8 +779,6 @@ fs.mkdirSync(`_site/page/${page}`,{recursive:true});
 fs.writeFileSync(outputPath, homepage.replace("${homepagePosts}",homepagePosts+pagination));
 }
 
-`).join("");
-
 const homepage = `<!doctype html>
 <html lang="en">
 <head>
