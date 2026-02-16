@@ -1,9 +1,3 @@
----
-layout: base.njk
-permalink: /contact/
-title: Contact
----
-
 # Contact
 
 For editorial inquiries, partnerships, or corrections:
