@@ -239,6 +239,11 @@ const totalPages = Math.ceil(posts.length / POSTS_PER_PAGE);
  /* =========================
    DYNAMIC SITEMAP GENERATOR
 ========================= */
+function generateSitemap({ posts, categories: topics }); {
+
+  const today = new Date().toISOString().split("T")[0];
+
+  const urls = [];
 
 function generatePostSitemap(posts){
 const today = new Date().toISOString().split("T")[0];
@@ -304,6 +309,11 @@ generatePostSitemap(posts);
 generatePageSitemap();
 generateCategorySitemap(topics);
 generateSitemapIndex(); 
+ 
+ {
+  const today = new Date().toISOString().split("T")[0];
+
+  const urls = [];
  
   // Homepage
   urls.push({
