@@ -1,9 +1,3 @@
----
-layout: base.njk
-permalink: /about/
-title: About ReviewLab
----
-
 # About ReviewLab
 
 ReviewLab is an independent software evaluation platform focused on AI tools, automation systems, and productivity technology.
