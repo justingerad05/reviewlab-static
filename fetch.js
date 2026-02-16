@@ -377,9 +377,9 @@ function generateTopList(category, posts){
 ${i+1}. <a href="${p.url}">${p.title}</a>
 </li>`).join("");
 
- fs.mkdirSync(`_site/ai-tools/${category}`,{recursive:true});
+ fs.mkdirSync(`_site/ai-tools/${category}/top-10`, { recursive: true });
 
- fs.writeFileSync(`_site/ai-tools/${category}/top-10.html`, `
+fs.writeFileSync(`_site/ai-tools/${category}/top-10/index.html`,
 <!doctype html>
 <html>
 <head>
@@ -506,7 +506,7 @@ const page = `<!doctype html>
 <meta property="og:description" content="${post.description}">
 <meta property="og:type" content="article">
 <meta property="og:url" content="${post.url}">
-<meta property="og:image" content="${SITE_URL}/assets/og-default.jpg">
+<meta property="og:image" content="${post.og}">
 
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="${post.og}">
@@ -660,6 +660,39 @@ copyStaticPage("contact","pages/contact.md");
 copyStaticPage("privacy","pages/privacy.md");
 copyStaticPage("editorial-policy","pages/editorial-policy/index.md");
 copyStaticPage("review-methodology","pages/review-methodology/index.md");
+
+fs.mkdirSync(`_site/ai-tools`, { recursive: true });
+
+const aiToolsList = Object.keys(topics)
+.map(cat => `
+<li>
+<a href="${SITE_URL}/ai-tools/${cat}/">
+${cat.replace(/-/g," ")}
+</a>
+</li>
+`).join("");
+
+fs.writeFileSync(`_site/ai-tools/index.html`, `
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI Tools Categories</title>
+<link rel="canonical" href="${SITE_URL}/ai-tools/">
+<link rel="stylesheet" href="${SITE_URL}/assets/styles.css">
+</head>
+<body class="container">
+
+<h1>AI Tools Categories</h1>
+
+<ul>
+${aiToolsList}
+</ul>
+
+</body>
+</html>
+`);
 
 /* BUILD CATEGORY (AI TOOLS) PAGES — RUN ONCE */
 
