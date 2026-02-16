@@ -239,11 +239,6 @@ const totalPages = Math.ceil(posts.length / POSTS_PER_PAGE);
  /* =========================
    DYNAMIC SITEMAP GENERATOR
 ========================= */
-generatePostSitemap(posts);
-generatePageSitemap();
-generateCategorySitemap(topics);
-generateSitemapIndex(); 
-
 function generatePostSitemap(posts){
 const today = new Date().toISOString().split("T")[0];
 
@@ -302,74 +297,6 @@ fs.writeFileSync("_site/sitemap.xml",
 <sitemap><loc>${SITE_URL}/sitemap-pages.xml</loc></sitemap>
 <sitemap><loc>${SITE_URL}/sitemap-categories.xml</loc></sitemap>
 </sitemapindex>`);
-}
- 
-  // Homepage
-  urls.push({
-    loc: `${SITE_URL}/`,
-    priority: "1.0",
-    changefreq: "daily",
-    lastmod: today
-  });
-
-  // Author
-  urls.push({
-    loc: `${SITE_URL}/author/`,
-    priority: "0.6",
-    changefreq: "monthly",
-    lastmod: today
-  });
-
-  // Static pages
-  const staticPages = [
-    "about",
-    "contact",
-    "privacy",
-    "editorial-policy",
-    "review-methodology"
-  ];
-
-  staticPages.forEach(page => {
-    urls.push({
-      loc: `${SITE_URL}/${page}/`,
-      priority: "0.3",
-      changefreq: "yearly",
-      lastmod: today
-    });
-  });
-
-  // Categories
-  Object.keys(categories).forEach(cat => {
-    urls.push({
-      loc: `${SITE_URL}/ai-tools/${cat}/`,
-      priority: "0.8",
-      changefreq: "weekly",
-      lastmod: today
-    });
-  });
-
-  // Posts
-  posts.forEach(post => {
-    urls.push({
-      loc: post.url,
-      priority: "0.9",
-      changefreq: "weekly",
-      lastmod: post.lastmod.split("T")[0]
-    });
-  });
-
-  const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-${urls.map(u=>`
-<url>
-  <loc>${u.loc}</loc>
-  <lastmod>${u.lastmod}</lastmod>
-  <changefreq>${u.changefreq}</changefreq>
-  <priority>${u.priority}</priority>
-</url>`).join("")}
-</urlset>`;
-
-  fs.writeFileSync("_site/sitemap.xml", sitemap);
 }
 
  /* =========================
@@ -784,7 +711,10 @@ ${list}
   fs.writeFileSync(`${outputDir}/index.html`, html);
 }
 
-generateSitemap({ posts, categories: topics });
+generatePostSitemap(posts);
+generatePageSitemap();
+generateCategorySitemap(topics);
+generateSitemapIndex(); 
 
 /* FULL AUTHORITY AUTHOR PAGE RESTORED */
 
