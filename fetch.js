@@ -95,7 +95,7 @@ const regex = new RegExp(`\\b(${keyword})\\b`,"i");
 
 if(regex.test(enriched)){
 enriched = enriched.replace(regex,
-`<a href="${p.url}" style="font-weight:600;">$1</a>`
+`<a href="${p.url}" class="post-title">$1</a>`
 );
 }
 });
@@ -441,7 +441,7 @@ inlinePosts = posts
 }
 
 const inlineRecs = inlinePosts
-.map(p=>`<li><a href="${p.url}" class="container">${p.title}</a></li>`)
+.map(p=>`<li><a href="${p.url}" class="post-title">${p.title}</a></li>`)
 .join("");
 
 const related = relatedPosts
@@ -449,7 +449,7 @@ const related = relatedPosts
 <li>
 <a href="${p.url}" class="related-link">
 <img data-src="${p.thumb}" width="110" class="lazy" alt="${p.title}" />
-<span style="font-weight:600;">${p.title} (~${p.readTime} min)</span>
+<span class="post-title">${p.title} (~${p.readTime} min)</span>
 </a>
 </li>`).join("");
 
@@ -534,13 +534,13 @@ ${breadcrumbSchema}
  
 <h1>${post.title}</h1>
 
-<p style="opacity:.7;font-size:14px;">
+<p class="sub">
 By <a href="${SITE_URL}/author/">Justin Gerald</a> • ${post.readTime} min read
 </p>
 
 ${post.html}
 
-<div class="container">
+<div class="email-capture">
 <strong>You may also like:</strong>
 <ul class="container">
 ${inlineRecs}
@@ -551,7 +551,7 @@ ${inlineRecs}
 
 <h3>Related Reviews</h3>
 
-<ul class="container">
+<ul class="clesn-list">
 ${related}
 </ul>
 
@@ -597,10 +597,7 @@ link.addEventListener("mouseout",()=>hover.style.display="none");
 link.addEventListener("touchstart",()=>{
 touchTimer=setTimeout(()=>{
 hover.src=img.dataset.src;
-hover.style.display="block";
-hover.style.top="40%";
-hover.style.left="50%";
-hover.style.transform="translate(-50%,-50%)";
+hover.classList.add("hover-centered");
 },350);
 });
 
@@ -614,7 +611,7 @@ hover.style.display="none";
 });
 </script>
 
-<footer class="container">
+<footer class="footer">
 <a href="${SITE_URL}/">Home</a> •
 <a href="${SITE_URL}/about/">About</a> •
 <a href="${SITE_URL}/contact/">Contact</a> •
@@ -761,8 +758,7 @@ generateSitemapIndex();
 /* FULL AUTHORITY AUTHOR PAGE RESTORED */
 
 const authorPosts = posts.map(p=>`
-<li style="margin-bottom:18px;">
-<a href="${p.url}" style="font-weight:700;font-size:18px;">${p.title}</a>
+<A href="${p.url}" style="font-weight:700;font-size:18px;">${p.title}</a>
 <div style="opacity:.6;font-size:13px;">${p.readTime} min read</div>
 </li>`).join("");
 
