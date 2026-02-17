@@ -140,3 +140,27 @@ article p{
 article ul{
   margin-bottom:20px;
 }
+
+/* ===== Post Page Layout ===== */
+
+.post-page {
+  background: #ffffff;
+  color: #111827;
+  padding: 40px;
+  border-radius: 18px;
+  box-shadow: 0 10px 40px rgba(0,0,0,.08);
+}
+
+.post-page h1,
+.post-page h2,
+.post-page h3 {
+  color: #111827;
+}
+
+.post-page p {
+  color: #1f2937;
+}
+
+.post-page a {
+  color: #2563eb;
+}
