@@ -602,6 +602,7 @@ hover.classList.add("hover-centered");
 link.addEventListener("touchend",()=>{
 clearTimeout(touchTimer);
 hover.style.display="none";
+hover.classList.remove("hover-centered");
 });
 
 });
