@@ -726,6 +726,7 @@ for (const topic in topics) {
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${topicTitle}</title>
 <link rel="canonical" href="${topicURL}">
+<link rel="stylesheet" href="${SITE_URL}/assets/styles.css">
 <meta name="description" content="Expert reviews and comparisons for ${topicTitle}.">
 </head>
 
@@ -848,7 +849,7 @@ const pagePosts = posts.slice(start,end);
 
 const homepagePosts = pagePosts.map(post => `
 <li class="post-card">
-  <a href="${post.url}" class="post-card">
+  <a href="${post.url}">
     <img data-src="${post.thumb}" alt="${post.title}" class="thumb lazy">
     <div>
       <div class="post-title">${post.title} (~${post.readTime} min)</div>
