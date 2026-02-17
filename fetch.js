@@ -368,30 +368,38 @@ for(let i=0;i<posts.length;i++){
 
 function generateTopList(category, posts){
 
- const filtered = posts.filter(p=>p.category===category);
+  const filtered = posts.filter(p=>p.category===category);
+  const top = filtered.slice(0,10);
 
- const top = filtered.slice(0,10);
-
- const list = top.map((p,i)=>`
+  const list = top.map((p,i)=>`
 <li>
 ${i+1}. <a href="${p.url}">${p.title}</a>
 </li>`).join("");
 
- fs.mkdirSync(`_site/ai-tools/${category}/top-10`, { recursive: true });
+  const outputDir = `_site/ai-tools/${category}/top-10`;
+  fs.mkdirSync(outputDir, { recursive: true });
 
-fs.writeFileSync(`_site/ai-tools/${category}/top-10/index.html`,
+  const html = `
 <!doctype html>
 <html>
 <head>
 <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Top 10 ${category.replace(/-/g," ")}</title>
+<link rel="stylesheet" href="${SITE_URL}/assets/styles.css">
 </head>
-<body style="max-width:760px;margin:auto;font-family:system-ui;padding:40px;">
+<body class="container">
+
 <h1>Top 10 ${category.replace(/-/g," ")}</h1>
-<ol>${list}</ol>
+<ol class="clean-list">
+${list}
+</ol>
+
 </body>
 </html>
-`);
+`;
+
+  fs.writeFileSync(`${outputDir}/index.html`, html);
 }
 
 generateTopList("ai-writing-tools", posts);
@@ -432,7 +440,7 @@ inlinePosts = posts
 }
 
 const inlineRecs = inlinePosts
-.map(p=>`<li><a href="${p.url}" style="font-weight:600;">${p.title}</a></li>`)
+.map(p=>`<li><a href="${p.url}" class="container">${p.title}</a></li>`)
 .join("");
 
 const related = relatedPosts
@@ -515,15 +523,10 @@ const page = `<!doctype html>
 ${post.schemas}
 </script>
 
-<style>
-.lazy{opacity:0;transition:.3s;border-radius:10px;}
-.lazy.loaded{opacity:1;}
-.related-link{display:flex;align-items:center;gap:14px;text-decoration:none;color:inherit;padding:12px 0;}
-.hover-preview{position:absolute;display:none;max-width:420px;border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,.25);z-index:9999;pointer-events:none;}
-</style>
+<link rel="stylesheet" href="${SITE_URL}/assets/styles.css">
 
 </head>
-<body style="max-width:760px;margin:auto;font-family:system-ui;padding:40px;line-height:1.7;">
+<body class="container">
 
 ${breadcrumbHTML}
 ${breadcrumbSchema}
@@ -645,7 +648,7 @@ const html = `
 <title>${slug.replace(/-/g," ")}</title>
 <link rel="canonical" href="${SITE_URL}/${slug}/">
 </head>
-<body style="max-width:760px;margin:auto;font-family:system-ui;padding:40px;line-height:1.7;">
+<body class="container">
 ${content}
 </body>
 </html>
@@ -716,7 +719,7 @@ for (const topic in topics) {
 <meta name="description" content="Expert reviews and comparisons for ${topicTitle}.">
 </head>
 
-<body style="max-width:760px;margin:auto;font-family:system-ui;padding:40px;line-height:1.7;">
+<body class="container">
 
 <nav>
 <a href="${SITE_URL}/">Home</a> › 
@@ -781,7 +784,7 @@ fs.writeFileSync(`_site/author/index.html`,`
 }
 </script>
 </head>
-<body style="max-width:760px;margin:auto;font-family:system-ui;padding:40px;line-height:1.7;">
+<body class="container">
 
 <h1 style="font-size:42px;margin-bottom:6px;">Justin Gerald</h1>
 <p style="font-size:18px;opacity:.75;margin-top:0;">
