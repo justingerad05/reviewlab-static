@@ -5,7 +5,7 @@ body {
   font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
   line-height: 1.7;
   background:#020617;
-  color:#111;
+  color:#f1f5f9;
 }
 
 .container {
@@ -14,7 +14,18 @@ body {
   padding: 40px 20px;
 }
 
-.related-title{
+.breadcrumb {
+  font-size:14px;
+  margin-bottom:20px;
+  opacity:.7;
+}
+
+.author-title {
+  font-size:42px;
+  margin-bottom:6px;
+}
+
+.related-title {
   font-weight:600;
 }
 
@@ -23,7 +34,7 @@ body {
          opacity:7;
 }
   
-.hover-centered{
+.hover-centered {
   display:block !important;
   top:50% !important;
   left:50% !important;
@@ -31,12 +42,37 @@ body {
   position:fixed !important;
 }
 
-.author-title{
+.author-title {
   font-size:42px;
   margin-bottom:6px;
 }
 
-.author-box{
+.author-sub {
+  font-size:18px;
+  opacity:.75;
+  margin-top:0;
+}
+
+.author-post {
+  margin-bottom:18px;
+}
+
+.author-post-title {
+  font-weight:700;
+  font-size:18px;
+  display:block;
+  margin-bottom:4px;
+}
+
+.post-card-link {
+  display:flex;
+  align-items:center;
+  gap:16px;
+  text-decoration:none;
+  color:inherit;
+}
+
+.author-box {
   background:#fafafa;
   padding:20px;
   border-radius:14px;
@@ -76,7 +112,7 @@ p {
 }
 
 a {
-  color: #111;
+  color: #38bdf8;
   text-decoration: none;
 }
 
