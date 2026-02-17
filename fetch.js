@@ -547,8 +547,6 @@ ${inlineRecs}
 </ul>
 </div>
 
-<hr>
-
 <h3>Related Reviews</h3>
 
 <ul class="clesn-list">
