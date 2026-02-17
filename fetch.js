@@ -145,7 +145,7 @@ function detectTopic(title){
  if(t.includes("automation"))
    return "automation-tools";
 
- return "ai-writing-tools";
+ return "Ai-Writing-Tools";
 }
 
 /* BUILD DATA */
@@ -454,7 +454,9 @@ const related = relatedPosts
 </li>`).join("");
 
  const category = post.category || "ai-writing-tools";
-const categoryTitle = category.replace(/-/g," ");
+const categoryTitle = category
+  .replace(/-/g," ")
+  .replace(/\b\w/g, l => l.toUpperCase());
 
 const breadcrumbHTML = `
 <nav class="breadcrumb">
