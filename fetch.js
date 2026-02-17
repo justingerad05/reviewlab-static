@@ -453,7 +453,7 @@ const related = relatedPosts
 </a>
 </li>`).join("");
 
- const category = post.category || "Ai-Writing-Tools";
+ const category = post.category || "ai-writing-tools";
 const categoryTitle = category.replace(/-/g," ");
 
 const breadcrumbHTML = `
@@ -614,7 +614,7 @@ hover.style.display="none";
 });
 </script>
 
-<footer style="margin-top:60px;font-size:14px;opacity:.7;">
+<footer class="container">
 <a href="${SITE_URL}/">Home</a> •
 <a href="${SITE_URL}/about/">About</a> •
 <a href="${SITE_URL}/contact/">Contact</a> •
