@@ -95,7 +95,7 @@ const regex = new RegExp(`\\b(${keyword})\\b`,"i");
 
 if(regex.test(enriched)){
 enriched = enriched.replace(regex,
-`<a href="${p.url}" class="post-title">$1</a>`
+`<a href="${p.url}" class="related-title">$1</a>`
 );
 }
 });
@@ -449,11 +449,11 @@ const related = relatedPosts
 <li>
 <a href="${p.url}" class="related-link">
 <img data-src="${p.thumb}" width="110" class="lazy" alt="${p.title}" />
-<span class="post-title">${p.title} (~${p.readTime} min)</span>
+<span class="related-title">${p.title} (~${p.readTime} min)</span>
 </a>
 </li>`).join("");
 
- const category = post.category || "ai-writing-tools";
+ const category = post.category || "Ai-Writing-Tools";
 const categoryTitle = category.replace(/-/g," ");
 
 const breadcrumbHTML = `
@@ -540,7 +540,7 @@ By <a href="${SITE_URL}/author/">Justin Gerald</a> • ${post.readTime} min read
 
 ${post.html}
 
-<div class="email-capture">
+<div class="author-box">
 <strong>You may also like:</strong>
 <ul class="container">
 ${inlineRecs}
@@ -797,7 +797,7 @@ real-world testing signals, and buyer-intent software evaluation.
 
 <div class="author-box">
 <strong>Editorial Integrity:</strong>
-<p style="margin-top:8px;">
+<p class="trust">
 Every review published on ReviewLab is created through structured analysis,
 feature verification, market comparison, and user-benefit evaluation.
 No automated ratings. No anonymous authorship.
@@ -805,7 +805,7 @@ No automated ratings. No anonymous authorship.
 
 </div>
 <h2>Latest Reviews</h2>
-<ul style="list-style:none;padding:0;">
+<ul class="post-list">
 ${authorPosts}
 </ul>
 
@@ -840,8 +840,8 @@ const pagePosts = posts.slice(start,end);
 
 const homepagePosts = pagePosts.map(post => `
 <li class="post-card">
-  <a href="${post.url}" class="post-card-link">
-    <img data-src="${post.thumb}" alt="${post.title}" class="thumb lazy">
+  <a href="${post.url}" class="post-card">
+    <img data-src="${post.thumb}" alt="${post.title}" class="thumb">
     <div>
       <div class="post-title">${post.title} (~${post.readTime} min)</div>
       <div class="meta">Published ${new Date(post.date).toLocaleDateString("en-US",{year:"numeric",month:"long",day:"numeric"})}</div>
@@ -851,7 +851,7 @@ const homepagePosts = pagePosts.map(post => `
 `).join("");
 
 const pagination = `
-<div style="margin-top:40px;">
+<div class="pagination">
 ${page>1?`<a href="${page===2?'/':'/page/'+(page-1)+'/'}">← Prev</a>`:''}
 ${page<totalPages?`<a style="float:right" href="/page/${page+1}/">Next →</a>`:''}
 </div>
