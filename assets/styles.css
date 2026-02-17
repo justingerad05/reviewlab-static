@@ -4,14 +4,26 @@ body {
   margin: 0;
   font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
   line-height: 1.7;
-  background: #ffffff;
-  color: #111;
+  background:#020617;
+  color:#111;
 }
 
 .container {
   max-width: 760px;
   margin: auto;
   padding: 40px 20px;
+}
+
+.related-title{
+  font-weight:600;
+}
+
+.hover-centered{
+  display:block !important;
+  top:50% !important;
+  left:50% !important;
+  transform:translate(-50%,-50%) !important;
+  position:fixed !important;
 }
 
 /* ===== Typography ===== */
@@ -147,4 +159,22 @@ button:hover {
   box-shadow: 0 20px 60px rgba(0,0,0,.25);
   z-index: 9999;
   pointer-events: none;
+}
+
+article{
+  max-width:760px;
+  margin:auto;
+}
+
+article h1{
+  font-size:32px;
+  margin-bottom:20px;
+}
+
+article p{
+  margin-bottom:18px;
+}
+
+article ul{
+  margin-bottom:20px;
 }
