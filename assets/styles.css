@@ -4,7 +4,7 @@ body {
   margin: 0;
   font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
   line-height: 1.7;
-  background:#f8fafc;
+  background:#020617;
   color:#f1f5f9;
 }
 
@@ -153,7 +153,7 @@ ul, ol {
 /* ===== Email Capture ===== */
 
 .email-capture {
-  background: #f5f5f5;
+  background: #55f555;
   padding: 24px;
   border-radius: 12px;
   margin-bottom: 40px;
