@@ -18,12 +18,29 @@ body {
   font-weight:600;
 }
 
+.footer {margin-top: 60px;
+         font-size: 14px;
+         opacity:7;
+}
+  
 .hover-centered{
   display:block !important;
   top:50% !important;
   left:50% !important;
   transform:translate(-50%,-50%) !important;
   position:fixed !important;
+}
+
+.author-title{
+  font-size:42px;
+  margin-bottom:6px;
+}
+
+.author-box{
+  background:#fafafa;
+  padding:20px;
+  border-radius:14px;
+  margin:26px 0;
 }
 
 /* ===== Typography ===== */
