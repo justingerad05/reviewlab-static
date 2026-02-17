@@ -27,9 +27,6 @@ jobs:
       - name: Fetch Blogger posts
         run: node fetch.js
         
-      - name: install marked
-        run: npm install marked
-        
       - name: List files
         run: ls -R
     
