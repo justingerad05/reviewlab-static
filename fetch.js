@@ -457,7 +457,7 @@ const related = relatedPosts
 const categoryTitle = category.replace(/-/g," ");
 
 const breadcrumbHTML = `
-<nav class="container">
+<nav class="breadcrumb">
 <a href="${SITE_URL}">Home</a> › 
 <a href="${SITE_URL}/ai-tools/">AI Tools</a> › 
 <a href="${SITE_URL}/ai-tools/${category}/">${categoryTitle}</a> › 
@@ -549,7 +549,7 @@ ${inlineRecs}
 
 <h3>Related Reviews</h3>
 
-<ul class="clesn-list">
+<ul class="clean-list">
 ${related}
 </ul>
 
@@ -756,9 +756,11 @@ generateSitemapIndex();
 /* FULL AUTHORITY AUTHOR PAGE RESTORED */
 
 const authorPosts = posts.map(p=>`
-<A href="${p.url}" style="font-weight:700;font-size:18px;">${p.title}</a>
-<div style="opacity:.6;font-size:13px;">${p.readTime} min read</div>
-</li>`).join("");
+<li class="author-post">
+  <a href="${p.url}" class="author-post-title">${p.title}</a>
+  <div class="meta">${p.readTime} min read</div>
+</li>
+`).join("");
 
 fs.mkdirSync(`_site/author`,{recursive:true});
  
@@ -786,23 +788,22 @@ fs.writeFileSync(`_site/author/index.html`,`
 </head>
 <body class="container">
 
-<h1 style="font-size:42px;margin-bottom:6px;">Justin Gerald</h1>
-<p style="font-size:18px;opacity:.75;margin-top:0;">
+<h1 class="author-title">Justin Gerald</h1>
+<p class="author-sub">
 Independent product review analyst focused on deep research,
 real-world testing signals, and buyer-intent software evaluation.
 </p>
 
-<div style="background:#fafafa;padding:20px;border-radius:14px;margin:26px 0;">
+<div class="author-box">
 <strong>Editorial Integrity:</strong>
 <p style="margin-top:8px;">
 Every review published on ReviewLab is created through structured analysis,
 feature verification, market comparison, and user-benefit evaluation.
 No automated ratings. No anonymous authorship.
 </p>
+
 </div>
-
 <h2>Latest Reviews</h2>
-
 <ul style="list-style:none;padding:0;">
 ${authorPosts}
 </ul>
@@ -838,7 +839,7 @@ const pagePosts = posts.slice(start,end);
 
 const homepagePosts = pagePosts.map(post => `
 <li class="post-card">
-  <a href="${post.url}" style="display:flex;align-items:center;gap:16px;text-decoration:none;color:inherit;">
+  <a href="${post.url}" class="post-card-link">
     <img data-src="${post.thumb}" alt="${post.title}" class="thumb lazy">
     <div>
       <div class="post-title">${post.title} (~${post.readTime} min)</div>
