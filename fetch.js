@@ -453,7 +453,7 @@ const related = relatedPosts
 </a>
 </li>`).join("");
 
- const category = post.category || "Ai-Writing-Tools";
+ const category = post.category || "ai-writing-tools";
 const categoryTitle = category.replace(/-/g," ");
 
 const breadcrumbHTML = `
@@ -542,14 +542,16 @@ ${post.html}
 
 <div class="author-box">
 <strong>You may also like:</strong>
-<ul class="container">
+<ul class="trust">
 ${inlineRecs}
 </ul>
 </div>
 
+<hr>
+
 <h3>Related Reviews</h3>
 
-<ul class="clean-list">
+<ul class="post-list">
 ${related}
 </ul>
 
