@@ -11,6 +11,27 @@ import site from "./_data/site.json" with { type: "json" };
 
 const SITE_URL = site.url;
 
+function globalHeader(){
+
+return `
+<header class="site-header">
+<div class="nav-container">
+
+<a href="${SITE_URL}/" class="logo">ReviewLab</a>
+
+<nav class="main-nav">
+<a href="${SITE_URL}/">Home</a>
+<a href="${SITE_URL}/ai-tools/">AI Tools</a>
+<a href="${SITE_URL}/author/">Author</a>
+<a href="${SITE_URL}/about/">About</a>
+<a href="${SITE_URL}/contact/">Contact</a>
+</nav>
+
+</div>
+</header>
+`;
+}
+
 const CTA = `${SITE_URL}/og-cta-tested.jpg`;
 const DEFAULT = `${SITE_URL}/assets/og-default.jpg`;
 
@@ -390,6 +411,7 @@ ${i+1}. <a href="${p.url}">${p.title}</a>
 <link rel="stylesheet" href="${SITE_URL}/assets/styles.css">
 </head>
 <body class="container">
+${globalHeader()}
 
 <h1>Top 10 ${category.replace(/-/g," ")}</h1>
 <ol class="clean-list">
@@ -530,6 +552,8 @@ ${post.schemas}
 
 </head>
 <body>
+${globalHeader()}
+
 <div class="container">
 <div class="post-page">
 
@@ -659,6 +683,7 @@ const html = `
 <link rel="stylesheet" href="${SITE_URL}/assets/styles.css">
 </head>
 <body class="container">
+${globalHeader()}
 ${htmlContent}
 </body>
 </html>
@@ -696,6 +721,7 @@ fs.writeFileSync(`_site/ai-tools/index.html`, `
 <link rel="stylesheet" href="${SITE_URL}/assets/styles.css">
 </head>
 <body class="container">
+${globalHeader()}
 
 <h1>AI Tools Categories</h1>
 
@@ -731,6 +757,7 @@ for (const topic in topics) {
 </head>
 
 <body class="container">
+${globalHeader()}
 
 <nav>
 <a href="${SITE_URL}/">Home</a> › 
@@ -797,6 +824,7 @@ fs.writeFileSync(`_site/author/index.html`,`
 </script>
 </head>
 <body class="container">
+${globalHeader()}
 
 <h1 class="author-title">Justin Gerald</h1>
 <p class="author-sub">
@@ -890,6 +918,7 @@ const homepage = `<!doctype html>
 </script>
 </head>
 <body>
+${globalHeader()}
 <div class="container">
 
 <h1>Latest AI Tool Reviews & Honest Software Analysis</h1>
