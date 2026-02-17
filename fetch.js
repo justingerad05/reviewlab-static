@@ -1,5 +1,6 @@
 import fs from "fs";
 import fetch from "node-fetch";
+import { marked } from "marked";
 import { XMLParser } from "fast-xml-parser";
 import { upscaleToOG } from "./generate-og.js";
 
@@ -452,11 +453,11 @@ const related = relatedPosts
 </a>
 </li>`).join("");
 
- const category = post.category || "ai-writing-tools";
+ const category = post.category || "Ai-Writing-Tools";
 const categoryTitle = category.replace(/-/g," ");
 
 const breadcrumbHTML = `
-<nav style="font-size:14px;margin-bottom:20px;">
+<nav class="container">
 <a href="${SITE_URL}">Home</a> › 
 <a href="${SITE_URL}/ai-tools/">AI Tools</a> › 
 <a href="${SITE_URL}/ai-tools/${category}/">${categoryTitle}</a> › 
@@ -539,9 +540,9 @@ By <a href="${SITE_URL}/author/">Justin Gerald</a> • ${post.readTime} min read
 
 ${post.html}
 
-<div style="margin:40px 0;padding:20px;border-radius:14px;background:#fafafa;">
+<div class="container">
 <strong>You may also like:</strong>
-<ul style="margin-top:10px;">
+<ul class="container">
 ${inlineRecs}
 </ul>
 </div>
@@ -550,7 +551,7 @@ ${inlineRecs}
 
 <h3>Related Reviews</h3>
 
-<ul style="list-style:none;padding:0;">
+<ul class="container">
 ${related}
 </ul>
 
@@ -640,16 +641,21 @@ let content = fs.readFileSync(filePath,"utf-8");
 // Remove frontmatter
 content = content.replace(/---[\s\S]*?---/,"").trim();
 
+// Convert markdown to HTML
+const htmlContent = marked.parse(content);
+
 const html = `
 <!doctype html>
 <html>
 <head>
 <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${slug.replace(/-/g," ")}</title>
 <link rel="canonical" href="${SITE_URL}/${slug}/">
+<link rel="stylesheet" href="${SITE_URL}/assets/styles.css">
 </head>
 <body class="container">
-${content}
+${htmlContent}
 </body>
 </html>
 `;
