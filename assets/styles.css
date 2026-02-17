@@ -1,8 +1,9 @@
+/* ===== Base Layout ===== */
+
 body {
-  font-family: system-ui;
-  line-height: 1.7;
   margin: 0;
-  padding: 0;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  line-height: 1.7;
   background: #ffffff;
   color: #111;
 }
@@ -10,46 +11,34 @@ body {
 .container {
   max-width: 760px;
   margin: auto;
-  padding: 40px;
+  padding: 40px 20px;
 }
 
+/* ===== Typography ===== */
+
 h1 {
-  font-size: 32px;
-  margin-bottom: 10px;
+  font-size: 34px;
+  margin-bottom: 16px;
 }
 
 h2 {
-  margin-top: 40px;
+  font-size: 22px;
+  margin-top: 32px;
 }
 
-a {
-  text-decoration: none;
-  color: #0a58ca;
+h3 {
+  font-size: 18px;
+  margin-top: 24px;
 }
 
-a:hover {
-  text-decoration: underline;
+p {
+  margin-bottom: 16px;
 }
 
-nav {
-  font-size: 14px;
-  margin-bottom: 20px;
-  color: #666;
-}
-
-.post-list {
-  list-style: none;
-  padding: 0;
-}
-
-.post-card {
-  margin-bottom: 22px;
-}
-
-.thumb {
-  width: 120px;
-  height: auto;
-  border-radius: 10px;
+.sub {
+  font-size: 18px;
+  opacity: .7;
+  margin-bottom: 30px;
 }
 
 .meta {
@@ -57,22 +46,57 @@ nav {
   opacity: .6;
 }
 
-.sub {
-  opacity: .7;
-  margin-bottom: 40px;
+a {
+  color: #111;
+  text-decoration: none;
 }
 
+a:hover {
+  text-decoration: underline;
+}
+
+/* ===== Lists ===== */
+
+ul, ol {
+  padding-left: 20px;
+}
+
+.clean-list {
+  list-style: none;
+  padding-left: 0;
+}
+
+/* ===== Cards ===== */
+
+.post-card {
+  list-style: none;
+  margin-bottom: 24px;
+}
+
+.post-title {
+  font-weight: 600;
+  font-size: 18px;
+}
+
+.thumb {
+  width: 120px;
+  height: 70px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+/* ===== Email Capture ===== */
+
 .email-capture {
-  background: #f7f7f7;
+  background: #f5f5f5;
   padding: 24px;
-  border-radius: 14px;
+  border-radius: 12px;
   margin-bottom: 40px;
 }
 
 .form-row {
   display: flex;
-  gap: 12px;
-  margin-top: 10px;
+  gap: 10px;
 }
 
 input[type="email"] {
@@ -84,23 +108,18 @@ input[type="email"] {
 
 button {
   padding: 10px 16px;
-  border-radius: 6px;
   border: none;
+  border-radius: 6px;
   background: #111;
-  color: #fff;
+  color: white;
   cursor: pointer;
 }
 
 button:hover {
-  opacity: .9;
+  opacity: .85;
 }
 
-.related-link {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  padding: 12px 0;
-}
+/* ===== Lazy Loading ===== */
 
 .lazy {
   opacity: 0;
@@ -111,8 +130,21 @@ button:hover {
   opacity: 1;
 }
 
-footer {
-  margin-top: 60px;
-  font-size: 14px;
-  opacity: .7;
+/* ===== Related ===== */
+
+.related-link {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 0;
+}
+
+.hover-preview {
+  position: absolute;
+  display: none;
+  max-width: 420px;
+  border-radius: 12px;
+  box-shadow: 0 20px 60px rgba(0,0,0,.25);
+  z-index: 9999;
+  pointer-events: none;
 }
