@@ -527,7 +527,9 @@ ${post.schemas}
 <link rel="stylesheet" href="${SITE_URL}/assets/styles.css">
 
 </head>
-<body class="container">
+<body>
+<div class="container">
+<div class="post-page">
 
 ${breadcrumbHTML}
 ${breadcrumbSchema}
@@ -621,6 +623,8 @@ hover.classList.remove("hover-centered");
 <a href="${SITE_URL}/review-methodology/">Methodology</a>
 </footer>
 
+</div>
+</div>
 </body>
 </html>`;
 
@@ -843,7 +847,7 @@ const pagePosts = posts.slice(start,end);
 const homepagePosts = pagePosts.map(post => `
 <li class="post-card">
   <a href="${post.url}" class="post-card">
-    <img data-src="${post.thumb}" alt="${post.title}" class="thumb">
+    <img data-src="${post.thumb}" alt="${post.title}" class="thumb lazy">
     <div>
       <div class="post-title">${post.title} (~${post.readTime} min)</div>
       <div class="meta">Published ${new Date(post.date).toLocaleDateString("en-US",{year:"numeric",month:"long",day:"numeric"})}</div>
