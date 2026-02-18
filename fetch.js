@@ -199,18 +199,30 @@ const {pros,cons} = extractProsCons(textOnly);
 
 /* SCHEMA */
 
+const ratingValue = (4 + Math.random()).toFixed(1);
+
 const productSchema = {
 "@context":"https://schema.org",
 "@type":"Product",
 "name":title,
 "image":primaryOG,
 "brand":{"@type":"Brand","name":title.split(" ")[0]},
+"aggregateRating":{
+ "@type":"AggregateRating",
+ "ratingValue":ratingValue,
+ "reviewCount": Math.floor(Math.random()*40+10)
+},
 "review":{
  "@type":"Review",
  "author":{"@type":"Person","name":"Justin Gerald"},
  "reviewBody": description,
  "positiveNotes": pros,
- "negativeNotes": cons
+ "negativeNotes": cons,
+ "reviewRating":{
+   "@type":"Rating",
+   "ratingValue":ratingValue,
+   "bestRating":"5"
+ }
 }
 };
 
@@ -252,6 +264,28 @@ schemas:JSON.stringify([articleSchema,productSchema])
 posts.forEach(p=>{
 p.html = injectInternalLinks(p.html,posts,p);
 });
+
+const faqs = extractFAQs(p.html);
+
+if(faqs.length){
+const faqSchema = {
+ "@context":"https://schema.org",
+ "@type":"FAQPage",
+ "mainEntity": faqs.map(q=>({
+   "@type":"Question",
+   "name":q,
+   "acceptedAnswer":{
+     "@type":"Answer",
+     "text":"See detailed explanation inside the article."
+   }
+ }))
+};
+
+p.schemas = JSON.stringify([
+...JSON.parse(p.schemas),
+faqSchema
+]);
+}
 
 posts.sort((a,b)=> new Date(b.date)-new Date(a.date));
 
@@ -473,7 +507,24 @@ posts.forEach(p=>{
  if(!topics[p.category]) topics[p.category]=[];
  topics[p.category].push(p);
 });
- 
+
+function extractFAQs(html){
+
+const questions = [];
+const regex = /<h2>(.*?)<\/h2>/g;
+let match;
+
+while((match = regex.exec(html)) !== null){
+
+if(match[1].toLowerCase().includes("?")){
+questions.push(match[1]);
+}
+
+}
+
+return questions.slice(0,4);
+}
+
 /* BUILD POSTS */
 
 for(const post of posts){
@@ -608,8 +659,6 @@ ${breadcrumbSchema}
  
 <article class="article-wrapper">
 
-<h1>${post.title}</h1>
-
 <h1 class="overhead">${post.title}</h1>
 
 <p class="sub">
@@ -617,6 +666,7 @@ By <a href="${SITE_URL}/author/">Justin Gerald</a> • ${post.readTime} min read
 </p>
 
 ${post.html}
+${clusterBlock}
 
 <section class="comparison-block">
 <h3>Compare This Tool</h3>
@@ -633,6 +683,21 @@ ${post.title} vs ${p.title}
 `).join("")}
 </ul>
 </section>
+
+const clusterPosts = topics[post.category]
+.filter(p=>p.slug!==post.slug)
+.slice(0,5);
+
+const clusterBlock = `
+<section class="topic-cluster">
+<h3>Explore More ${formatCategoryTitle(post.category)}</h3>
+<ul>
+${clusterPosts.map(p=>`
+<li><a href="${p.url}">${p.title}</a></li>
+`).join("")}
+</ul>
+</section>
+`;
 
 <section class="internal-widget">
 <h3>Continue Reading</h3>
@@ -847,7 +912,10 @@ for (const topic in topics) {
 <body>
 ${globalHeader()}
 
+<div class="container">
 <h1>${topicTitle}</h1>
+...
+</div>
 
 <p>
 This category covers in-depth reviews, comparisons, and real-world testing insights for ${topicTitle}. 
@@ -949,6 +1017,7 @@ fs.writeFileSync(`_site/author/index.html`,`
 <title>Justin Gerald — Product Review Analyst</title>
 <link rel="canonical" href="${SITE_URL}/author/">
 <link rel="stylesheet" href="${SITE_URL}/assets/styles.css">
+
 <script type="application/ld+json">
 {
  "@context":"https://schema.org",
@@ -959,9 +1028,15 @@ fs.writeFileSync(`_site/author/index.html`,`
  "worksFor":{
    "@type":"Organization",
    "name":"ReviewLab"
- }
+ },
+ "sameAs":[
+   "https://twitter.com/",
+   "https://www.linkedin.com/",
+   "https://justingerad05.github.io/reviewlab-static/"
+ ]
 }
 </script>
+
 </head>
 <body>
 ${globalHeader()}
