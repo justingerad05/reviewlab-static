@@ -695,7 +695,7 @@ ${posts
 .slice(0,3)
 .map(p=>`
 <li>
-<a href="${SITE_URL}/posts/comparisons/${post.slug}-vs-${p.slug}/">
+<a href="${SITE_URL}/posts/comparisons/${post.slug}-vs-${p.slug}/index.html">
 ${post.title} vs ${p.title}
 </a>
 </li>
@@ -1120,8 +1120,8 @@ const homepagePosts = pagePosts.map(post => `
 
 const pagination = `
 <div class="pagination">
-${page>1?`<a href="${page===2?'/':'/page/'+(page-1)+'/'}">← Prev</a>`:''}
-${page<totalPages?`<a style="float:right" href="/page/${page+1}/">Next →</a>`:''}
+${page>1?`<a href="${page===2?`${SITE_URL}/`:`${SITE_URL}/page/${page-1}/`}">← Prev</a>`:''}
+${page<totalPages?`<a style="float:right" href="${SITE_URL}/page/${page+1}/">Next →</a>`:''}
 </div>
 `;
 
