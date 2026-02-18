@@ -514,6 +514,10 @@ const related = relatedPosts
  const category = post.category || "ai-writing-tools";
 const categoryTitle = formatCategoryTitle(category);
 
+const breadcrumbHTML = `
+
+`;
+  
 const breadcrumbSchema = `
 <script type="application/ld+json">
 {
