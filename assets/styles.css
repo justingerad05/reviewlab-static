@@ -160,42 +160,6 @@ article ul{
   color: #2563eb;
 }
 
-.card-image{
-position:relative;
-border-radius:16px;
-overflow:hidden;
-}
-
-.card-image img{
-width:100%;
-display:block;
-transition:transform .4s ease;
-}
-
-.card-image:hover img{
-transform:scale(1.05);
-}
-
-.card-overlay{
-position:absolute;
-bottom:0;
-left:0;
-right:0;
-padding:20px;
-background:linear-gradient(to top, rgba(0,0,0,.8), rgba(0,0,0,.2), transparent);
-color:white;
-}
-
-.card-overlay h2{
-margin:0;
-font-size:20px;
-}
-
-.card-overlay span{
-font-size:14px;
-opacity:.8;
-}
-
 .site-header{
 background:#0f172a;
 padding:15px 0;
