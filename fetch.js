@@ -262,8 +262,8 @@ schemas:JSON.stringify([articleSchema,productSchema])
 /* APPLY LINKS */
 
 posts.forEach(p=>{
+
 p.html = injectInternalLinks(p.html,posts,p);
-});
 
 const faqs = extractFAQs(p.html);
 
@@ -286,6 +286,8 @@ p.schemas = JSON.stringify([
 faqSchema
 ]);
 }
+
+});
 
 posts.sort((a,b)=> new Date(b.date)-new Date(a.date));
 
@@ -623,6 +625,23 @@ const breadcrumbSchema = `
 </script>
 `;
 
+/* TOPIC CLUSTER BLOCK */
+
+const clusterPosts = topics[post.category]
+  .filter(p=>p.slug!==post.slug)
+  .slice(0,5);
+
+const clusterBlock = clusterPosts.length ? `
+<section class="topic-cluster">
+<h3>Explore More ${formatCategoryTitle(post.category)}</h3>
+<ul>
+${clusterPosts.map(p=>`
+<li><a href="${p.url}">${p.title}</a></li>
+`).join("")}
+</ul>
+</section>
+` : "";
+
 const page = `<!doctype html>
 <html lang="en">
 <head>
@@ -683,21 +702,6 @@ ${post.title} vs ${p.title}
 `).join("")}
 </ul>
 </section>
-
-const clusterPosts = topics[post.category]
-.filter(p=>p.slug!==post.slug)
-.slice(0,5);
-
-const clusterBlock = `
-<section class="topic-cluster">
-<h3>Explore More ${formatCategoryTitle(post.category)}</h3>
-<ul>
-${clusterPosts.map(p=>`
-<li><a href="${p.url}">${p.title}</a></li>
-`).join("")}
-</ul>
-</section>
-`;
 
 <section class="internal-widget">
 <h3>Continue Reading</h3>
