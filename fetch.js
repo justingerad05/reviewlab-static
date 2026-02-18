@@ -436,7 +436,7 @@ ${list}
 
 <div class="author-box">
 <p>
-This category contains ${topics[topic].length} in-depth reviews focused on performance,
+This category contains ${filtered.length} in-depth reviews focused on performance,
 ROI, usability, and competitive analysis.
 </p>
 </div>
@@ -881,8 +881,8 @@ fs.writeFileSync(`_site/author/index.html`,`
 <body>
 ${globalHeader()}
 <div class="container">
-Justin Gerald
-</div>
+
+<h1 class="author-title">Justin Gerald</h1>
 
 <p class="author-sub">
 Independent product review analyst focused on deep research,
@@ -903,6 +903,7 @@ No automated ratings. No anonymous authorship.
 ${authorPosts}
 </ul>
 
+</div>
 </body>
 </html>
 `);
@@ -953,17 +954,6 @@ const homepagePosts = pagePosts.map(post => `
 </li>
 `).join("");
 
-filter.addEventListener("change", function(){
-const val = this.value;
-document.querySelectorAll(".post-card").forEach(card=>{
-if(val==="all"){
-card.style.display="flex";
-}else{
-card.style.display = card.dataset.category===val ? "flex" : "none";
-}
-});
-});
-
 const pagination = `
 <div class="pagination">
 ${page>1?`<a href="${page===2?'/':'/page/'+(page-1)+'/'}">← Prev</a>`:''}
@@ -980,7 +970,9 @@ const homepage = `<!doctype html>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="canonical" href="${SITE_URL}/">
 <link rel="stylesheet" href="${SITE_URL}/assets/styles.css">
+
 <script type="application/ld+json">
+[
 {
 "@context":"https://schema.org",
 "@type":"WebSite",
@@ -991,8 +983,7 @@ const homepage = `<!doctype html>
 "target":"${SITE_URL}/?q={search_term_string}",
 "query-input":"required name=search_term_string"
 }
-}
-
+},
 {
 "@context":"https://schema.org",
 "@type":"ItemList",
@@ -1006,7 +997,9 @@ ${pagePosts.map((post,i)=>`
 }`).join(",")}
 ]
 }
+]
 </script>
+
 </head>
 <body>
 ${globalHeader()}
@@ -1049,6 +1042,19 @@ ${pagination}
 </div>
 
 <script>
+const filter = document.getElementById("categoryFilter");"
+
+filter.addEventListener("change", function(){
+const val = this.value;
+document.querySelectorAll(".post-card").forEach(card=>{
+if(val==="all"){
+card.style.display="flex";
+}else{
+card.style.display = card.dataset.category===val ? "flex" : "none";
+}
+});
+});
+
 const searchInput = document.getElementById("searchInput");
 
 searchInput.addEventListener("keyup", function(){
