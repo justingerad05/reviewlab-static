@@ -484,7 +484,26 @@ fs.mkdirSync(`_site/posts/${post.slug}`,{recursive:true});
 
 const relatedPosts = posts
 .filter(p=>p.slug!==post.slug)
-.slice(0,4);
+.map(p=>{
+
+let score = 0;
+
+/* Same category boost */
+if(p.category === post.category) score += 5;
+
+/* Title similarity */
+score += scoreSimilarity(post.title,p.title);
+
+/* Recency boost */
+const daysOld = (Date.now() - new Date(p.date)) / (1000*60*60*24);
+if(daysOld < 60) score += 2;
+
+return {post:p,score};
+
+})
+.sort((a,b)=>b.score-a.score)
+.slice(0,4)
+.map(r=>r.post);
 
 let inlinePosts = posts
 .filter(p=>p.slug!==post.slug && !relatedPosts.some(r=>r.slug===p.slug))
@@ -580,8 +599,9 @@ ${post.schemas}
 <body>
 ${globalHeader()}
 
-<div class="container">
-<div class="post-page">
+<div class="container page-wrapper">
+
+<div class="main-content post-page">
 
 ${breadcrumbHTML}
 ${breadcrumbSchema}
@@ -590,7 +610,7 @@ ${breadcrumbSchema}
 
 <h1>${post.title}</h1>
 
-<img src="${post.og}" alt="${post.title}" class="featured-image">
+<h1 class="overhead">${post.title}</h1>
 
 <p class="sub">
 By <a href="${SITE_URL}/author/">Justin Gerald</a> • ${post.readTime} min read
@@ -686,6 +706,17 @@ hover.classList.remove("hover-centered");
 });
 </script>
 
+</div>
+
+<aside class="sidebar">
+<h3>Categories</h3>
+<ul>
+<li><a href="${SITE_URL}/ai-tools/ai-writing-tools/">AI Writing</a></li>
+<li><a href="${SITE_URL}/ai-tools/ai-image-generators/">AI Image</a></li>
+<li><a href="${SITE_URL}/ai-tools/automation-tools/">Automation</a></li>
+</ul>
+</aside>
+
 <footer class="site-footer">
 
 <div class="footer-links">
@@ -739,7 +770,9 @@ const html = `
 </head>
 <body>
 ${globalHeader()}
+<div class="container">
 ${htmlContent}
+</div>
 </body>
 </html>
 `;
@@ -838,6 +871,63 @@ generatePostSitemap(posts);
 generatePageSitemap();
 generateCategorySitemap(topics);
 generateSitemapIndex(); 
+
+/* =========================
+   TAG TAXONOMY ENGINE
+========================= */
+
+const tags = {};
+
+posts.forEach(post=>{
+
+const words = post.title.toLowerCase().split(/\W+/);
+
+words.forEach(word=>{
+
+if(word.length < 5) return;
+
+if(!tags[word]) tags[word]=[];
+
+tags[word].push(post);
+
+});
+
+});
+
+/* Build tag pages */
+
+for(const tag in tags){
+
+if(tags[tag].length < 2) continue;
+
+const list = tags[tag]
+.map(p=>`<li><a href="${p.url}">${p.title}</a></li>`)
+.join("");
+
+const dir = `_site/tag/${tag}`;
+fs.mkdirSync(dir,{recursive:true});
+
+fs.writeFileSync(`${dir}/index.html`,`
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>${tag} Reviews</title>
+<link rel="canonical" href="${SITE_URL}/tag/${tag}/">
+<link rel="stylesheet" href="${SITE_URL}/assets/styles.css">
+</head>
+<body>
+${globalHeader()}
+<div class="container">
+<h1>${tag} Reviews</h1>
+<ul>
+${list}
+</ul>
+</div>
+</body>
+</html>
+`);
+}
 
 /* FULL AUTHORITY AUTHOR PAGE RESTORED */
 
@@ -1037,10 +1127,15 @@ ${pagination}
 </div>
 
 <script>
-const filter = document.getElementById("categoryFilter");"
+document.addEventListener("DOMContentLoaded", function(){
 
+const filter = document.getElementById("categoryFilter");
+const searchInput = document.getElementById("searchInput");
+
+if(filter){
 filter.addEventListener("change", function(){
 const val = this.value;
+
 document.querySelectorAll(".post-card").forEach(card=>{
 if(val==="all"){
 card.style.display="flex";
@@ -1049,18 +1144,20 @@ card.style.display = card.dataset.category===val ? "flex" : "none";
 }
 });
 });
+}
 
-const searchInput = document.getElementById("searchInput");
-
+if(searchInput){
 searchInput.addEventListener("keyup", function(){
 const value = this.value.toLowerCase();
+
 document.querySelectorAll(".post-card").forEach(card=>{
 const text = card.innerText.toLowerCase();
 card.style.display = text.includes(value) ? "flex" : "none";
 });
 });
+}
 
-document.addEventListener("DOMContentLoaded",()=>{
+/* Lazy load */
 
 const lazyImgs=document.querySelectorAll(".lazy");
 
@@ -1083,6 +1180,54 @@ lazyImgs.forEach(img=>io.observe(img));
 </body>
 </html>
 `;
+
+fs.mkdirSync(`_site/search`,{recursive:true});
+
+fs.writeFileSync(`_site/search/index.html`,`
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Search Reviews</title>
+<link rel="stylesheet" href="${SITE_URL}/assets/styles.css">
+</head>
+<body>
+${globalHeader()}
+<div class="container">
+
+<h1>Search Reviews</h1>
+
+<input type="text" id="searchBox" class="search-input" placeholder="Search..." class="search">
+
+<ul id="results" class="post-list"></ul>
+
+</div>
+
+<script>
+const posts = ${JSON.stringify(posts.map(p=>({
+title:p.title,
+url:p.url
+})))};
+
+const box = document.getElementById("searchBox");
+const results = document.getElementById("results");
+
+box.addEventListener("keyup",function(){
+const val=this.value.toLowerCase();
+results.innerHTML="";
+
+posts
+.filter(p=>p.title.toLowerCase().includes(val))
+.slice(0,20)
+.forEach(p=>{
+results.innerHTML+=\`<li><a href="\${p.url}" class="post-title">\${p.title}</a></li>\`;
+});
+});
+</script>
+
+</body>
+</html>
+`);
 
 const outputPath = page===1
 ? "_site/index.html"
