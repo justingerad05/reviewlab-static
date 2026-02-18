@@ -905,7 +905,6 @@ const homepagePosts = pagePosts.map(post => `
 <div class="card-overlay">
 <h2>${post.title}</h2>
 <span>${post.readTime} min read</span>
-<div class="meta">Published ${new Date(post.date).toLocaleDateString("en-US",{year:"numeric",month:"long",day:"numeric"})}</div>
 </div>
 </div>
 </a>
