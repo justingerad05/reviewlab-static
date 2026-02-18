@@ -935,6 +935,20 @@ const homepagePosts = pagePosts.map(post => `
   </a>
 </li>
 `).join("");
+  
+<li class="post-card" data-category="${post.category}">
+  const filter = document.getElementById("categoryFilter");
+
+filter.addEventListener("change", function(){
+const val = this.value;
+document.querySelectorAll(".post-card").forEach(card=>{
+if(val==="all"){
+card.style.display="flex";
+}else{
+card.style.display = card.dataset.category===val ? "flex" : "none";
+}
+});
+});
 
 const pagination = `
 <div class="pagination">
@@ -984,6 +998,8 @@ ${pagePosts.map((post,i)=>`
 ${globalHeader()}
 <div class="container">
 
+<input type="text" id="searchInput" placeholder="Search reviews..." style="padding:10px;width:100%;margin-bottom:20px;border-radius:8px;">
+
 <h1>Latest AI Tool Reviews & Honest Software Analysis</h1>
 <p class="sub">Real testing. No hype. Just software that actually delivers.</p>
 
@@ -999,6 +1015,13 @@ ${globalHeader()}
 </form>
 </section>
 
+<select id="categoryFilter" style="margin-bottom:20px;padding:8px;border-radius:6px;">
+<option value="all">All Categories</option>
+<option value="ai-writing-tools">AI Writing</option>
+<option value="ai-image-generators">AI Image</option>
+<option value="automation-tools">Automation</option>
+</select>
+
 <ul class="post-list">
 ${homepagePosts}
 </ul>
@@ -1008,6 +1031,16 @@ ${pagination}
 </div>
 
 <script>
+const searchInput = document.getElementById("searchInput");
+
+searchInput.addEventListener("keyup", function(){
+const value = this.value.toLowerCase();
+document.querySelectorAll(".post-card").forEach(card=>{
+const text = card.innerText.toLowerCase();
+card.style.display = text.includes(value) ? "flex" : "none";
+});
+});
+
 document.addEventListener("DOMContentLoaded",()=>{
 
 const lazyImgs=document.querySelectorAll(".lazy");
