@@ -514,15 +514,6 @@ const related = relatedPosts
  const category = post.category || "ai-writing-tools";
 const categoryTitle = formatCategoryTitle(category);
 
-const breadcrumbHTML = `
-<nav class="breadcrumb">
-<a href="${SITE_URL}">Home</a> › 
-<a href="${SITE_URL}/ai-tools/">AI Tools</a> › 
-<a href="${SITE_URL}/ai-tools/${category}/">${categoryTitle}</a> › 
-${post.title}
-</nav>
-`;
-
 const breadcrumbSchema = `
 <script type="application/ld+json">
 {
