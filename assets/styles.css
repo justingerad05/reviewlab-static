@@ -32,6 +32,10 @@ h1{font-size:42px;margin-bottom:10px;}
   margin-top:40px;
 }
 
+.overhead { 
+  margin-top:0px;
+}
+
 .author-title {
   font-size:42px;
   margin-bottom:6px;
