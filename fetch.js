@@ -434,6 +434,13 @@ ${globalHeader()}
 ${list}
 </ol>
 
+<div class="author-box">
+<p>
+This category contains ${topics[topic].length} in-depth reviews focused on performance,
+ROI, usability, and competitive analysis.
+</p>
+</div>
+
 </body>
 </html>
 `;
@@ -945,9 +952,6 @@ const homepagePosts = pagePosts.map(post => `
   </a>
 </li>
 `).join("");
-  
-<li class="post-card" data-category="${post.category}">
-  const filter = document.getElementById("categoryFilter");
 
 filter.addEventListener("change", function(){
 const val = this.value;
