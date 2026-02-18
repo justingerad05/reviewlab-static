@@ -155,18 +155,18 @@ const posts=[];
 
 function detectTopic(title){
 
- const t = title.toLowerCase();
+const t = title.toLowerCase();
 
- if(t.includes("writer") || t.includes("copy"))
-   return "ai-writing-tools";
+if(t.includes("writer") || t.includes("copy"))
+  return "ai-writing-tools";
 
- if(t.includes("image") || t.includes("art"))
-   return "ai-image-generators";
+if(t.includes("image") || t.includes("art") || t.includes("design"))
+  return "ai-image-generators";
 
- if(t.includes("automation"))
-   return "automation-tools";
+if(t.includes("automation") || t.includes("auto") || t.includes("workflow"))
+  return "automation-tools";
 
- return "Ai-Writing-Tools";
+return "ai-writing-tools";
 }
 
 /* BUILD DATA */
@@ -476,9 +476,17 @@ const related = relatedPosts
 </li>`).join("");
 
  const category = post.category || "ai-writing-tools";
-const categoryTitle = category
-  .replace(/-/g," ")
-  .replace(/\b\w/g, l => l.toUpperCase());
+
+ function formatCategoryTitle(slug){
+
+if(slug==="ai-writing-tools") return "AI Writing Software";
+if(slug==="ai-image-generators") return "AI Image Generation Tools";
+if(slug==="automation-tools") return "AI Automation Software";
+
+return slug.replace(/-/g," ").replace(/\b\w/g,l=>l.toUpperCase());
+}
+
+const categoryTitle = formatCategoryTitle(category);
 
 const breadcrumbHTML = `
 <nav class="breadcrumb">
@@ -560,7 +568,11 @@ ${globalHeader()}
 ${breadcrumbHTML}
 ${breadcrumbSchema}
  
+<article class="article-wrapper">
+
 <h1>${post.title}</h1>
+
+<img src="${post.og}" alt="${post.title}" class="featured-image">
 
 <p class="sub">
 By <a href="${SITE_URL}/author/">Justin Gerald</a> • ${post.readTime} min read
@@ -568,12 +580,12 @@ By <a href="${SITE_URL}/author/">Justin Gerald</a> • ${post.readTime} min read
 
 ${post.html}
 
-<div class="author-box">
-<strong>You may also like:</strong>
-<ul class="trust">
+<section class="internal-widget">
+<h3>Continue Reading</h3>
+<ul class="internal-list">
 ${inlineRecs}
 </ul>
-</div>
+</section>
 
 <hr>
 
@@ -640,15 +652,25 @@ hover.classList.remove("hover-centered");
 });
 </script>
 
-<footer class="footer">
-<a href="${SITE_URL}/">Home</a> •
-<a href="${SITE_URL}/about/">About</a> •
-<a href="${SITE_URL}/contact/">Contact</a> •
-<a href="${SITE_URL}/privacy/">Privacy</a> •
-<a href="${SITE_URL}/editorial-policy/">Editorial Policy</a> •
-<a href="${SITE_URL}/review-methodology/">Methodology</a>
+<footer class="site-footer">
+
+<div class="footer-links">
+<a href="${SITE_URL}/">Home</a>
+<a href="${SITE_URL}/ai-tools/">AI Tools</a>
+<a href="${SITE_URL}/about/">About</a>
+<a href="${SITE_URL}/contact/">Contact</a>
+<a href="${SITE_URL}/privacy/">Privacy Policy</a>
+<a href="${SITE_URL}/editorial-policy/">Editorial Policy</a>
+<a href="${SITE_URL}/review-methodology/">Review Methodology</a>
+</div>
+
+<p class="footer-copy">
+© ${new Date().getFullYear()} ReviewLab. Independent AI software analysis.
+</p>
+
 </footer>
 
+</article>
 </div>
 </div>
 </body>
@@ -877,13 +899,16 @@ const pagePosts = posts.slice(start,end);
 
 const homepagePosts = pagePosts.map(post => `
 <li class="post-card">
-  <a href="${post.url}">
-    <img data-src="${post.thumb}" alt="${post.title}" class="thumb lazy">
-    <div>
-      <div class="post-title">${post.title} (~${post.readTime} min)</div>
-      <div class="meta">Published ${new Date(post.date).toLocaleDateString("en-US",{year:"numeric",month:"long",day:"numeric"})}</div>
-    </div>
-  </a>
+<a href="${post.url}" class="card-link">
+<div class="card-image">
+<img data-src="${post.thumb}" alt="${post.title}" class="thumb lazy">
+<div class="card-overlay">
+<h2>${post.title}</h2>
+<span>${post.readTime} min read</span>
+<div class="meta">Published ${new Date(post.date).toLocaleDateString("en-US",{year:"numeric",month:"long",day:"numeric"})}</div>
+</div>
+</div>
+</a>
 </li>
 `).join("");
 
