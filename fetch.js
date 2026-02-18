@@ -356,13 +356,25 @@ generateRSS(posts);
 function generateComparison(postA, postB){
 
  const slug = `${postA.slug}-vs-${postB.slug}`;
+ const url = `${SITE_URL}/posts/comparisons/${slug}/`;
 
  const html = `
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>${postA.title} vs ${postB.title}</title>
+<link rel="canonical" href="${url}">
+<link rel="stylesheet" href="${SITE_URL}/assets/styles.css">
+</head>
+<body>
+${globalHeader()}
+<div class="container">
+
 <h1>${postA.title} vs ${postB.title}</h1>
 
-<p>Detailed comparison between these two tools.</p>
-
-<h2>Feature Comparison</h2>
+<p>Side-by-side comparison of features, strengths, and ideal use cases.</p>
 
 <table border="1" cellpadding="8">
 <tr>
@@ -371,11 +383,15 @@ function generateComparison(postA, postB){
 <th>${postB.title}</th>
 </tr>
 <tr>
-<td>Pricing</td>
-<td>${postA.pricing || "See review"}</td>
-<td>${postB.pricing || "See review"}</td>
+<td>Overview</td>
+<td><a href="${postA.url}">Read Review</a></td>
+<td><a href="${postB.url}">Read Review</a></td>
 </tr>
 </table>
+
+</div>
+</body>
+</html>
 `;
 
  fs.mkdirSync(`_site/posts/comparisons/${slug}`,{recursive:true});
@@ -544,7 +560,7 @@ const page = `<!doctype html>
 
 <title>${post.title}</title>
 <link rel="canonical" href="${post.url}">
-
+<link rel="stylesheet" href="${SITE_URL}/assets/styles.css">
 <meta name="description" content="${post.description}">
 <meta property="og:title" content="${post.title}">
 <meta property="og:description" content="${post.description}">
@@ -558,9 +574,6 @@ const page = `<!doctype html>
 <script type="application/ld+json">
 ${post.schemas}
 </script>
-
-<link rel="stylesheet" href="${SITE_URL}/assets/styles.css">
-
 </head>
 <body>
 ${globalHeader()}
@@ -745,7 +758,7 @@ const aiToolsList = Object.keys(topics)
 .map(cat => `
 <li>
 <a href="${SITE_URL}/ai-tools/${cat}/">
-${formatCategoryTitle(cat)}
+${formatCategoryTitle(cat)} (${topics[cat].length})
 </a>
 </li>
 `).join("");
@@ -799,12 +812,6 @@ for (const topic in topics) {
 <body>
 ${globalHeader()}
 
-<nav>
-<a href="${SITE_URL}/">Home</a> › 
-<a href="${SITE_URL}/ai-tools/">AI Tools</a> › 
-${topicTitle}
-</nav>
-
 <h1>${topicTitle}</h1>
 
 <p>
@@ -849,6 +856,7 @@ fs.writeFileSync(`_site/author/index.html`,`
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Justin Gerald — Product Review Analyst</title>
 <link rel="canonical" href="${SITE_URL}/author/">
+<link rel="stylesheet" href="${SITE_URL}/assets/styles.css">
 <script type="application/ld+json">
 {
  "@context":"https://schema.org",
@@ -865,8 +873,10 @@ fs.writeFileSync(`_site/author/index.html`,`
 </head>
 <body>
 ${globalHeader()}
+<div class="container">
+Justin Gerald
+</div>
 
-<h1 class="author-title">Justin Gerald</h1>
 <p class="author-sub">
 Independent product review analyst focused on deep research,
 real-world testing signals, and buyer-intent software evaluation.
@@ -916,8 +926,8 @@ const end = start+POSTS_PER_PAGE;
 const pagePosts = posts.slice(start,end);
 
 const homepagePosts = pagePosts.map(post => `
-<li class="post-card">
-  <a href="${post.url}" style="display:flex;align-items:center;gap:16px;width:100%;">
+<li class="post-card" data-category="${post.category}">
+  <a href="${post.url}" class="post-link">
     
     <img data-src="${post.thumb}" 
          alt="${post.title}" 
@@ -998,7 +1008,18 @@ ${pagePosts.map((post,i)=>`
 ${globalHeader()}
 <div class="container">
 
-<input type="text" id="searchInput" placeholder="Search reviews..." style="padding:10px;width:100%;margin-bottom:20px;border-radius:8px;">
+<div class="search-filter-bar">
+
+<input type="text" id="searchInput" placeholder="Search reviews..." class="search-input">
+
+<select id="categoryFilter" class="category-select">
+<option value="all">All Categories</option>
+<option value="ai-writing-tools">AI Writing</option>
+<option value="ai-image-generators">AI Image</option>
+<option value="automation-tools">Automation</option>
+</select>
+
+</div>
 
 <h1>Latest AI Tool Reviews & Honest Software Analysis</h1>
 <p class="sub">Real testing. No hype. Just software that actually delivers.</p>
@@ -1014,13 +1035,6 @@ ${globalHeader()}
 <div class="trust">Join smart readers staying ahead of AI.</div>
 </form>
 </section>
-
-<select id="categoryFilter" style="margin-bottom:20px;padding:8px;border-radius:6px;">
-<option value="all">All Categories</option>
-<option value="ai-writing-tools">AI Writing</option>
-<option value="ai-image-generators">AI Image</option>
-<option value="automation-tools">Automation</option>
-</select>
 
 <ul class="post-list">
 ${homepagePosts}
