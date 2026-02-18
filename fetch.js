@@ -410,7 +410,7 @@ ${i+1}. <a href="${p.url}">${p.title}</a>
 <title>Top 10 ${category.replace(/-/g," ")}</title>
 <link rel="stylesheet" href="${SITE_URL}/assets/styles.css">
 </head>
-<body class="container">
+<body>
 ${globalHeader()}
 
 <h1>Top 10 ${category.replace(/-/g," ")}</h1>
@@ -429,9 +429,22 @@ generateTopList("ai-writing-tools", posts);
 generateTopList("ai-image-generators", posts);
 generateTopList("automation-tools", posts);
 
+function formatCategoryTitle(slug){
+
+if(slug==="ai-writing-tools") return "AI Writing Software";
+if(slug==="ai-image-generators") return "AI Image Generation Tools";
+if(slug==="automation-tools") return "AI Automation Software";
+
+return slug.replace(/-/g," ").replace(/\b\w/g,l=>l.toUpperCase());
+}
+
 /* AUTHORITY HUB GENERATOR */
 
-const topics = {};
+const topics = {
+  "ai-writing-tools": [],
+  "ai-image-generators": [],
+  "automation-tools": []
+};
 
 posts.forEach(p=>{
  if(!topics[p.category]) topics[p.category]=[];
@@ -476,16 +489,6 @@ const related = relatedPosts
 </li>`).join("");
 
  const category = post.category || "ai-writing-tools";
-
- function formatCategoryTitle(slug){
-
-if(slug==="ai-writing-tools") return "AI Writing Software";
-if(slug==="ai-image-generators") return "AI Image Generation Tools";
-if(slug==="automation-tools") return "AI Automation Software";
-
-return slug.replace(/-/g," ").replace(/\b\w/g,l=>l.toUpperCase());
-}
-
 const categoryTitle = formatCategoryTitle(category);
 
 const breadcrumbHTML = `
@@ -580,6 +583,22 @@ By <a href="${SITE_URL}/author/">Justin Gerald</a> • ${post.readTime} min read
 
 ${post.html}
 
+<section class="comparison-block">
+<h3>Compare This Tool</h3>
+<ul>
+${posts
+.filter(p=>p.slug!==post.slug)
+.slice(0,3)
+.map(p=>`
+<li>
+<a href="${SITE_URL}/posts/comparisons/${post.slug}-vs-${p.slug}/">
+${post.title} vs ${p.title}
+</a>
+</li>
+`).join("")}
+</ul>
+</section>
+
 <section class="internal-widget">
 <h3>Continue Reading</h3>
 <ul class="internal-list">
@@ -656,7 +675,6 @@ hover.classList.remove("hover-centered");
 
 <div class="footer-links">
 <a href="${SITE_URL}/">Home</a>
-<a href="${SITE_URL}/ai-tools/">AI Tools</a>
 <a href="${SITE_URL}/about/">About</a>
 <a href="${SITE_URL}/contact/">Contact</a>
 <a href="${SITE_URL}/privacy/">Privacy Policy</a>
@@ -704,7 +722,7 @@ const html = `
 <link rel="canonical" href="${SITE_URL}/${slug}/">
 <link rel="stylesheet" href="${SITE_URL}/assets/styles.css">
 </head>
-<body class="container">
+<body>
 ${globalHeader()}
 ${htmlContent}
 </body>
@@ -727,7 +745,7 @@ const aiToolsList = Object.keys(topics)
 .map(cat => `
 <li>
 <a href="${SITE_URL}/ai-tools/${cat}/">
-${cat.replace(/-/g," ")}
+${formatCategoryTitle(cat)}
 </a>
 </li>
 `).join("");
@@ -742,7 +760,7 @@ fs.writeFileSync(`_site/ai-tools/index.html`, `
 <link rel="canonical" href="${SITE_URL}/ai-tools/">
 <link rel="stylesheet" href="${SITE_URL}/assets/styles.css">
 </head>
-<body class="container">
+<body>
 ${globalHeader()}
 
 <h1>AI Tools Categories</h1>
@@ -763,7 +781,7 @@ for (const topic in topics) {
     .map(p => `<li><a href="${p.url}">${p.title}</a></li>`)
     .join("");
 
-  const topicTitle = topic.replace(/-/g, " ");
+  const topicTitle = formatCategoryTitle(topic);
   const topicURL = `${SITE_URL}/ai-tools/${topic}/`;
 
   const html = `
@@ -778,7 +796,7 @@ for (const topic in topics) {
 <meta name="description" content="Expert reviews and comparisons for ${topicTitle}.">
 </head>
 
-<body class="container">
+<body>
 ${globalHeader()}
 
 <nav>
@@ -845,7 +863,7 @@ fs.writeFileSync(`_site/author/index.html`,`
 }
 </script>
 </head>
-<body class="container">
+<body>
 ${globalHeader()}
 
 <h1 class="author-title">Justin Gerald</h1>
@@ -899,15 +917,22 @@ const pagePosts = posts.slice(start,end);
 
 const homepagePosts = pagePosts.map(post => `
 <li class="post-card">
-<a href="${post.url}" class="card-link">
-<div class="card-image">
-<img data-src="${post.thumb}" alt="${post.title}" class="thumb lazy">
-<div class="card-overlay">
-<h2>${post.title}</h2>
-<span>${post.readTime} min read</span>
-</div>
-</div>
-</a>
+  <a href="${post.url}" style="display:flex;align-items:center;gap:16px;width:100%;">
+    
+    <img data-src="${post.thumb}" 
+         alt="${post.title}" 
+         class="thumb lazy">
+    
+    <div>
+      <div class="post-title">
+        ${post.title}
+      </div>
+      <div class="meta">
+        Published ${new Date(post.date).toLocaleDateString("en-US",{year:"numeric",month:"long",day:"numeric"})}
+      </div>
+    </div>
+
+  </a>
 </li>
 `).join("");
 
@@ -938,6 +963,20 @@ const homepage = `<!doctype html>
 "target":"${SITE_URL}/?q={search_term_string}",
 "query-input":"required name=search_term_string"
 }
+}
+
+{
+"@context":"https://schema.org",
+"@type":"ItemList",
+"itemListElement":[
+${pagePosts.map((post,i)=>`
+{
+"@type":"ListItem",
+"position":${i+1},
+"name":"${post.title}",
+"url":"${post.url}"
+}`).join(",")}
+]
 }
 </script>
 </head>
