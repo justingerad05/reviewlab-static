@@ -669,14 +669,16 @@ ${post.schemas}
 <body>
 ${globalHeader()}
 
-<div class="container page-wrapper">
+<div class="container">
+
+<div class="page-wrapper">
 
 <div class="main-content post-page">
 
 ${breadcrumbHTML}
 ${breadcrumbSchema}
  
-<article class="article-wrapper">
+<article>
 
 <h1 class="overhead">${post.title}</h1>
 
@@ -719,6 +721,39 @@ ${related}
 </ul>
 
 <img id="hoverPreview" class="hover-preview"/>
+
+</article>
+
+</div>
+
+<aside class="sidebar">
+<h3>Categories</h3>
+<ul>
+<li><a href="${SITE_URL}/ai-tools/ai-writing-tools/">AI Writing</a></li>
+<li><a href="${SITE_URL}/ai-tools/ai-image-generators/">AI Image</a></li>
+<li><a href="${SITE_URL}/ai-tools/automation-tools/">Automation</a></li>
+</ul>
+</aside>
+
+</div>
+</div>
+
+<footer class="site-footer">
+
+<div class="footer-links">
+<a href="${SITE_URL}/">Home</a>
+<a href="${SITE_URL}/about/">About</a>
+<a href="${SITE_URL}/contact/">Contact</a>
+<a href="${SITE_URL}/privacy/">Privacy Policy</a>
+<a href="${SITE_URL}/editorial-policy/">Editorial Policy</a>
+<a href="${SITE_URL}/review-methodology/">Review Methodology</a>
+</div>
+
+<p class="footer-copy">
+© ${new Date().getFullYear()} ReviewLab. Independent AI software analysis.
+</p>
+
+</footer>
 
 <script>
 document.addEventListener("DOMContentLoaded",()=>{
@@ -775,39 +810,9 @@ hover.classList.remove("hover-centered");
 });
 </script>
 
-</div>
-
-<aside class="sidebar">
-<h3>Categories</h3>
-<ul>
-<li><a href="${SITE_URL}/ai-tools/ai-writing-tools/">AI Writing</a></li>
-<li><a href="${SITE_URL}/ai-tools/ai-image-generators/">AI Image</a></li>
-<li><a href="${SITE_URL}/ai-tools/automation-tools/">Automation</a></li>
-</ul>
-</aside>
-
-<footer class="site-footer">
-
-<div class="footer-links">
-<a href="${SITE_URL}/">Home</a>
-<a href="${SITE_URL}/about/">About</a>
-<a href="${SITE_URL}/contact/">Contact</a>
-<a href="${SITE_URL}/privacy/">Privacy Policy</a>
-<a href="${SITE_URL}/editorial-policy/">Editorial Policy</a>
-<a href="${SITE_URL}/review-methodology/">Review Methodology</a>
-</div>
-
-<p class="footer-copy">
-© ${new Date().getFullYear()} ReviewLab. Independent AI software analysis.
-</p>
-
-</footer>
-
-</article>
-</div>
-</div>
 </body>
-</html>`;
+</html>
+`;
 
 fs.writeFileSync(`_site/posts/${post.slug}/index.html`,page);
 }
