@@ -354,3 +354,27 @@ text-decoration:underline;
 margin-top:15px;
 color:#6b7280;
 }
+
+.hero-visual{
+  position:relative;
+  height:120px;
+  margin-bottom:40px;
+  overflow:hidden;
+}
+
+.floating-icon{
+  position:absolute;
+  width:60px;
+  opacity:.12;
+  animation:float 12s infinite ease-in-out;
+}
+
+.floating-icon:nth-child(2){ left:20%; animation-delay:2s; }
+.floating-icon:nth-child(3){ left:45%; animation-delay:4s; }
+.floating-icon:nth-child(4){ left:70%; animation-delay:6s; }
+
+@keyframes float{
+  0%{ transform:translateY(0px); }
+  50%{ transform:translateY(-15px); }
+  100%{ transform:translateY(0px); }
+}
