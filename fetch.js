@@ -434,10 +434,16 @@ ${globalHeader()}
  fs.writeFileSync(`_site/posts/comparisons/${slug}/index.html`,html);
 }
 
-for(let i=0;i<posts.length;i++){
- for(let j=i+1;j<posts.length;j++){
-   generateComparison(posts[i],posts[j]);
- }
+for(const post of posts){
+
+const topComparisons = posts
+.filter(p=>p.slug!==post.slug)
+.slice(0,3);
+
+topComparisons.forEach(p=>{
+generateComparison(post,p);
+});
+
 }
 
 function generateTopList(category, posts){
@@ -709,6 +715,18 @@ ${post.title} vs ${p.title}
 <ul class="internal-list">
 ${inlineRecs}
 </ul>
+</section>
+
+<section class="email-capture">
+<h3>Get Honest AI Tool Reviews</h3>
+<p>No fluff. No sponsored bias. Only tools worth your time.</p>
+<form action="https://docs.google.com/forms/d/e/1FAIpQLSchzs0bE9se3YCR2TTiFl3Ohi0nbx0XPBjvK_dbANuI_eI1Aw/formResponse" method="POST" target="_blank">
+<div class="form-row">
+<input type="email" name="entry.364499249" placeholder="Enter your email address" required>
+<button type="submit">Get Free Reviews</button>
+</div>
+<div class="trust">Join smart readers staying ahead of AI.</div>
+</form>
 </section>
 
 <hr>
