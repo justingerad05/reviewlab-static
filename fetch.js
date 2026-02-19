@@ -1035,9 +1035,9 @@ fs.writeFileSync(`_site/author/index.html`,`
    "name":"ReviewLab"
  },
  "sameAs":[
-   "https://twitter.com/",
+   "https://x.com/JustinGera80500",
    "https://www.linkedin.com/",
-   "https://justingerad05.github.io/reviewlab-static/"
+   "https://github.io/"
  ]
 }
 </script>
