@@ -22,16 +22,31 @@ h1{font-size:42px;margin-bottom:10px;}
 .email-capture button{padding:14px 20px;border-radius:10px;border:none;font-weight:700;cursor:pointer;background:#22c55e;color:#020617;}
 .trust{margin-top:12px;font-size:13px;color:#64748b;}
 
+.post-page{
+  background:#ffffff;
+  color:#111827;
+  padding:50px;
+  border-radius:18px;
+  box-shadow:0 20px 60px rgba(0,0,0,.08);
+}
+
 .page-wrapper{
-max-width:1100px;
-margin:auto;
-display:flex;
-gap:40px;
+  max-width:1100px;
+  margin:60px auto;
+  display:flex;
+  gap:40px;
+  align-items:flex-start;
+}
+
+.main-content{
+  flex:3;
 }
 
 .sidebar{
+  flex:1;
   position:sticky;
   top:40px;
+  height:fit-content;
 }
 
 .topic-cluster{
@@ -51,35 +66,31 @@ gap:40px;
   padding-left:18px;
 }
 
-.breadcrumb {
+.breadcrumb{
   font-size:14px;
   margin-bottom:20px;
   opacity:.7;
 }
 
-.pagination { 
+.pagination{ 
   margin-top:40px;
 }
 
-.overhead { 
-  margin-top:0px;
-}
-
-.author-title {
+.author-title{
   font-size:42px;
   margin-bottom:6px;
 }
 
-.related-title {
+.related-title{
   font-weight:600;
 }
 
-.footer {margin-top: 60px;
+.footer{margin-top: 60px;
          font-size: 14px;
          opacity:.7;
 }
   
-.hover-centered {
+.hover-centered{
   display:block !important;
   top:50% !important;
   left:50% !important;
@@ -171,14 +182,6 @@ article ul{
 
 /* ===== Post Page Layout ===== */
 
-.post-page{
-  background:#ffffff;
-  color:#111827;
-  padding:60px;
-  border-radius:20px;
-  box-shadow:0 25px 80px rgba(0,0,0,.08);
-}
-
 .article-wrapper{
   max-width:760px;
   margin:auto;
@@ -214,22 +217,6 @@ article ul{
   width:100%;
   text-decoration:none;
   color:inherit;
-}
-
-.page-wrapper{
-max-width:1100px;
-margin:auto;
-display:flex;
-gap:40px;
-}
-
-.main-content{
-flex:3;
-}
-
-.sidebar{
-flex:1;
-opacity:.85;
 }
 
 .search{
