@@ -1040,8 +1040,8 @@ fs.writeFileSync(`_site/author/index.html`,`
  },
  "sameAs":[
    "https://x.com/JustinGera80500",
-   "https://www.linkedin.com/",
-   "https://github.io/"
+   "https://www.plurk.com/justingerad05",
+   "https://github.com/justingerad05"
  ]
 }
 </script>
