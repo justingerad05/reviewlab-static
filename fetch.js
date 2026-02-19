@@ -587,7 +587,6 @@ const related = relatedPosts
 const categoryTitle = formatCategoryTitle(category);
 
 const breadcrumbHTML = `
-
 `;
   
 const breadcrumbSchema = `
