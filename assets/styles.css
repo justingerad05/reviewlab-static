@@ -60,7 +60,9 @@ flex:4;
 }
 
 .post-page article{
-   max-width:820px;
+  max-width:820px;
+  margin:0 auto;
+  text-align:left;
 }
 
 .post-inline-email{
