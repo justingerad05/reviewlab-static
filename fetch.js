@@ -1207,6 +1207,13 @@ ${globalHeader()}
 <h1>Latest AI Tool Reviews & Honest Software Analysis</h1>
 <p class="sub">Real testing. No hype. Just software that actually delivers.</p>
 
+<div class="hero-visual">
+<img src="${SITE_URL}/assets/og-default.jpg" class="floating-icon">
+<img src="${SITE_URL}/assets/og-default.jpg" class="floating-icon">
+<img src="${SITE_URL}/assets/og-default.jpg" class="floating-icon">
+<img src="${SITE_URL}/assets/og-default.jpg" class="floating-icon">
+</div>
+
 <section class="email-capture">
 <h3>Get Honest AI Tool Reviews</h3>
 <p>No fluff. No sponsored bias. Only tools worth your time.</p>
