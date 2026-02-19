@@ -717,21 +717,21 @@ ${inlineRecs}
 </ul>
 </section>
 
-<section class="email-capture">
-<h3>Get Honest AI Tool Reviews</h3>
-<p>No fluff. No sponsored bias. Only tools worth your time.</p>
-<form action="https://docs.google.com/forms/d/e/1FAIpQLSchzs0bE9se3YCR2TTiFl3Ohi0nbx0XPBjvK_dbANuI_eI1Aw/formResponse" method="POST" target="_blank">
-<div class="form-row">
-<input type="email" name="entry.364499249" placeholder="Enter your email address" required>
-<button type="submit">Get Free Reviews</button>
-</div>
-<div class="trust">Join smart readers staying ahead of AI.</div>
+<section class="post-inline-email">
+<p><strong>Want deeper AI tool breakdowns?</strong></p>
+
+<form action="https://docs.google.com/forms/d/e/1FAIpQLSchzs0bE9se3YCR2TTiFl3Ohi0nbx0XPBjvK_dbANuI_eI1Aw/formResponse" method="POST" target="_blank" class="inline-form">
+
+<input type="email" name="entry.364499249" placeholder="Your email" required>
+
+<button type="submit">Send Me Future Reviews</button>
+
 </form>
+
+<p class="trust">No spam. Only tested tools.</p>
 </section>
 
-<hr>
-
-<h3>Related Reviews</h3>
+<h3 class="pagination">Related Reviews</h3>
 
 <ul class="post-list">
 ${related}
@@ -1205,8 +1205,10 @@ ${globalHeader()}
 
 </div>
 
+<div style="max-width:820px;margin:0 auto;text-align:center;">
 <h1>Latest AI Tool Reviews & Honest Software Analysis</h1>
 <p class="sub">Real testing. No hype. Just software that actually delivers.</p>
+</div>
 
 <section class="email-capture">
 <h3>Get Honest AI Tool Reviews</h3>
