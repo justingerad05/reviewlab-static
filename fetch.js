@@ -717,6 +717,11 @@ ${inlineRecs}
 </ul>
 </section>
 
+<h3 class="pagination">Related Reviews</h3>
+<ul class="post-list">
+${related}
+</ul>
+
 <section class="post-inline-email">
 <p><strong>Want deeper AI tool breakdowns?</strong></p>
 
@@ -730,12 +735,6 @@ ${inlineRecs}
 
 <p class="trust">No spam. Only tested tools.</p>
 </section>
-
-<h3 class="pagination">Related Reviews</h3>
-
-<ul class="post-list">
-${related}
-</ul>
 
 <img id="hoverPreview" class="hover-preview"/>
 
@@ -1205,7 +1204,7 @@ ${globalHeader()}
 
 </div>
 
-<div style="max-width:820px;margin:0 auto;text-align:center;">
+<div class="post-page article">
 <h1>Latest AI Tool Reviews & Honest Software Analysis</h1>
 <p class="sub">Real testing. No hype. Just software that actually delivers.</p>
 </div>
