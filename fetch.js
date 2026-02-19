@@ -1204,10 +1204,8 @@ ${globalHeader()}
 
 </div>
 
-<div class="post-page article">
 <h1>Latest AI Tool Reviews & Honest Software Analysis</h1>
 <p class="sub">Real testing. No hype. Just software that actually delivers.</p>
-</div>
 
 <section class="email-capture">
 <h3>Get Honest AI Tool Reviews</h3>
