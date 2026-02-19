@@ -695,7 +695,7 @@ ${posts
 .slice(0,3)
 .map(p=>`
 <li>
-<a href="${SITE_URL}/posts/comparisons/${post.slug}-vs-${p.slug}/index.html">
+<a href="${SITE_URL}/posts/comparisons/${post.slug}-vs-${p.slug}/">
 ${post.title} vs ${p.title}
 </a>
 </li>
@@ -917,9 +917,8 @@ for (const topic in topics) {
 ${globalHeader()}
 
 <div class="container">
+
 <h1>${topicTitle}</h1>
-...
-</div>
 
 <p>
 This category covers in-depth reviews, comparisons, and real-world testing insights for ${topicTitle}. 
@@ -929,6 +928,8 @@ Each review is independently analyzed for performance, usability, and ROI.
 <ul>
 ${list}
 </ul>
+
+</div>
 
 </body>
 </html>
