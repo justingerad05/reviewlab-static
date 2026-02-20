@@ -724,20 +724,6 @@ ${related}
 
 <img id="hoverPreview" class="hover-preview"/>
 
-<section class="post-inline-email">
-<p><strong>Want deeper AI tool breakdowns?</strong></p>
-
-<form action="https://docs.google.com/forms/d/e/1FAIpQLSchzs0bE9se3YCR2TTiFl3Ohi0nbx0XPBjvK_dbANuI_eI1Aw/formResponse" method="POST" target="_blank" class="inline-form">
-
-<input type="email" name="entry.364499249" placeholder="Your email" required>
-
-<button type="submit">Send Me Future Reviews</button>
-
-</form>
-
-<p class="trust">No spam. Only tested tools.</p>
-</section>
-
 </article>
 
 </div>
@@ -752,6 +738,21 @@ ${related}
 </aside>
 
 </div>
+
+<section class="post-inline-email">
+<p><strong>Want deeper AI tool breakdowns?</strong></p>
+
+<form action="https://docs.google.com/forms/d/e/1FAIpQLSchzs0bE9se3YCR2TTiFl3Ohi0nbx0XPBjvK_dbANuI_eI1Aw/formResponse" method="POST" target="_blank" class="inline-form">
+
+<input type="email" name="entry.364499249" placeholder="Your email" required>
+
+<button type="submit">Send Me Future Reviews</button>
+
+</form>
+
+<p class="trust">No spam. Only tested tools.</p>
+</section>
+
 </div>
 
 <footer class="site-footer">
@@ -1077,7 +1078,7 @@ real-world testing signals, and buyer-intent software evaluation.
 
 <div class="author-box">
 <strong>Editorial Integrity:</strong>
-<p class="trust">
+<p class="author-sub">
 Every review published on ReviewLab is created through structured analysis,
 feature verification, market comparison, and user-benefit evaluation.
 No automated ratings. No anonymous authorship.
