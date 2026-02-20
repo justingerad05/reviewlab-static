@@ -1077,7 +1077,7 @@ real-world testing signals, and buyer-intent software evaluation.
 
 <div class="author-box">
 <strong>Editorial Integrity:</strong>
-<p class="site-footer">
+<p class="footer-links">
 Every review published on ReviewLab is created through structured analysis,
 feature verification, market comparison, and user-benefit evaluation.
 No automated ratings. No anonymous authorship.
