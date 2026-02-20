@@ -35,7 +35,7 @@ h1{font-size:42px;margin-bottom:10px;}
 .post-page{
   background:#ffffff;
   color:#111827;
-  padding:30px 40px;
+  padding:50px 60px;
   border-radius:20px;
   box-shadow:0 25px 70px rgba(0,0,0,.06);
   width:720px;
@@ -57,7 +57,7 @@ h1{font-size:42px;margin-bottom:10px;}
 
 .sidebar{
   position:absolute;
-  left:1100px;
+  left:980px;
   top:0;
   width:0;
   opacity:.7;
