@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+
+<url>
+<loc>https://justingerad05.github.io/reviewlab-static/about/</loc>
+<changefreq>yearly</changefreq>
+<priority>0.4</priority>
+</url>
+<url>
+<loc>https://justingerad05.github.io/reviewlab-static/contact/</loc>
+<changefreq>yearly</changefreq>
+<priority>0.4</priority>
+</url>
+<url>
+<loc>https://justingerad05.github.io/reviewlab-static/privacy/</loc>
+<changefreq>yearly</changefreq>
+<priority>0.4</priority>
+</url>
+<url>
+<loc>https://justingerad05.github.io/reviewlab-static/editorial-policy/</loc>
+<changefreq>yearly</changefreq>
+<priority>0.4</priority>
+</url>
+<url>
+<loc>https://justingerad05.github.io/reviewlab-static/review-methodology/</loc>
+<changefreq>yearly</changefreq>
+<priority>0.4</priority>
+</url>
+<url>
+<loc>https://justingerad05.github.io/reviewlab-static/author/</loc>
+<changefreq>yearly</changefreq>
+<priority>0.4</priority>
+</url>
+</urlset>

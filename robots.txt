@@ -1,0 +1,8 @@
+
+User-agent: *
+Allow: /
+Disallow: /page/
+Disallow: /posts/comparisons/
+Crawl-delay: 5
+
+Sitemap: https://justingerad05.github.io/reviewlab-static/sitemap.xml
