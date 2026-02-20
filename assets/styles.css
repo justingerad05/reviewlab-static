@@ -39,7 +39,7 @@ h1{font-size:42px;margin-bottom:10px;}
   border-radius:20px;
   box-shadow:0 25px 70px rgba(0,0,0,.06);
   width:720px;
-  margin-bottom:-20;
+  margin-bottom:-220;
 }
 
 .page-wrapper{
@@ -50,7 +50,7 @@ h1{font-size:42px;margin-bottom:10px;}
 }
 
 .main-content{
-  flex:1;
+  flex:4;
   display:flex;
   justify-content:flex-end;
 }
