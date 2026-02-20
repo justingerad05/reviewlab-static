@@ -1207,12 +1207,24 @@ ${globalHeader()}
 <h1>Latest AI Tool Reviews & Honest Software Analysis</h1>
 <p class="sub">Real testing. No hype. Just software that actually delivers.</p>
 
-<div class="hero-visual">
-<img src="${SITE_URL}/assets/og-default.jpg" class="floating-icon">
-<img src="${SITE_URL}/assets/og-default.jpg" class="floating-icon">
-<img src="${SITE_URL}/assets/og-default.jpg" class="floating-icon">
-<img src="${SITE_URL}/assets/og-default.jpg" class="floating-icon">
-</div>
+<section class="hero">
+  <div class="stars"></div>
+  <div class="grid-overlay"></div>
+
+  <div class="hero-content">
+    <h1>Latest AI Tool Reviews & Honest Software Analysis</h1>
+    <p>Real testing. No hype. Just software that actually delivers.</p>
+
+    <div class="email-box">
+      <input type="email" placeholder="Enter your email address" />
+      <button>Get Free Reviews</button>
+    </div>
+  </div>
+
+  <div class="floating-cube"></div>
+  <div class="floating-card"></div>
+  <div class="floating-robot"></div>
+</section>
 
 <section class="email-capture">
 <h3>Get Honest AI Tool Reviews</h3>
