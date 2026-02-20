@@ -1206,17 +1206,28 @@ ${globalHeader()}
 
 <section class="hero">
 
-  <!-- Animated Background Layers -->
-  <div class="hero-bg"></div>
-  <div class="hero-grid"></div>
+  <!-- Layered Animated Background -->
+  <div class="bg-gradient"></div>
+  <div class="bg-grid"></div>
+  <div class="bg-fog"></div>
+  <div class="bg-particles"></div>
 
-  <!-- Floating Objects -->
-  <div class="float-cube"></div>
-  <div class="float-ring"></div>
-  <div class="float-glow"></div>
+  <!-- Floating Tech Panels -->
+  <div class="panel panel-1"></div>
+  <div class="panel panel-2"></div>
+  <div class="panel panel-3"></div>
 
-  <!-- Main Content -->
+  <!-- Orbit Rings -->
+  <div class="ring ring-1"></div>
+  <div class="ring ring-2"></div>
+
+  <!-- Soft Light Sweep -->
+  <div class="light-sweep"></div>
+
+  <!-- Content -->
   <div class="hero-inner">
+
+    <div class="logo-glow">ReviewLab</div>
 
     <h1 class="hero-title">
       Latest AI Tool Reviews & Honest Software Analysis
@@ -1243,7 +1254,7 @@ ${globalHeader()}
     </form>
 
     <div class="hero-trust">
-      No spam. Only deeply tested AI tools.
+      Join smart readers staying ahead of AI.
     </div>
 
   </div>
