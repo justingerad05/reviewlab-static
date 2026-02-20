@@ -50,14 +50,14 @@ h1{font-size:42px;margin-bottom:10px;}
 }
 
 .main-content{
-  flex:1;
+  flex:4;
   display:flex;
   justify-content:flex-end;
 }
 
 .sidebar{
   position:absolute;
-  right:100px;
+  right:80px;
   top:0;
   width:0;
   opacity:.9;
