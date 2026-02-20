@@ -46,7 +46,7 @@ h1{font-size:42px;margin-bottom:10px;}
   position:relative;
   max-width:900px;
   margin:0 auto;
-  padding:0 24px;
+  padding:0 20px;
 }
 
 .main-content{
@@ -57,10 +57,8 @@ h1{font-size:42px;margin-bottom:10px;}
 
 .sidebar{
   position:absolute;
-  right:80px;
-  top:0;
-  width:0;
-  opacity:.9;
+  right:240px;
+  opacity:.7;
 }
 
 .post-page article{
