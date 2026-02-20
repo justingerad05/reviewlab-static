@@ -57,7 +57,7 @@ h1{font-size:42px;margin-bottom:10px;}
 
 .sidebar{
   position:absolute;
-  right:200px;
+  right:0;
   top:0;
   width:260px;
   opacity:.9;
@@ -325,7 +325,7 @@ color:white;
 }
 
 .site-footer{
-  margin-top:50px;
+  margin-top:30px;
   padding:40px 0;
   border-top:1px solid #e5e7eb;
   text-align:center;
