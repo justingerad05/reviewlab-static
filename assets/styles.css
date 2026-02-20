@@ -39,7 +39,6 @@ h1{font-size:42px;margin-bottom:10px;}
   border-radius:20px;
   box-shadow:0 25px 70px rgba(0,0,0,.06);
   width:730px;
-  margin-bottom:22px;
 }
 
 .page-wrapper{
@@ -47,6 +46,7 @@ h1{font-size:42px;margin-bottom:10px;}
   max-width:1200px;
   margin:0 auto;
   padding:0 20px;
+  margin-bottom:22px;
 }
 
 .main-content{
