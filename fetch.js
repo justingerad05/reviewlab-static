@@ -737,8 +737,6 @@ ${related}
 </ul>
 </aside>
 
-</div>
-
 <section class="post-inline-email">
 <p><strong>Want deeper AI tool breakdowns?</strong></p>
 
@@ -753,6 +751,7 @@ ${related}
 <p class="trust">No spam. Only tested tools.</p>
 </section>
 
+</div>
 </div>
 
 <footer class="site-footer">
@@ -1078,7 +1077,7 @@ real-world testing signals, and buyer-intent software evaluation.
 
 <div class="author-box">
 <strong>Editorial Integrity:</strong>
-<p class="author-sub">
+<p class="site-footer">
 Every review published on ReviewLab is created through structured analysis,
 feature verification, market comparison, and user-benefit evaluation.
 No automated ratings. No anonymous authorship.
