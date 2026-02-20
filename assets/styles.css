@@ -57,9 +57,9 @@ h1{font-size:42px;margin-bottom:10px;}
 
 .sidebar{
   position:absolute;
-  right:0;
+  right:50px;
   top:0;
-  width:560px;
+  width:0;
   opacity:.9;
 }
 
