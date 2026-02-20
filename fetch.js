@@ -722,6 +722,8 @@ ${inlineRecs}
 ${related}
 </ul>
 
+<img id="hoverPreview" class="hover-preview"/>
+
 <section class="post-inline-email">
 <p><strong>Want deeper AI tool breakdowns?</strong></p>
 
@@ -735,8 +737,6 @@ ${related}
 
 <p class="trust">No spam. Only tested tools.</p>
 </section>
-
-<img id="hoverPreview" class="hover-preview"/>
 
 </article>
 
