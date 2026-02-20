@@ -1204,38 +1204,50 @@ ${globalHeader()}
 
 </div>
 
-<h1>Latest AI Tool Reviews & Honest Software Analysis</h1>
-<p class="sub">Real testing. No hype. Just software that actually delivers.</p>
-
 <section class="hero">
-  <div class="stars"></div>
-  <div class="grid-overlay"></div>
 
-  <div class="hero-content">
-    <h1>Latest AI Tool Reviews & Honest Software Analysis</h1>
-    <p>Real testing. No hype. Just software that actually delivers.</p>
+  <!-- Animated Background Layers -->
+  <div class="hero-bg"></div>
+  <div class="hero-grid"></div>
 
-    <div class="email-box">
-      <input type="email" placeholder="Enter your email address" />
-      <button>Get Free Reviews</button>
+  <!-- Floating Objects -->
+  <div class="float-cube"></div>
+  <div class="float-ring"></div>
+  <div class="float-glow"></div>
+
+  <!-- Main Content -->
+  <div class="hero-inner">
+
+    <h1 class="hero-title">
+      Latest AI Tool Reviews & Honest Software Analysis
+    </h1>
+
+    <p class="hero-sub">
+      Real testing. No hype. Just software that actually delivers.
+    </p>
+
+    <form action="https://docs.google.com/forms/d/e/1FAIpQLSchzs0bE9se3YCR2TTiFl3Ohi0nbx0XPBjvK_dbANuI_eI1Aw/formResponse"
+          method="POST"
+          target="_blank"
+          class="hero-form">
+
+      <input type="email"
+             name="entry.364499249"
+             placeholder="Enter your email address"
+             required>
+
+      <button type="submit">
+        Get Free Reviews
+      </button>
+
+    </form>
+
+    <div class="hero-trust">
+      No spam. Only deeply tested AI tools.
     </div>
+
   </div>
 
-  <div class="floating-cube"></div>
-  <div class="floating-card"></div>
-  <div class="floating-robot"></div>
-</section>
-
-<section class="email-capture">
-<h3>Get Honest AI Tool Reviews</h3>
-<p>No fluff. No sponsored bias. Only tools worth your time.</p>
-<form action="https://docs.google.com/forms/d/e/1FAIpQLSchzs0bE9se3YCR2TTiFl3Ohi0nbx0XPBjvK_dbANuI_eI1Aw/formResponse" method="POST" target="_blank">
-<div class="form-row">
-<input type="email" name="entry.364499249" placeholder="Enter your email address" required>
-<button type="submit">Get Free Reviews</button>
-</div>
-<div class="trust">Join smart readers staying ahead of AI.</div>
-</form>
 </section>
 
 <ul class="post-list">
