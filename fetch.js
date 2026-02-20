@@ -726,17 +726,6 @@ ${related}
 
 </article>
 
-</div>
-
-<aside class="sidebar">
-<h3>Categories</h3>
-<ul>
-<li><a href="${SITE_URL}/ai-tools/ai-writing-tools/">AI Writing</a></li>
-<li><a href="${SITE_URL}/ai-tools/ai-image-generators/">AI Image</a></li>
-<li><a href="${SITE_URL}/ai-tools/automation-tools/">Automation</a></li>
-</ul>
-</aside>
-
 <section class="post-inline-email">
 <p><strong>Want deeper AI tool breakdowns?</strong></p>
 
@@ -750,6 +739,17 @@ ${related}
 
 <p class="trust">No spam. Only tested tools.</p>
 </section>
+
+</div>
+
+<aside class="sidebar">
+<h3>Categories</h3>
+<ul>
+<li><a href="${SITE_URL}/ai-tools/ai-writing-tools/">AI Writing</a></li>
+<li><a href="${SITE_URL}/ai-tools/ai-image-generators/">AI Image</a></li>
+<li><a href="${SITE_URL}/ai-tools/automation-tools/">Automation</a></li>
+</ul>
+</aside>
 
 </div>
 </div>
