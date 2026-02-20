@@ -35,7 +35,7 @@ h1{font-size:42px;margin-bottom:10px;}
 .post-page{
   background:#ffffff;
   color:#111827;
-  padding:70px 90px;
+  padding:60px 90px;
   border-radius:20px;
   box-shadow:0 25px 70px rgba(0,0,0,.06);
   width:750px;
@@ -46,6 +46,7 @@ h1{font-size:42px;margin-bottom:10px;}
   max-width:1200px;
   margin:0 auto;
   padding:0 10px;
+  margin-bottom:0;
 }
 
 .main-content{
