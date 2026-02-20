@@ -724,8 +724,6 @@ ${related}
 
 <img id="hoverPreview" class="hover-preview"/>
 
-</article>
-
 <section class="post-inline-email">
 <p><strong>Want deeper AI tool breakdowns?</strong></p>
 
@@ -739,6 +737,8 @@ ${related}
 
 <p class="trust">No spam. Only tested tools.</p>
 </section>
+
+</article>
 
 </div>
 
