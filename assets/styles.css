@@ -35,11 +35,12 @@ h1{font-size:42px;margin-bottom:10px;}
 .post-page{
   background:#ffffff;
   color:#111827;
-  padding:60px 50px;
+  padding:90px 50px;
   border-radius:20px;
   box-shadow:0 25px 70px rgba(0,0,0,.06);
   width:720px;
   margin:0 auto;
+  margin-bottom:10px
 }
 
 .page-wrapper{
@@ -50,7 +51,7 @@ h1{font-size:42px;margin-bottom:10px;}
 }
 
 .main-content{
-  flex:4;
+  flex:1;
   display:flex;
   justify-content:flex-end;
 }
