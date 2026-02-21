@@ -46,6 +46,7 @@ h1{font-size:42px;margin-bottom:10px;}
   max-width:1200px;
   margin:0 auto;
   padding:0 20px;
+  margin-bottom:-50;
 }
 
 .main-content{
@@ -68,7 +69,7 @@ h1{font-size:42px;margin-bottom:10px;}
 }
 
 .post-inline-email{
-  margin:20px auto;
+  margin:60px auto;
   max-width:480px;
   text-align:center;
 }
@@ -355,194 +356,19 @@ margin-top:15px;
 color:#6b7280;
 }
 
-/* ===============================
-   CINEMATIC HERO SYSTEM
-================================ */
-
-.hero{
-  position:relative;
-  height:100vh;
-  overflow:hidden;
-  background:#020617;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  text-align:center;
-}
-
-/* Base Gradient */
-.bg-gradient{
+.floating-icon{
   position:absolute;
-  inset:0;
-  background:
-    radial-gradient(circle at 25% 30%, rgba(56,189,248,.25), transparent 40%),
-    radial-gradient(circle at 75% 70%, rgba(34,197,94,.18), transparent 40%),
-    radial-gradient(circle at center, #0b1222, #020617 70%);
-  animation:gradientShift 20s ease-in-out infinite alternate;
+  width:60px;
+  opacity:.12;
+  animation:float 12s infinite ease-in-out;
 }
 
-@keyframes gradientShift{
-  0%{ transform:scale(1); }
-  100%{ transform:scale(1.1); }
-}
-
-/* Perspective Grid */
-.bg-grid{
-  position:absolute;
-  inset:0;
-  background-image:
-    linear-gradient(rgba(255,255,255,.05) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,255,255,.05) 1px, transparent 1px);
-  background-size:60px 60px;
-  transform:perspective(600px) rotateX(65deg);
-  opacity:.15;
-}
-
-/* Moving Fog Layer */
-.bg-fog{
-  position:absolute;
-  inset:0;
-  background:radial-gradient(circle at center, rgba(56,189,248,.15), transparent 60%);
-  animation:fogMove 15s ease-in-out infinite alternate;
-}
-
-@keyframes fogMove{
-  0%{ transform:translateY(0); }
-  100%{ transform:translateY(-40px); }
-}
-
-/* Floating Panels */
-.panel{
-  position:absolute;
-  width:200px;
-  height:120px;
-  background:rgba(15,23,42,.7);
-  border:1px solid rgba(56,189,248,.3);
-  border-radius:16px;
-  backdrop-filter:blur(10px);
-  box-shadow:0 20px 60px rgba(0,0,0,.5);
-}
-
-.panel-1{ top:15%; left:10%; animation:float 8s infinite ease-in-out; }
-.panel-2{ bottom:20%; right:15%; animation:float 10s infinite ease-in-out; }
-.panel-3{ top:30%; right:20%; animation:float 12s infinite ease-in-out; }
+.floating-icon:nth-child(2){ left:20%; animation-delay:2s; }
+.floating-icon:nth-child(3){ left:45%; animation-delay:4s; }
+.floating-icon:nth-child(4){ left:70%; animation-delay:6s; }
 
 @keyframes float{
-  0%,100%{ transform:translateY(0); }
-  50%{ transform:translateY(-30px); }
-}
-
-/* Orbit Rings */
-.ring{
-  position:absolute;
-  border-radius:50%;
-  border:1px solid rgba(34,197,94,.4);
-}
-
-.ring-1{
-  width:300px;
-  height:300px;
-  top:20%;
-  left:20%;
-  animation:spin 25s linear infinite;
-}
-
-.ring-2{
-  width:180px;
-  height:180px;
-  bottom:25%;
-  right:25%;
-  animation:spinReverse 18s linear infinite;
-}
-
-@keyframes spin{
-  from{ transform:rotate(0); }
-  to{ transform:rotate(360deg); }
-}
-
-@keyframes spinReverse{
-  from{ transform:rotate(360deg); }
-  to{ transform:rotate(0); }
-}
-
-/* Light Sweep */
-.light-sweep{
-  position:absolute;
-  inset:-50%;
-  background:linear-gradient(120deg, transparent, rgba(255,255,255,.08), transparent);
-  transform:rotate(25deg);
-  animation:sweep 8s infinite linear;
-}
-
-@keyframes sweep{
-  from{ transform:translateX(-100%) rotate(25deg); }
-  to{ transform:translateX(100%) rotate(25deg); }
-}
-
-/* Logo Glow */
-.logo-glow{
-  font-size:26px;
-  font-weight:800;
-  color:#38bdf8;
-  margin-bottom:20px;
-  text-shadow:0 0 20px rgba(56,189,248,.7);
-}
-
-/* Content */
-.hero-inner{
-  position:relative;
-  z-index:10;
-  max-width:750px;
-  padding:0 20px;
-}
-
-.hero-title{
-  font-size:46px;
-  font-weight:800;
-  margin-bottom:18px;
-  line-height:1.2;
-}
-
-.hero-sub{
-  font-size:18px;
-  opacity:.8;
-  margin-bottom:30px;
-}
-
-.hero-form{
-  display:flex;
-  gap:10px;
-  justify-content:center;
-  flex-wrap:wrap;
-}
-
-.hero-form input{
-  padding:14px 16px;
-  border-radius:12px;
-  border:1px solid #334155;
-  background:#0f172a;
-  color:#fff;
-  min-width:260px;
-  font-size:16px;
-}
-
-.hero-form button{
-  padding:14px 24px;
-  border-radius:12px;
-  border:none;
-  font-weight:700;
-  cursor:pointer;
-  background:linear-gradient(135deg,#38bdf8,#22c55e);
-  color:#020617;
-  transition:.3s;
-}
-
-.hero-form button:hover{
-  transform:translateY(-3px);
-}
-
-.hero-trust{
-  margin-top:14px;
-  font-size:13px;
-  opacity:.6;
+  0%{ transform:translateY(0px); }
+  50%{ transform:translateY(-15px); }
+  100%{ transform:translateY(0px); }
 }
