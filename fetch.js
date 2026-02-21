@@ -722,6 +722,8 @@ ${inlineRecs}
 ${related}
 </ul>
 
+<img id="hoverPreview" class="hover-preview"/>
+
 <section class="post-inline-email">
 <p><strong>Want deeper AI tool breakdowns?</strong></p>
 
@@ -735,8 +737,6 @@ ${related}
 
 <p class="trust">No spam. Only tested tools.</p>
 </section>
-
-<img id="hoverPreview" class="hover-preview"/>
 
 </article>
 
@@ -1206,13 +1206,6 @@ ${globalHeader()}
 
 <h1>Latest AI Tool Reviews & Honest Software Analysis</h1>
 <p class="sub">Real testing. No hype. Just software that actually delivers.</p>
-
-<div class="hero-visual">
-<img src="${SITE_URL}/assets/og-default.jpg" class="floating-icon">
-<img src="${SITE_URL}/assets/og-default.jpg" class="floating-icon">
-<img src="${SITE_URL}/assets/og-default.jpg" class="floating-icon">
-<img src="${SITE_URL}/assets/og-default.jpg" class="floating-icon">
-</div>
 
 <section class="email-capture">
 <h3>Get Honest AI Tool Reviews</h3>
