@@ -1187,9 +1187,9 @@ ${pagePosts.map((post,i)=>`
 </script>
 
 </head>
-<body>
+<body class="homepage-bg">
 ${globalHeader()}
-<div class="container">
+<div class="container home-hero">
 
 <div class="search-filter-bar">
 
@@ -1281,6 +1281,8 @@ lazyImgs.forEach(img=>io.observe(img));
 </body>
 </html>
 `;
+
+fs.copyFileSync("assets/hero-bg.jpg","_site/assets/hero-bg.jpg");
 
 fs.mkdirSync(`_site/search`,{recursive:true});
 
