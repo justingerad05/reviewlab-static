@@ -1077,7 +1077,7 @@ real-world testing signals, and buyer-intent software evaluation.
 
 <div class="author-box">
 <strong>Editorial Integrity:</strong>
-<p class="trust">
+<p class="footer-links">
 Every review published on ReviewLab is created through structured analysis,
 feature verification, market comparison, and user-benefit evaluation.
 No automated ratings. No anonymous authorship.
@@ -1156,7 +1156,7 @@ const homepage = `<!doctype html>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="canonical" href="${SITE_URL}/">
 <link rel="stylesheet" href="${SITE_URL}/assets/styles.css">
-
+<script src="https://unpkg.com/three@0.158.0/build/three.min.js"></script>
 <script type="application/ld+json">
 [
 {
@@ -1204,19 +1204,46 @@ ${globalHeader()}
 
 </div>
 
-<h1>Latest AI Tool Reviews & Honest Software Analysis</h1>
-<p class="sub">Real testing. No hype. Just software that actually delivers.</p>
+<section class="hero">
 
-<section class="email-capture">
-<h3>Get Honest AI Tool Reviews</h3>
-<p>No fluff. No sponsored bias. Only tools worth your time.</p>
-<form action="https://docs.google.com/forms/d/e/1FAIpQLSchzs0bE9se3YCR2TTiFl3Ohi0nbx0XPBjvK_dbANuI_eI1Aw/formResponse" method="POST" target="_blank">
-<div class="form-row">
-<input type="email" name="entry.364499249" placeholder="Enter your email address" required>
-<button type="submit">Get Free Reviews</button>
-</div>
-<div class="trust">Join smart readers staying ahead of AI.</div>
-</form>
+  <!-- Layered Animated Background -->
+<canvas id="hero-canvas"></canvas>
+
+  <!-- Content -->
+  <div class="hero-inner">
+
+    <div class="logo-glow">ReviewLab</div>
+
+    <h1 class="hero-title">
+      Latest AI Tool Reviews & Honest Software Analysis
+    </h1>
+
+    <p class="hero-sub">
+      Real testing. No hype. Just software that actually delivers.
+    </p>
+
+    <form action="https://docs.google.com/forms/d/e/1FAIpQLSchzs0bE9se3YCR2TTiFl3Ohi0nbx0XPBjvK_dbANuI_eI1Aw/formResponse"
+          method="POST"
+          target="_blank"
+          class="hero-form">
+
+      <input type="email"
+             name="entry.364499249"
+             placeholder="Enter your email address"
+             required>
+
+      <button type="submit">
+        Get Free Reviews
+      </button>
+
+    </form>
+
+    <div class="hero-trust">
+      Join smart readers staying ahead of AI.
+    </div>
+
+  </div>
+
 </section>
 
 <ul class="post-list">
@@ -1226,6 +1253,124 @@ ${homepagePosts}
 ${pagination}
 
 </div>
+
+<script>
+const canvas = document.getElementById("hero-canvas");
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(
+  60,
+  window.innerWidth / window.innerHeight,
+  0.1,
+  1000
+);
+
+const renderer = new THREE.WebGLRenderer({
+  canvas,
+  alpha: true,
+  antialias: true
+});
+
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio(window.devicePixelRatio);
+
+camera.position.z = 12;
+
+/* ========= STAR FIELD ========= */
+
+const starGeometry = new THREE.BufferGeometry();
+const starCount = 2000;
+const starPositions = [];
+
+for(let i=0;i<starCount;i++){
+  starPositions.push(
+    (Math.random()-0.5)*100,
+    (Math.random()-0.5)*100,
+    (Math.random()-0.5)*100
+  );
+}
+
+starGeometry.setAttribute(
+  "position",
+  new THREE.Float32BufferAttribute(starPositions,3)
+);
+
+const starMaterial = new THREE.PointsMaterial({
+  color: 0xffffff,
+  size: 0.05
+});
+
+const stars = new THREE.Points(starGeometry, starMaterial);
+scene.add(stars);
+
+/* ========= GLOWING CUBE ========= */
+
+const cubeGeometry = new THREE.BoxGeometry(2,2,2);
+const cubeMaterial = new THREE.MeshStandardMaterial({
+  color: 0x00ffff,
+  emissive: 0x00ffff,
+  emissiveIntensity: 1,
+  metalness: 0.3,
+  roughness: 0.2
+});
+
+const cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
+scene.add(cube);
+
+/* ========= FLOATING PANELS ========= */
+
+function createPanel(x,y,z){
+  const geo = new THREE.PlaneGeometry(3,1.6);
+  const mat = new THREE.MeshStandardMaterial({
+    color: 0x111827,
+    emissive: 0x2563eb,
+    emissiveIntensity: 0.4,
+    side: THREE.DoubleSide
+  });
+  const panel = new THREE.Mesh(geo, mat);
+  panel.position.set(x,y,z);
+  return panel;
+}
+
+const panel1 = createPanel(-6,2,-2);
+const panel2 = createPanel(6,-2,-3);
+scene.add(panel1,panel2);
+
+/* ========= LIGHTING ========= */
+
+const light = new THREE.PointLight(0x00ffff,2,50);
+light.position.set(0,0,5);
+scene.add(light);
+
+const ambient = new THREE.AmbientLight(0xffffff,0.4);
+scene.add(ambient);
+
+/* ========= ANIMATION ========= */
+
+function animate(){
+  requestAnimationFrame(animate);
+
+  cube.rotation.x += 0.005;
+  cube.rotation.y += 0.007;
+
+  panel1.position.y = 2 + Math.sin(Date.now()*0.001)*0.5;
+  panel2.position.y = -2 + Math.cos(Date.now()*0.001)*0.5;
+
+  stars.rotation.y += 0.0005;
+
+  renderer.render(scene,camera);
+}
+
+animate();
+
+/* ========= RESPONSIVE ========= */
+
+window.addEventListener("resize",()=>{
+  camera.aspect = window.innerWidth/window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth,window.innerHeight);
+});
+</script>
 
 <script>
 document.addEventListener("DOMContentLoaded", function(){
