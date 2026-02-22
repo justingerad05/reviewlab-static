@@ -1294,7 +1294,7 @@ fs.writeFileSync(`_site/search/index.html`,`
 <title>Search Reviews</title>
 <link rel="stylesheet" href="${SITE_URL}/assets/styles.css">
 </head>
-<body>
+<body class="${page === 1 ? "homepage-bg homepage-root" : ""}">
 ${globalHeader()}
 <div class="container">
 
