@@ -1,7 +1,7 @@
 /* ===== Basic Background Test ===== */
 
 body.homepage-bg{
-  background-image:url("./assets/hero-bg.jpg");
+  background-image:url("/reviewlab-static/assets/hero-bg.jpg");
   background-size:cover;
   background-position:center;
   background-repeat:no-repeat;
