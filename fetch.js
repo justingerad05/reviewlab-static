@@ -434,16 +434,10 @@ ${globalHeader()}
  fs.writeFileSync(`_site/posts/comparisons/${slug}/index.html`,html);
 }
 
-for(const post of posts){
-
-const topComparisons = posts
-.filter(p=>p.slug!==post.slug)
-.slice(0,3);
-
-topComparisons.forEach(p=>{
-generateComparison(post,p);
-});
-
+for(let i=0;i<posts.length;i++){
+  for(let j=i+1;j<posts.length && j<i+4;j++){
+    generateComparison(posts[i],posts[j]);
+  }
 }
 
 function generateTopList(category, posts){
