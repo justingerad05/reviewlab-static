@@ -661,10 +661,13 @@ const page = `<!doctype html>
 <meta property="og:title" content="${post.title}">
 <meta property="og:description" content="${post.description}">
 <meta property="og:type" content="article">
+<meta property="og:site_name" content="ReviewLab">
 <meta property="og:url" content="${post.url}">
 <meta property="og:image" content="${post.og}">
 
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="${post.title}">
+<meta name="twitter:description" content="${post.description}">
 <meta name="twitter:image" content="${post.og}">
 
 <script type="application/ld+json">
@@ -1094,20 +1097,19 @@ ${authorPosts}
 </html>
 `);
 
-fs.writeFileSync("_data/posts.json",JSON.stringify(posts,null,2));
+fs.writeFileSync("_site/_data/posts.json",JSON.stringify(posts,null,2));
 
 fs.writeFileSync("_site/robots.txt",`
 User-agent: *
 Allow: /
 Disallow: /page/
-Disallow: /posts/comparisons/
-Crawl-delay: 5
 
 Sitemap: ${SITE_URL}/sitemap.xml
 `);
 
 fs.copyFileSync("assets/styles.css","_site/assets/styles.css");
 fs.copyFileSync("assets/og-default.jpg","_site/assets/og-default.jpg");
+fs.copyFileSync("assets/og-cta-tested.jpg","_site/og-cta-tested.jpg");
 
 /* =========================
    HOMEPAGE + PAGINATION
