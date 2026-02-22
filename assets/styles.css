@@ -1,51 +1,12 @@
-/* ===== Cinematic Background Layer ===== */
+/* ===== Basic Background Test ===== */
 
 body.homepage-bg{
-  background: #020617;
-  position: relative;
-  min-height: 100vh;
-  overflow-x: hidden;
-}
-
-body.homepage-bg::before{
-  content: "";
-  position: fixed;
-  inset: 0;
-  background: 
-    linear-gradient(to bottom, rgba(2,6,23,0.85), rgba(2,6,23,0.95)),
-    url("/assets/hero-bg.jpg");
+  background-image: url("./assets/hero-bg.jpg");
   background-size: cover;
   background-position: center;
+  background-repeat: no-repeat;
   background-attachment: fixed;
-  z-index: -2;
-}
-
-body.homepage-bg::after{
-  content: "";
-  position: fixed;
-  inset: 0;
-  backdrop-filter: blur(6px);
-  z-index: -1;
-}
-
-.home-hero{
-  padding-top: 100px;
-  padding-bottom: 40px;
-}
-
-.home-hero h1{
-  font-size: 48px;
-  font-weight: 800;
-  text-align: center;
-  color: #ffffff;
-  text-shadow: 0 5px 25px rgba(0,0,0,0.6);
-}
-
-.home-hero .sub{
-  text-align: center;
-  font-size: 18px;
-  color: #cbd5e1;
-  margin-bottom: 50px;
+  min-height: 100vh;
 }
 
 /* ===== Base Layout ===== */
