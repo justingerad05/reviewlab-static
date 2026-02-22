@@ -4,6 +4,10 @@ import { marked } from "marked";
 import { XMLParser } from "fast-xml-parser";
 import { upscaleToOG } from "./generate-og.js";
 
+function escapeJson(str){
+  return str.replace(/"/g,'\\"');
+}
+
 const FEED_URL =
 "https://honestproductreviewlab.blogspot.com/feeds/posts/default?alt=atom";
 
@@ -34,6 +38,7 @@ return `
 
 const CTA = `${SITE_URL}/og-cta-tested.jpg`;
 const DEFAULT = `${SITE_URL}/assets/og-default.jpg`;
+const LOCAL_DEFAULT_PATH = "_site/assets/og-default.jpg";
 
 /* CLEAN FULL BUILD */
 
@@ -61,34 +66,41 @@ if(!Array.isArray(entries)) entries=[entries];
 
 /* YOUTUBE IMAGE ENGINE */
 
-async function getYouTubeImages(html,slug){
+async function getYouTubeImages(html, slug) {
 
-const match = html.match(/(?:youtube\.com\/embed\/|watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
-if(!match) return [DEFAULT];
+  const match = html.match(/(?:youtube\.com\/embed\/|watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
 
-const id = match[1];
+  if (!match) {
+    return [`${SITE_URL}/assets/og-default.jpg`];
+  }
 
-const candidates = [
-`https://img.youtube.com/vi/${id}/maxresdefault.jpg`,
-`https://img.youtube.com/vi/${id}/sddefault.jpg`,
-`https://img.youtube.com/vi/${id}/hqdefault.jpg`
-];
+  const id = match[1];
 
-for(const img of candidates){
-try{
-const res = await fetch(img,{method:"HEAD"});
-if(res.ok) return [img];
-}catch{}
-}
+  const candidates = [
+    `https://img.youtube.com/vi/${id}/maxresdefault.jpg`,
+    `https://img.youtube.com/vi/${id}/sddefault.jpg`,
+    `https://img.youtube.com/vi/${id}/hqdefault.jpg`
+  ];
 
-const upscaled = await upscaleToOG(
-`https://img.youtube.com/vi/${id}/hqdefault.jpg`,
-slug
-);
+  for (const img of candidates) {
+    try {
+      const res = await fetch(img, { method: "HEAD" });
+      if (res.ok) {
+        return [img];
+      }
+    } catch {}
+  }
 
-if(upscaled) return [`${SITE_URL}/og-images/${slug}.jpg`];
+  const success = await upscaleToOG(
+    `https://img.youtube.com/vi/${id}/hqdefault.jpg`,
+    slug
+  );
 
-return [DEFAULT];
+  if (success && fs.existsSync(`_site/og-images/${slug}.jpg`)) {
+    return [`${SITE_URL}/og-images/${slug}.jpg`];
+  }
+
+  return [`${SITE_URL}/assets/og-default.jpg`];
 }
 
 /* SEMANTIC INTERNAL LINK GRAPH */
@@ -204,7 +216,7 @@ const ratingValue = (4 + Math.random()).toFixed(1);
 const productSchema = {
 "@context":"https://schema.org",
 "@type":"Product",
-"name":title,
+"name":escapeJson(title),
 "image":primaryOG,
 "brand":{"@type":"Brand","name":title.split(" ")[0]},
 "aggregateRating":{
@@ -229,7 +241,7 @@ const productSchema = {
 const articleSchema = {
 "@context":"https://schema.org",
 "@type":"Review",
-"headline":title,
+"headline":escapeJson(title),
 "image":primaryOG,
 "datePublished":entry.published,
 "dateModified": new Date().toISOString(),
@@ -354,6 +366,7 @@ fs.writeFileSync("_site/sitemap.xml",
 <sitemap><loc>${SITE_URL}/sitemap-posts.xml</loc></sitemap>
 <sitemap><loc>${SITE_URL}/sitemap-pages.xml</loc></sitemap>
 <sitemap><loc>${SITE_URL}/sitemap-categories.xml</loc></sitemap>
+<sitemap><loc>${SITE_URL}/sitemap-news.xml</loc></sitemap>
 </sitemapindex>`);
 }
 
@@ -399,6 +412,9 @@ function generateComparison(postA, postB){
 <html>
 <head>
 <meta charset="utf-8">
+<link rel="preconnect" href="https://img.youtube.com">
+<link rel="preconnect" href="https://i.ytimg.com">
+<link rel="dns-prefetch" href="//img.youtube.com">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${postA.title} vs ${postB.title}</title>
 <link rel="canonical" href="${url}">
@@ -458,6 +474,9 @@ ${i+1}. <a href="${p.url}">${p.title}</a>
 <html>
 <head>
 <meta charset="utf-8">
+<link rel="preconnect" href="https://img.youtube.com">
+<link rel="preconnect" href="https://i.ytimg.com">
+<link rel="dns-prefetch" href="//img.youtube.com">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Top 10 ${category.replace(/-/g," ")}</title>
 <link rel="stylesheet" href="${SITE_URL}/assets/styles.css">
@@ -616,7 +635,7 @@ const breadcrumbSchema = `
 {
 "@type":"ListItem",
 "position":4,
-"name":"${post.title}",
+"name":"${escapeJson(post.title)}",
 "item":"${post.url}"
 }
 ]
@@ -646,6 +665,9 @@ const page = `<!doctype html>
 <head>
 
 <meta charset="utf-8">
+<link rel="preconnect" href="https://img.youtube.com">
+<link rel="preconnect" href="https://i.ytimg.com">
+<link rel="dns-prefetch" href="//img.youtube.com">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <title>${post.title}</title>
@@ -685,7 +707,7 @@ ${breadcrumbSchema}
 <h1 class="overhead">${post.title}</h1>
 
 <p class="sub">
-By <a href="${SITE_URL}/author/">Justin Gerald</a> • ${post.readTime} min read
+By <a href="${SITE_URL}/author/" rel="author">Justin Gerald</a> • ${post.readTime} min read
 </p>
 
 ${post.html}
@@ -850,6 +872,9 @@ const html = `
 <html>
 <head>
 <meta charset="utf-8">
+<link rel="preconnect" href="https://img.youtube.com">
+<link rel="preconnect" href="https://i.ytimg.com">
+<link rel="dns-prefetch" href="//img.youtube.com">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${slug.replace(/-/g," ")}</title>
 <link rel="canonical" href="${SITE_URL}/${slug}/">
@@ -890,6 +915,9 @@ fs.writeFileSync(`_site/ai-tools/index.html`, `
 <html>
 <head>
 <meta charset="utf-8">
+<link rel="preconnect" href="https://img.youtube.com">
+<link rel="preconnect" href="https://i.ytimg.com">
+<link rel="dns-prefetch" href="//img.youtube.com">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>AI Tools Categories</title>
 <link rel="canonical" href="${SITE_URL}/ai-tools/">
@@ -924,6 +952,9 @@ for (const topic in topics) {
 <html>
 <head>
 <meta charset="utf-8">
+<link rel="preconnect" href="https://img.youtube.com">
+<link rel="preconnect" href="https://i.ytimg.com">
+<link rel="dns-prefetch" href="//img.youtube.com">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${topicTitle}</title>
 <link rel="canonical" href="${topicURL}">
@@ -959,6 +990,31 @@ ${list}
 }
 
 generatePostSitemap(posts);
+
+function generateNewsSitemap(posts){
+
+const newsItems = posts.slice(0, 50).map(post => `
+<url>
+<loc>${post.url}</loc>
+<news:news>
+<news:publication>
+<news:name>ReviewLab</news:name>
+<news:language>en</news:language>
+</news:publication>
+<news:publication_date>${post.date}</news:publication_date>
+<news:title>${escapeJson(post.title)}</news:title>
+</news:news>
+</url>`).join("");
+
+fs.writeFileSync("_site/sitemap-news.xml",
+`<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+xmlns:news="http://www.google.com/schemas/sitemap-news/0.9">
+${newsItems}
+</urlset>`);
+}
+
+generateNewsSitemap(posts);
 generatePageSitemap();
 generateCategorySitemap(topics);
 generateSitemapIndex(); 
@@ -1005,6 +1061,9 @@ fs.writeFileSync(`${dir}/index.html`,`
 <meta charset="utf-8">
 <title>${tag} Reviews</title>
 <link rel="canonical" href="${SITE_URL}/tag/${tag}/">
+<link rel="preconnect" href="https://img.youtube.com">
+<link rel="preconnect" href="https://i.ytimg.com">
+<link rel="dns-prefetch" href="//img.youtube.com">
 <link rel="stylesheet" href="${SITE_URL}/assets/styles.css">
 </head>
 <body>
@@ -1036,6 +1095,9 @@ fs.writeFileSync(`_site/author/index.html`,`
 <html>
 <head>
 <meta charset="utf-8">
+<link rel="preconnect" href="https://img.youtube.com">
+<link rel="preconnect" href="https://i.ytimg.com">
+<link rel="dns-prefetch" href="//img.youtube.com">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Justin Gerald — Product Review Analyst</title>
 <link rel="canonical" href="${SITE_URL}/author/">
@@ -1147,6 +1209,9 @@ const homepage = `<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<link rel="preconnect" href="https://img.youtube.com">
+<link rel="preconnect" href="https://i.ytimg.com">
+<link rel="dns-prefetch" href="//img.youtube.com">
 <title>ReviewLab – Honest AI Tool Reviews</title>
 <meta name="description" content="ReviewLab publishes deeply tested AI software reviews.">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -1287,6 +1352,9 @@ fs.writeFileSync(`_site/search/index.html`,`
 <html>
 <head>
 <meta charset="utf-8">
+<link rel="preconnect" href="https://img.youtube.com">
+<link rel="preconnect" href="https://i.ytimg.com">
+<link rel="dns-prefetch" href="//img.youtube.com">
 <title>Search Reviews</title>
 <link rel="stylesheet" href="${SITE_URL}/assets/styles.css">
 </head>
