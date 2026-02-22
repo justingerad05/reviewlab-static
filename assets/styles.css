@@ -50,7 +50,8 @@ body.homepage-bg::after{
 
 /* ===== Base Layout ===== */
 
-body {margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Inter,sans-serif;color:#e5e7eb;}
+
+body {margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Inter,sans-serif;}
 .container{max-width:1000px;margin:0 auto;padding:60px 24px;padding-bottom:30px;}
 h1{font-size:42px;margin-bottom:10px;}
 .sub{color:#94a3b8;margin-bottom:40px;}
