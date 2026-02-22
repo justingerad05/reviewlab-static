@@ -23,6 +23,80 @@ body.homepage-bg::before{
   z-index:-1;
 }
 
+/* ===== Glass Shimmer Effect ===== */
+
+.post-card,
+.email-capture {
+  position: relative;
+  overflow: hidden;
+}
+
+.post-card::after,
+.email-capture::after {
+  content: "";
+  position: absolute;
+  top: -150%;
+  left: -50%;
+  width: 60%;
+  height: 400%;
+  background: linear-gradient(
+    120deg,
+    transparent 0%,
+    rgba(255,255,255,0.08) 40%,
+    rgba(255,255,255,0.18) 50%,
+    rgba(255,255,255,0.08) 60%,
+    transparent 100%
+  );
+  transform: rotate(25deg);
+  animation: shimmer 8s infinite linear;
+}
+
+@keyframes shimmer {
+  0% { transform: translateX(-120%) rotate(25deg); }
+  100% { transform: translateX(220%) rotate(25deg); }
+}
+
+/* ===== Hero Heading Glow ===== */
+
+.container h1 {
+  position: relative;
+  z-index: 1;
+}
+
+.container h1::before {
+  content: "";
+  position: absolute;
+  inset: -40px -60px;
+  background: radial-gradient(
+    circle,
+    rgba(56,189,248,.35) 0%,
+    rgba(56,189,248,.18) 40%,
+    transparent 70%
+  );
+  z-index: -1;
+  filter: blur(60px);
+  opacity: .7;
+}
+
+/* ===== Hero Depth Shadow ===== */
+
+.container::after {
+  content: "";
+  position: absolute;
+  bottom: -40px;
+  left: 10%;
+  width: 80%;
+  height: 60px;
+  background: radial-gradient(
+    ellipse,
+    rgba(0,0,0,.45) 0%,
+    transparent 70%
+  );
+  filter: blur(40px);
+  opacity: .6;
+  pointer-events: none;
+}
+
 /* ===== Base Layout ===== */
 
 body {
@@ -31,7 +105,8 @@ body {
   color:#e5e7eb;
 }
 
-.container{max-width:1000px;margin:0 auto;padding:60px 24px;padding-bottom:30px;}
+.container{max-width:1000px;margin:0 auto;padding:60px 24px;padding-bottom:30px;position:relative;
+}
 
 h1{
   font-size:48px;
@@ -76,13 +151,13 @@ h1{
 
 .email-capture {
   margin: 80px auto;
-  max-width: 760px;
-  padding: 50px;
-  border-radius: 24px;
-  background: rgba(255,255,255,.06);
-  border: 1px solid rgba(255,255,255,.18);
-  backdrop-filter: blur(22px);
-  box-shadow: 0 35px 100px rgba(0,0,0,.45);
+  max-width: 560px;
+  padding: 36px 40px;
+  border-radius: 20px;
+  background: rgba(255,255,255,.05);
+  border: 1px solid rgba(255,255,255,.14);
+  backdrop-filter: blur(18px);
+  box-shadow: 0 25px 70px rgba(0,0,0,.35);
   text-align: center;
 }
 
