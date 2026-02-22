@@ -1187,7 +1187,7 @@ ${pagePosts.map((post,i)=>`
 </script>
 
 </head>
-<body class="homepage-bg">
+<body class="homepage-bg homepage-root">
 ${globalHeader()}
 <div class="container home-hero">
 
