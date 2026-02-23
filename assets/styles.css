@@ -2,7 +2,7 @@
 
 <style>
 body.homepage-bg{
-  background-image:url("${SITE_URL}/assets/hero-bg.jpg");
+  background-image:url("/reviewlab-static/assets/hero-bg.jpg");
   background-size:cover;
   background-position:center;
   background-repeat:no-repeat;
@@ -220,10 +220,9 @@ h1{
 }
 
 .sidebar{
-  position:absolute;
-  left:950px;
-  top:0;
+  position:relative;
   width:240px;
+  margin-left:40px;
   opacity:.9;
 }
 
