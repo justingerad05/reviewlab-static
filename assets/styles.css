@@ -1,6 +1,13 @@
 /* ===== Basic Background Test ===== */
 
-body.homepage-bg{ background-image:url("/reviewlab-static/assets/hero-bg.jpg"); background-size:cover; background-position:center; background-repeat:no-repeat; background-attachment:fixed; min-height:100vh; }
+body.homepage-bg{
+  background-image:url("/reviewlab-static/assets/hero-bg.jpg");
+  background-size:cover;
+  background-position:center;
+  background-repeat:no-repeat;
+  background-attachment:fixed;
+  min-height:100vh;
+}
 
 body.homepage-bg::before{
   content:"";
@@ -199,21 +206,24 @@ h1{
 }
 
 .page-wrapper{
-  display:flex;
-  gap:40px;
+  position:relative;
   max-width:1200px;
   margin:0 auto;
   padding:0 20px;
+  margin-bottom:-50px;
 }
 
 .main-content{
-  flex:1;
+  flex:4;
+  display:flex;
+  justify-content:flex-end;
 }
 
 .sidebar{
-  position:relative;
+  position:absolute;
+  left:950px;
+  top:0;
   width:240px;
-  margin-left:40px;
   opacity:.9;
 }
 
