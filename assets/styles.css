@@ -35,6 +35,7 @@ body.homepage-bg::before{
 .email-capture::after {
   content: "";
   position: absolute;
+  pointer-events: none;
   top: -150%;
   left: -50%;
   width: 60%;
