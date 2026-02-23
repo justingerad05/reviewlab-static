@@ -1204,8 +1204,8 @@ Sitemap: ${SITE_URL}/sitemap.xml
 
 fs.copyFileSync("assets/styles.css","_site/assets/styles.css");
 
-fs.copyFileSync("assets/og-default.jpg","_site/og-default.jpg");
-fs.copyFileSync("assets/og-cta-tested.jpg","_site/og-cta-tested.jpg");
+fs.copyFileSync("assets/og-default.jpg","_site/assets/og-default.jpg");
+fs.copyFileSync("assets/og-cta-tested.jpg","_site/assets/og-cta-tested.jpg");
 
 /* =========================
    HOMEPAGE + PAGINATION
@@ -1383,7 +1383,7 @@ lazyImgs.forEach(img=>io.observe(img));
 </html>
 `;
 
-fs.copyFileSync("assets/hero-bg.jpg","_site/hero-bg.jpg");
+fs.copyFileSync("assets/hero-bg.jpg","_site/assets/hero-bg.jpg");
   
 fs.mkdirSync(`_site/search`,{recursive:true});
 
