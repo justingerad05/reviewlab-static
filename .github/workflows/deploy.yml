@@ -27,6 +27,9 @@ jobs:
       - name: Fetch Blogger posts
         run: node fetch.js
         
+      - name: install sharp
+        run: npm install sharp
+        
       - name: List files
         run: ls -R
     
