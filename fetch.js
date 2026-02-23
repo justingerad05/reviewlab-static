@@ -1383,11 +1383,7 @@ lazyImgs.forEach(img=>io.observe(img));
 </html>
 `;
 
-if (fs.existsSync("assets/hero-bg.jpg")) {
-  fs.copyFileSync("assets/hero-bg.jpg","_site/hero-bg.jpg");
-} else {
-  console.log("⚠ hero-bg.jpg missing — skipping");
-}
+fs.copyFileSync("assets/hero-bg.jpg","_site/hero-bg.jpg");
   
 fs.mkdirSync(`_site/search`,{recursive:true});
 
