@@ -1,11 +1,11 @@
 /* ===== Basic Background Test ===== */
 
+<style>
 body.homepage-bg{
-  background-image:url("/reviewlab-static/assets/hero-bg.jpg");
+  background-image:url("${SITE_URL}/assets/hero-bg.jpg");
   background-size:cover;
   background-position:center;
   background-repeat:no-repeat;
-  background-attachment:fixed;
   min-height:100vh;
 }
 
