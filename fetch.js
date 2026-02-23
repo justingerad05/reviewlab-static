@@ -1203,8 +1203,18 @@ Sitemap: ${SITE_URL}/sitemap.xml
 `);
 
 fs.copyFileSync("assets/styles.css","_site/assets/styles.css");
-fs.copyFileSync("assets/og-default.jpg","_site/og-default.jpg");
-fs.copyFileSync("assets/og-cta-tested.jpg","_site/og-cta-tested.jpg");
+
+if (fs.existsSync("assets/og-default.jpg")) {
+  fs.copyFileSync("assets/og-default.jpg","_site/og-default.jpg");
+} else {
+  console.log("⚠ og-default.jpg missing — skipping");
+}
+
+if (fs.existsSync("assets/og-cta-tested.jpg")) {
+  fs.copyFileSync("assets/og-cta-tested.jpg","_site/og-cta-tested.jpg");
+} else {
+  console.log("⚠ og-cta-tested.jpg missing — skipping");
+}
 
 /* =========================
    HOMEPAGE + PAGINATION
@@ -1382,7 +1392,11 @@ lazyImgs.forEach(img=>io.observe(img));
 </html>
 `;
 
-fs.copyFileSync("assets/hero-bg.jpg","_site/hero-bg.jpg");
+if (fs.existsSync("assets/hero-bg.jpg")) {
+  fs.copyFileSync("assets/hero-bg.jpg","_site/hero-bg.jpg");
+} else {
+  console.log("⚠ hero-bg.jpg missing — skipping");
+}
   
 fs.mkdirSync(`_site/search`,{recursive:true});
 
