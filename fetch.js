@@ -191,6 +191,8 @@ if(!rawHtml) continue;
 
 const title = entry.title["#text"];
 
+const seenTitles = new Set();
+  
 const slug = title.toLowerCase()
 .replace(/[^a-z0-9]+/g,"-")
 .replace(/^-|-$/g,"");
@@ -267,6 +269,12 @@ const articleSchema = {
 "description":description,
 "mainEntityOfPage":url
 };
+
+if (seenTitles.has(title.toLowerCase())) {
+  console.log("⚠ Duplicate skipped:", title);
+  continue;
+}
+seenTitles.add(title.toLowerCase());
 
 posts.push({
 title,
@@ -432,6 +440,28 @@ function generateComparison(postA, postB){
 <title>${postA.title} vs ${postB.title}</title>
 <link rel="canonical" href="${url}">
 <link rel="stylesheet" href="${SITE_URL}/assets/styles.css">
+
+<script type="application/ld+json">
+{
+ "@context":"https://schema.org",
+ "@type":"ItemList",
+ "name":"${postA.title} vs ${postB.title}",
+ "itemListElement":[
+   {
+     "@type":"ListItem",
+     "position":1,
+     "name":"${postA.title}",
+     "url":"${postA.url}"
+   },
+   {
+     "@type":"ListItem",
+     "position":2,
+     "name":"${postB.title}",
+     "url":"${postB.url}"
+   }
+ ]
+}
+</script>
 </head>
 <body>
 ${globalHeader()}
@@ -684,7 +714,16 @@ const page = `<!doctype html>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <title>${post.title}</title>
+
 <link rel="canonical" href="${post.url}">
+
+<script>
+if(location.href.endsWith("index.html")){
+  const clean = location.href.replace("index.html","");
+  history.replaceState(null,null,clean);
+}
+</script>
+
 <link rel="stylesheet" href="${SITE_URL}/assets/styles.css">
 <meta name="description" content="${post.description}">
 <meta property="og:title" content="${post.title}">
@@ -1181,8 +1220,18 @@ Sitemap: ${SITE_URL}/sitemap.xml
 `);
 
 fs.copyFileSync("assets/styles.css","_site/assets/styles.css");
-fs.copyFileSync("assets/og-default.jpg","_site/og-default.jpg");
-fs.copyFileSync("assets/og-cta-tested.jpg","_site/og-cta-tested.jpg");
+
+if (fs.existsSync("assets/og-default.jpg")) {
+  fs.copyFileSync("assets/og-default.jpg","_site/og-default.jpg");
+} else {
+  console.log("⚠ og-default.jpg missing — skipping");
+}
+
+if (fs.existsSync("assets/og-cta-tested.jpg")) {
+  fs.copyFileSync("assets/og-cta-tested.jpg","_site/og-cta-tested.jpg");
+} else {
+  console.log("⚠ og-cta-tested.jpg missing — skipping");
+}
 
 /* =========================
    HOMEPAGE + PAGINATION
@@ -1360,8 +1409,12 @@ lazyImgs.forEach(img=>io.observe(img));
 </html>
 `;
 
-fs.copyFileSync("assets/hero-bg.jpg","_site/hero-bg.jpg");
-
+if (fs.existsSync("assets/hero-bg.jpg")) {
+  fs.copyFileSync("assets/hero-bg.jpg","_site/hero-bg.jpg");
+} else {
+  console.log("⚠ hero-bg.jpg missing — skipping");
+}
+  
 fs.mkdirSync(`_site/search`,{recursive:true});
 
 fs.writeFileSync(`_site/search/index.html`,`
