@@ -1,5 +1,4 @@
 import fs from "fs";
-import sharp from "sharp";
 import fetch from "node-fetch";
 import { marked } from "marked";
 import { XMLParser } from "fast-xml-parser";
@@ -205,18 +204,6 @@ const description = textOnly.slice(0,155);
 
 const ogImages = await getYouTubeImages(rawHtml,slug);
 const primaryOG = ogImages[0];
-
-let ogWidth = 1200;
-let ogHeight = 630;
-
-if (primaryOG.startsWith(SITE_URL)) {
-  const localPath = primaryOG.replace(SITE_URL + "/", "_site/");
-  if (fs.existsSync(localPath)) {
-    const meta = await sharp(localPath).metadata();
-    ogWidth = meta.width || 1200;
-    ogHeight = meta.height || 630;
-  }
-}
 
 const readTime = Math.max(1,
 Math.ceil(textOnly.split(/\s+/).length / 200)
@@ -732,10 +719,6 @@ if(location.href.endsWith("index.html")){
 <meta property="og:site_name" content="ReviewLab">
 <meta property="og:url" content="${post.url}">
 <meta property="og:image" content="${post.og}">
-<meta property="og:image:width" content="1200">
-<meta property="og:image:height" content="630">
-<meta property="og:image:width" content="${ogWidth}">
-<meta property="og:image:height" content="${ogHeight}">
 
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="${post.title}">
