@@ -5,6 +5,12 @@ import { XMLParser } from "fast-xml-parser";
 import { upscaleToOG } from "./generate-og.js";
 
 function escapeJson(str){
+  function sanitizeHTML(html){
+  return html
+    .replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi,"")
+    .replace(/style="[^"]*"/gi,"")
+    .replace(/class="Mso[^"]*"/gi,"");
+}
   return str.replace(/"/g,'\\"');
 }
 
@@ -163,6 +169,8 @@ cons:cons.slice(0,3)
 };
 }
 
+const seenSlugs = new Set();
+
 const posts=[];
 
 function detectTopic(title){
@@ -185,16 +193,27 @@ return "ai-writing-tools";
 
 for(const entry of entries){
 
-const rawHtml = entry.content?.["#text"];
+let rawHtml = entry.content?.["#text"];
 if(!rawHtml) continue;
 
+rawHtml = sanitizeHTML(rawHtml);
+  
 const title = entry.title["#text"];
 
 const seenTitles = new Set();
   
-const slug = title.toLowerCase()
+let baseSlug = title.toLowerCase()
 .replace(/[^a-z0-9]+/g,"-")
 .replace(/^-|-$/g,"");
+
+let slug = baseSlug;
+let counter = 1;
+
+while(seenSlugs.has(slug)){
+  slug = `${baseSlug}-${counter++}`;
+}
+
+seenSlugs.add(slug);
 
 const url = `${SITE_URL}/posts/${slug}/`;
 
@@ -213,7 +232,8 @@ const {pros,cons} = extractProsCons(textOnly);
 
 /* SCHEMA */
 
-const ratingValue = (4 + Math.random()).toFixed(1);
+const wordCount = textOnly.split(/\s+/).length;
+const ratingValue = Math.min(5, (3.8 + (wordCount / 4000))).toFixed(1);
 
 const productSchema = {
 "@context":"https://schema.org",
@@ -256,12 +276,6 @@ const articleSchema = {
 "description":description,
 "mainEntityOfPage":url
 };
-
-if (seenTitles.has(title.toLowerCase())) {
-  console.log("⚠ Duplicate skipped:", title);
-  continue;
-}
-seenTitles.add(title.toLowerCase());
 
 posts.push({
 title,
@@ -703,6 +717,8 @@ const page = `<!doctype html>
 <title>${post.title}</title>
 
 <link rel="canonical" href="${post.url}">
+
+<link rel="preload" as="image" href="${post.og}">
 
 <script>
 if(location.href.endsWith("index.html")){
@@ -1196,6 +1212,15 @@ ${authorPosts}
 
 fs.writeFileSync("_site/_data/posts.json",JSON.stringify(posts,null,2));
 
+const searchIndex = posts.map(p=>({
+  title:p.title,
+  url:p.url,
+  category:p.category,
+  description:p.description
+}));
+
+fs.writeFileSync("_site/search-index.json", JSON.stringify(searchIndex));
+
 fs.writeFileSync("_site/robots.txt",`
 User-agent: *
 Allow: /
@@ -1413,10 +1438,13 @@ ${globalHeader()}
 </div>
 
 <script>
-const posts = ${JSON.stringify(posts.map(p=>({
-title:p.title,
-url:p.url
-})))};
+let posts = [];
+
+fetch("/search-index.json")
+.then(res=>res.json())
+.then(data=>{
+  posts = data;
+});
 
 const box = document.getElementById("searchBox");
 const results = document.getElementById("results");
