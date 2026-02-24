@@ -207,7 +207,8 @@ h1{
   padding:60px 90px;
   border-radius:20px;
   box-shadow:0 25px 70px rgba(0,0,0,.06);
-  width:730px;
+  max-width:730px;
+  width:100%;
 }
 
 .page-wrapper{
@@ -228,8 +229,6 @@ h1{
 
 .sidebar{
   position:relative;
-  left:950px;
-  top:0;
   width:240px;
   opacity:.9;
   z-index:1;
