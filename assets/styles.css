@@ -31,7 +31,10 @@ body.homepage-bg::before{
   overflow: hidden;
 }
 
-.post-card::after,
+.post-card::after{
+  z-index:1;
+}
+
 .email-capture::after {
   content: "";
   position: absolute;
@@ -213,16 +216,18 @@ h1{
   margin:0 auto;
   padding:0 20px;
   margin-bottom:-50px;
+  display:flex;
+  gap:40px;
+  align-items:flex-start;
 }
 
 .main-content{
-  flex:4;
-  display:flex;
-  justify-content:flex-end;
+  flex:1;
+  display:block;
 }
 
 .sidebar{
-  position:absolute;
+  position:relative;
   left:950px;
   top:0;
   width:240px;
@@ -429,6 +434,8 @@ article ul{
   width:100%;
   text-decoration:none;
   color:inherit;
+  position:relative;
+  z-index:2;
 }
 
 .search{
