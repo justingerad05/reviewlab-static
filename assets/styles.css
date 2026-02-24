@@ -109,7 +109,7 @@ body {
 }
 
 .container{max-width:1000px;margin:0 auto;padding:60px 24px;padding-bottom:30px;position:relative;
-}
+  z-index:2;}
 
 h1{
   font-size:48px;
@@ -227,6 +227,7 @@ h1{
   top:0;
   width:240px;
   opacity:.9;
+  z-index:1;
 }
 
 .post-page article{
