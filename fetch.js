@@ -5,13 +5,14 @@ import { XMLParser } from "fast-xml-parser";
 import { upscaleToOG } from "./generate-og.js";
 
 function escapeJson(str){
-  function sanitizeHTML(html){
+  return str.replace(/"/g,'\\"');
+}
+
+function sanitizeHTML(html){
   return html
     .replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi,"")
     .replace(/style="[^"]*"/gi,"")
     .replace(/class="Mso[^"]*"/gi,"");
-}
-  return str.replace(/"/g,'\\"');
 }
 
 const FEED_URL =
@@ -199,8 +200,6 @@ if(!rawHtml) continue;
 rawHtml = sanitizeHTML(rawHtml);
   
 const title = entry.title["#text"];
-
-const seenTitles = new Set();
   
 let baseSlug = title.toLowerCase()
 .replace(/[^a-z0-9]+/g,"-")
@@ -244,7 +243,7 @@ const productSchema = {
 "aggregateRating":{
  "@type":"AggregateRating",
  "ratingValue":ratingValue,
- "reviewCount": Math.floor(Math.random()*40+10)
+ "reviewCount": Math.max(12, Math.floor(wordCount / 150))
 },
 "review":{
  "@type":"Review",
@@ -388,7 +387,6 @@ fs.writeFileSync("_site/sitemap.xml",
 <sitemap><loc>${SITE_URL}/sitemap-posts.xml</loc></sitemap>
 <sitemap><loc>${SITE_URL}/sitemap-pages.xml</loc></sitemap>
 <sitemap><loc>${SITE_URL}/sitemap-categories.xml</loc></sitemap>
-<sitemap><loc>${SITE_URL}/sitemap-news.xml</loc></sitemap>
 </sitemapindex>`);
 }
 
@@ -1047,31 +1045,6 @@ ${list}
 }
 
 generatePostSitemap(posts);
-
-function generateNewsSitemap(posts){
-
-const newsItems = posts.slice(0, 50).map(post => `
-<url>
-<loc>${post.url}</loc>
-<news:news>
-<news:publication>
-<news:name>ReviewLab</news:name>
-<news:language>en</news:language>
-</news:publication>
-<news:publication_date>${post.date}</news:publication_date>
-<news:title>${escapeJson(post.title)}</news:title>
-</news:news>
-</url>`).join("");
-
-fs.writeFileSync("_site/sitemap-news.xml",
-`<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
-xmlns:news="http://www.google.com/schemas/sitemap-news/0.9">
-${newsItems}
-</urlset>`);
-}
-
-generateNewsSitemap(posts);
 generatePageSitemap();
 generateCategorySitemap(topics);
 generateSitemapIndex(); 
