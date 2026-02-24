@@ -31,10 +31,7 @@ body.homepage-bg::before{
   overflow: hidden;
 }
 
-.post-card::after{
-  z-index:1;
-}
-
+.post-card::after,
 .email-capture::after {
   content: "";
   position: absolute;
@@ -207,8 +204,7 @@ h1{
   padding:60px 90px;
   border-radius:20px;
   box-shadow:0 25px 70px rgba(0,0,0,.06);
-  max-width:730px;
-  width:100%;
+  width:730px;
 }
 
 .page-wrapper{
@@ -217,18 +213,18 @@ h1{
   margin:0 auto;
   padding:0 20px;
   margin-bottom:-50px;
-  display:flex;
-  gap:40px;
-  align-items:flex-start;
 }
 
 .main-content{
-  flex:1;
-  display:block;
+  flex:4;
+  display:flex;
+  justify-content:flex-end;
 }
 
 .sidebar{
-  position:relative;
+  position:absolute;
+  left:950px;
+  top:0;
   width:240px;
   opacity:.9;
   z-index:1;
@@ -433,8 +429,6 @@ article ul{
   width:100%;
   text-decoration:none;
   color:inherit;
-  position:relative;
-  z-index:2;
 }
 
 .search{
