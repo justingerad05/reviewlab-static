@@ -866,11 +866,13 @@ hover.style.left=(e.pageX+20)+"px";
 
 link.addEventListener("mouseout",()=>hover.style.display="none");
 
-link.addEventListener("touchstart",()=>{
-touchTimer=setTimeout(()=>{
-hover.src=img.dataset.src;
-hover.classList.add("hover-centered");
-},350);
+link.addEventListener("touchstart", e=>{
+  hover.src = img.dataset.src;
+  hover.classList.add("hover-centered");
+  setTimeout(()=>{
+    hover.style.display="none";
+    hover.classList.remove("hover-centered");
+  },500);
 });
 
 link.addEventListener("touchend",()=>{
