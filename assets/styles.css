@@ -205,6 +205,8 @@ h1{
   border-radius:20px;
   box-shadow:0 25px 70px rgba(0,0,0,.06);
   width:730px;
+  position:relative;
+  z-index:5;
 }
 
 .page-wrapper{
