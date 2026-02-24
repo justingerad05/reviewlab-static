@@ -223,6 +223,17 @@ h1{
   justify-content:flex-end;
 }
 
+/* Allow sidebar links themselves to still work */
+.sidebar a{
+  pointer-events: auto;
+}
+
+/* Ensure author link is always above layout layers */
+.post-page .sub a{
+  position: relative;
+  z-index: 20;
+}
+
 .sidebar{
   position:absolute;
   left:950px;
@@ -230,6 +241,7 @@ h1{
   width:240px;
   opacity:.9;
   z-index:1;
+  pointer-events: none;
 }
 
 .post-page article{
