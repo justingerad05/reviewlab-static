@@ -493,6 +493,12 @@ ${globalHeader()}
  fs.writeFileSync(`_site/posts/comparisons/${slug}/index.html`,html);
 }
 
+for(let i=0;i<posts.length;i++){
+  for(let j=i+1;j<posts.length && j<i+4;j++){
+    generateComparison(posts[i],posts[j]);
+  }
+}
+
 const comparisonLinks = posts.slice(0,20).map((p,i)=>{
   if(!posts[i+1]) return "";
   return `<li><a href="${SITE_URL}/posts/comparisons/${p.slug}-vs-${posts[i+1].slug}/">
@@ -518,12 +524,6 @@ ${globalHeader()}
 </body>
 </html>
 `);
-
-for(let i=0;i<posts.length;i++){
-  for(let j=i+1;j<posts.length && j<i+4;j++){
-    generateComparison(posts[i],posts[j]);
-  }
-}
 
 function generateTopList(category, posts){
 
