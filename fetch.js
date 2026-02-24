@@ -61,6 +61,7 @@ fs.mkdirSync("_site/author", { recursive: true });
 fs.mkdirSync("_site/og-images", { recursive: true });
 fs.mkdirSync("_site/assets", { recursive: true });
 fs.mkdirSync("_site/_data", { recursive: true });
+fs.mkdirSync(`_site/comparisons`, {recursive:true});
 
 /* FETCH */
 
@@ -491,6 +492,32 @@ ${globalHeader()}
  fs.mkdirSync(`_site/posts/comparisons/${slug}`,{recursive:true});
  fs.writeFileSync(`_site/posts/comparisons/${slug}/index.html`,html);
 }
+
+const comparisonLinks = posts.slice(0,20).map((p,i)=>{
+  if(!posts[i+1]) return "";
+  return `<li><a href="${SITE_URL}/posts/comparisons/${p.slug}-vs-${posts[i+1].slug}/">
+  ${p.title} vs ${posts[i+1].title}
+  </a></li>`;
+}).join("");
+
+fs.writeFileSync(`_site/comparisons/index.html`,`
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>AI Tool Comparisons</title>
+<link rel="canonical" href="${SITE_URL}/comparisons/">
+<link rel="stylesheet" href="${SITE_URL}/assets/styles.css">
+</head>
+<body>
+${globalHeader()}
+<div class="container">
+<h1>AI Tool Comparisons</h1>
+<ul>${comparisonLinks}</ul>
+</div>
+</body>
+</html>
+`);
 
 for(let i=0;i<posts.length;i++){
   for(let j=i+1;j<posts.length && j<i+4;j++){
