@@ -603,7 +603,7 @@ const relatedPosts = posts
 let score = 0;
 
 /* Same category boost */
-if(p.category === post.category) score += 5;
+if(p.category === post.category) score += 15;
 
 /* Title similarity */
 score += scoreSimilarity(post.title,p.title);
@@ -763,6 +763,20 @@ ${breadcrumbSchema}
 By <a href="${SITE_URL}/author/" rel="author">Justin Gerald</a> • ${post.readTime} min read
 </p>
 
+<section class="post-inline-email">
+<p><strong>Want deeper AI tool breakdowns?</strong></p>
+
+<form action="https://docs.google.com/forms/d/e/1FAIpQLSchzs0bE9se3YCR2TTiFl3Ohi0nbx0XPBjvK_dbANuI_eI1Aw/formResponse" method="POST" target="_blank" class="inline-form">
+
+<input type="email" name="entry.364499249" placeholder="Your email" required>
+
+<button type="submit">Send Me Future Reviews</button>
+
+</form>
+
+<p class="trust">No spam. Only tested tools.</p>
+</section>
+
 ${post.html}
 ${clusterBlock}
 
@@ -795,20 +809,6 @@ ${related}
 </ul>
 
 <img id="hoverPreview" class="hover-preview"/>
-
-<section class="post-inline-email">
-<p><strong>Want deeper AI tool breakdowns?</strong></p>
-
-<form action="https://docs.google.com/forms/d/e/1FAIpQLSchzs0bE9se3YCR2TTiFl3Ohi0nbx0XPBjvK_dbANuI_eI1Aw/formResponse" method="POST" target="_blank" class="inline-form">
-
-<input type="email" name="entry.364499249" placeholder="Your email" required>
-
-<button type="submit">Send Me Future Reviews</button>
-
-</form>
-
-<p class="trust">No spam. Only tested tools.</p>
-</section>
 
 </article>
 
