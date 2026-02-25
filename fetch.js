@@ -493,6 +493,14 @@ ${globalHeader()}
  fs.writeFileSync(`_site/posts/comparisons/${slug}/index.html`,html);
 }
 
+/* BUILD ALL COMPARISON PAGES */
+
+for(let i=0;i<posts.length;i++){
+  for(let j=i+1;j<posts.length && j<i+4;j++){
+    generateComparison(posts[i],posts[j]);
+  }
+}
+
 const comparisonLinks = [];
 
 for(let i=0;i<posts.length;i++){
