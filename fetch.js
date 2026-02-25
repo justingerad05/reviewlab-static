@@ -493,18 +493,22 @@ ${globalHeader()}
  fs.writeFileSync(`_site/posts/comparisons/${slug}/index.html`,html);
 }
 
+const comparisonLinks = [];
+
 for(let i=0;i<posts.length;i++){
   for(let j=i+1;j<posts.length && j<i+4;j++){
-    generateComparison(posts[i],posts[j]);
+    const slugs = [posts[i].slug, posts[j].slug];
+    const slug = `${slugs[0]}-vs-${slugs[1]}`;
+    
+    comparisonLinks.push(`
+<li>
+<a href="${SITE_URL}/posts/comparisons/${slug}/">
+${posts[i].title} vs ${posts[j].title}
+</a>
+</li>
+`);
   }
 }
-
-const comparisonLinks = posts.slice(0,20).map((p,i)=>{
-  if(!posts[i+1]) return "";
-  return `<li><a href="${SITE_URL}/posts/comparisons/${p.slug}-vs-${posts[i+1].slug}/">
-  ${p.title} vs ${posts[i+1].title}
-  </a></li>`;
-}).join("");
 
 fs.writeFileSync(`_site/comparisons/index.html`,`
 <!doctype html>
@@ -519,7 +523,7 @@ fs.writeFileSync(`_site/comparisons/index.html`,`
 ${globalHeader()}
 <div class="container">
 <h1>AI Tool Comparisons</h1>
-<ul>${comparisonLinks}</ul>
+<ul>${comparisonLinks.join("")}</ul>
 </div>
 </body>
 </html>
