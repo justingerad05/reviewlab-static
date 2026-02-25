@@ -813,13 +813,15 @@ ${clusterBlock}
 ${posts
 .filter(p=>p.slug!==post.slug)
 .slice(0,3)
-.map(p=>`
+.map(p=>{
+  const slugs = [post.slug, p.slug].sort();
+  return `
 <li>
-<a href="${SITE_URL}/posts/comparisons/${post.slug}-vs-${p.slug}/">
+<a href="${SITE_URL}/posts/comparisons/${slugs[0]}-vs-${slugs[1]}/">
 ${post.title} vs ${p.title}
 </a>
-</li>
-`).join("")}
+</li>`;
+}).join("")}
 </ul>
 </section>
 
