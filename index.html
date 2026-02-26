@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link rel="preconnect" href="https://img.youtube.com">
+<link rel="preconnect" href="https://i.ytimg.com">
+<link rel="dns-prefetch" href="//img.youtube.com">
+<title>ReviewLab – Honest AI Tool Reviews</title>
+<meta name="description" content="ReviewLab publishes deeply tested AI software reviews.">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="canonical" href="https://justingerad05.github.io/reviewlab-static/">
+<link rel="stylesheet" href="https://justingerad05.github.io/reviewlab-static/assets/styles.css">
+
+<script type="application/ld+json">
+[
+{
+"@context":"https://schema.org",
+"@type":"WebSite",
+"name":"ReviewLab",
+"url":"https://justingerad05.github.io/reviewlab-static",
+"potentialAction":{
+"@type":"SearchAction",
+"target":"https://justingerad05.github.io/reviewlab-static/?q={search_term_string}",
+"query-input":"required name=search_term_string"
+}
+},
+{
+"@context":"https://schema.org",
+"@type":"ItemList",
+"itemListElement":[
+
+{
+"@type":"ListItem",
+"position":1,
+"name":"How To Launch AI Tools Without Coding (DFY AI Suite Review)",
+"url":"https://justingerad05.github.io/reviewlab-static/posts/how-to-launch-ai-tools-without-coding-dfy-ai-suite-review/"
+},
+{
+"@type":"ListItem",
+"position":2,
+"name":"PDF Cash Printer Review 2025 | Honest Product Review Lab",
+"url":"https://justingerad05.github.io/reviewlab-static/posts/pdf-cash-printer-review-2025-honest-product-review-lab/"
+}
+]
+}
+]
+</script>
+
+</head>
+<body class="homepage-bg homepage-root">
+
+<header class="site-header">
+<div class="nav-container">
+
+<a href="https://justingerad05.github.io/reviewlab-static/" class="logo">ReviewLab</a>
+
+<nav class="main-nav">
+<a href="https://justingerad05.github.io/reviewlab-static/">Home</a>
+<a href="https://justingerad05.github.io/reviewlab-static/ai-tools/">AI Tools</a>
+<a href="https://justingerad05.github.io/reviewlab-static/author/">Author</a>
+<a href="https://justingerad05.github.io/reviewlab-static/about/">About</a>
+<a href="https://justingerad05.github.io/reviewlab-static/contact/">Contact</a>
+</nav>
+
+</div>
+</header>
+
+<div class="container home-hero">
+
+<div class="search-filter-bar">
+
+<input type="text" id="searchInput" placeholder="Search reviews..." class="search-input">
+
+<select id="categoryFilter" class="category-select">
+<option value="all">All Categories</option>
+<option value="ai-writing-tools">AI Writing</option>
+<option value="ai-image-generators">AI Image</option>
+<option value="automation-tools">Automation</option>
+</select>
+
+</div>
+
+<h1>Latest AI Tool Reviews & Honest Software Analysis</h1>
+<p class="sub">Real testing. No hype. Just software that actually delivers.</p>
+
+<section class="email-capture">
+<h3>Get Honest AI Tool Reviews</h3>
+<p>No fluff. No sponsored bias. Only tools worth your time.</p>
+<form action="https://docs.google.com/forms/d/e/1FAIpQLSchzs0bE9se3YCR2TTiFl3Ohi0nbx0XPBjvK_dbANuI_eI1Aw/formResponse" method="POST" target="_blank">
+<div class="form-row">
+<input type="email" name="entry.364499249" placeholder="Enter your email address" required>
+<button type="submit">Get Free Reviews</button>
+</div>
+<div class="trust">Join smart readers staying ahead of AI.</div>
+</form>
+</section>
+
+<ul class="post-list">
+
+<li class="post-card" data-category="ai-writing-tools">
+  <a href="https://justingerad05.github.io/reviewlab-static/posts/how-to-launch-ai-tools-without-coding-dfy-ai-suite-review/" class="post-link">
+    
+    <img data-src="https://img.youtube.com/vi/_p4TEDLzzFQ/hqdefault.jpg" 
+         alt="How To Launch AI Tools Without Coding (DFY AI Suite Review)" 
+         class="thumb lazy">
+    
+    <div>
+      <div class="post-title">
+        How To Launch AI Tools Without Coding (DFY AI Suite Review)
+      </div>
+      <div class="meta">
+        Published February 4, 2026
+      </div>
+    </div>
+
+  </a>
+</li>
+
+<li class="post-card" data-category="ai-writing-tools">
+  <a href="https://justingerad05.github.io/reviewlab-static/posts/pdf-cash-printer-review-2025-honest-product-review-lab/" class="post-link">
+    
+    <img data-src="https://img.youtube.com/vi/jA6VT2aUNqw/sddefault.jpg" 
+         alt="PDF Cash Printer Review 2025 | Honest Product Review Lab" 
+         class="thumb lazy">
+    
+    <div>
+      <div class="post-title">
+        PDF Cash Printer Review 2025 | Honest Product Review Lab
+      </div>
+      <div class="meta">
+        Published September 23, 2025
+      </div>
+    </div>
+
+  </a>
+</li>
+
+</ul>
+
+
+<div class="pagination">
+
+
+</div>
+
+
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function(){
+
+const filter = document.getElementById("categoryFilter");
+const searchInput = document.getElementById("searchInput");
+
+if(filter){
+filter.addEventListener("change", function(){
+const val = this.value;
+
+document.querySelectorAll(".post-card").forEach(card=>{
+if(val==="all"){
+card.style.display="flex";
+}else{
+card.style.display = card.dataset.category===val ? "flex" : "none";
+}
+});
+});
+}
+
+if(searchInput){
+searchInput.addEventListener("keyup", function(){
+const value = this.value.toLowerCase();
+
+document.querySelectorAll(".post-card").forEach(card=>{
+const text = card.innerText.toLowerCase();
+card.style.display = text.includes(value) ? "flex" : "none";
+});
+});
+}
+
+/* Lazy load */
+
+const lazyImgs=document.querySelectorAll(".lazy");
+
+const io=new IntersectionObserver(entries=>{
+entries.forEach(e=>{
+if(e.isIntersecting){
+const img=e.target;
+img.src=img.dataset.src;
+img.onload=()=>img.classList.add("loaded");
+io.unobserve(img);
+}
+});
+});
+
+lazyImgs.forEach(img=>io.observe(img));
+
+});
+</script>
+
+</body>
+</html>

@@ -1,0 +1,6 @@
+
+User-agent: *
+Allow: /
+Disallow: /page/
+
+Sitemap: https://justingerad05.github.io/reviewlab-static/sitemap.xml
