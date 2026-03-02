@@ -81,7 +81,7 @@ body.homepage-bg::before{
 
 /* ===== Hero Depth Shadow ===== */
 
-.container::after {
+.home-hero::after{
   content: "";
   position: absolute;
   bottom: -40px;
@@ -322,7 +322,7 @@ h1{
 }
 
 .sidebar{
-  width:260px;
+  width:320px;
   position:sticky;
   top:110px;
 }
