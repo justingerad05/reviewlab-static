@@ -1064,12 +1064,24 @@ ${globalHeader()}
 
 <h1>${topicTitle}</h1>
 
-<p>
-This category covers in-depth reviews, comparisons, and real-world testing insights for ${topicTitle}. 
-Each review is independently analyzed for performance, usability, and ROI.
+<p class="category-intro">
+Comprehensive analysis of ${topicTitle} based on structured testing methodology,
+feature benchmarking, and real-world implementation workflows.
 </p>
 
-<ul>
+<section class="hub-grid">
+${topics[topic]
+.slice(0,6)
+.map(p=>`
+<div class="hub-card">
+<h3><a href="${p.url}">${p.title}</a></h3>
+<p>${p.description}</p>
+</div>
+`).join("")}
+</section>
+
+<h2>All Reviews</h2>
+<ul class="clean-list">
 ${list}
 </ul>
 
