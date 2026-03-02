@@ -1,13 +1,22 @@
 # Editorial Policy
 
-ReviewLab publishes research-driven software reviews designed to help readers make confident purchasing decisions.
+Review Lab operates under a structured review methodology designed to ensure transparency, repeatability, and integrity.
 
-Our evaluation process includes:
+Review Criteria
+Every review includes:
+Feature Verification
+Real-World Testing
+Output Evaluation
+Monetization Assessment
+Competitive Context
+Independence
 
-• Feature verification  
-• Competitive comparison  
-• Pricing analysis  
-• User benefit modeling  
+We do not accept payment in exchange for favorable positioning.
 
-Editorial independence is strictly maintained.
-Affiliate relationships never influence verdicts.
+Affiliate partnerships may exist, but editorial conclusions are independent of commission structures.
+
+Accuracy Commitment
+
+If a tool updates or changes functionality, reviews are revised accordingly.
+
+Last updated dates are maintained to reflect revision transparency.
