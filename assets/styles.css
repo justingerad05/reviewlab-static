@@ -1,4 +1,4 @@
-/* ===== Basic Background Test ===== */
+"/* ===== Basic Background Test ===== */
 
 body.homepage-bg{
   background-image:url("/reviewlab-static/assets/hero-bg.jpg");
@@ -233,11 +233,11 @@ h1{
 }
 
 .page-wrapper{
-  display:flex;
-  gap:40px;
+  position:relative;
   max-width:1200px;
   margin:0 auto;
   padding:0 20px;
+  margin-bottom:-50px;
 }
 
 .main-content{
@@ -258,9 +258,13 @@ h1{
 }
 
 .sidebar{
-  position:relative;
+  position:absolute;
+  left:950px;
+  top:0;
   width:240px;
-  margin-left:40px;
+  opacity:.9;
+  z-index:1;
+  pointer-events: none;
 }
 
 .post-page article{
@@ -574,4 +578,4 @@ color:#6b7280;
   0%{ transform:translateY(0px); }
   50%{ transform:translateY(-15px); }
   100%{ transform:translateY(0px); }
-}
+}"
