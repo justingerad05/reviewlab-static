@@ -1,15 +1,23 @@
 # Review Methodology
 
-We evaluate every AI tool using structured criteria:
+Every AI tool reviewed on Review Lab is evaluated using a structured five-layer framework.
 
-## 1. Feature Testing
-Every core function is reviewed.
+## 1. Feature Verification
 
-## 2. Pricing Transparency
-We check hidden costs.
+Claims are tested against actual interface capabilities.
 
-## 3. Real-World Use Case
-We analyze buyer intent.
+## 2. Performance Testing
 
-No automated scoring.
-No sponsored manipulation.
+Speed, output quality, reliability, and stability are evaluated.
+
+## 3. Workflow Integration
+
+We analyze how the tool integrates into real creator workflows.
+
+## 4. Monetization Potential
+
+We assess whether the tool supports scalable digital asset production.
+
+## 5. Comparative Context
+
+Tools are evaluated relative to competing platforms in the same category.
