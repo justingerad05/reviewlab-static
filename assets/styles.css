@@ -112,7 +112,6 @@ body.homepage-bg::before{
   max-width: 920px;
   margin: 0 auto 60px auto;
   gap:60px;
-  justify-content:center;
 }
 
 .home-hero h1{
