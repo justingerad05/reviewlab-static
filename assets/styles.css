@@ -352,8 +352,7 @@ h1{
   position:sticky;
   top:110px;
   align-self:start;
-  padding-left:10px;
-  gap:-60px;
+  padding-left:40px;
 }
 
 .sidebar h3{
