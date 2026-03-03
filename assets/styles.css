@@ -103,6 +103,12 @@ body.homepage-bg::before{
   margin-bottom: 60px;
 }
 
+.home-hero,
+.container{
+  position: relative;
+  z-index: 1;
+}
+
 .home-hero h1{
   font-weight:800;
   font-size:52px;
@@ -161,11 +167,18 @@ body.homepage-bg::before{
   border-radius:18px;
   border:1px solid rgba(255,255,255,.12);
   transition:.3s;
+  position: relative;
+  z-index: 5;
 }
 
 .hub-card:hover{
   transform:translateY(-4px);
   box-shadow:0 25px 60px rgba(0,0,0,.45);
+}
+
+.hub-card a{
+  position: relative;
+  z-index: 6;
 }
 
 .internal-widget{
@@ -337,7 +350,7 @@ h1{
   position:sticky;
   top:110px;
   align-self:start;
-  padding-left:90px;
+  padding-left:10px;
 }
 
 .sidebar h3{
