@@ -1271,7 +1271,7 @@ fs.writeFileSync(`_site/author/index.html`,`
     "AI image generation tools"
   ],
   "sameAs": [
-    "https://www.youtube.com/@HonestProductReviewLab",
+    "https://www.youtube.com/@Review2Lab",
     "https://x.com/justingerad80500",
     "https://www.plurk.com/justingerad05",
     "https://github.com/justingerad05"
