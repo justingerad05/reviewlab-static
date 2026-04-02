@@ -817,7 +817,13 @@ By <a href="${SITE_URL}/author/" rel="author">Justin Gerald</a> • ${post.readT
 <p class="trust">No spam. Only tested tools.</p>
 </section>
 
-${post.html}
+${post.html.replace(/(<p>.*?<\/p>){2}/, `$&
+<section class="mid-cta">
+<p><strong>Want the exact AI tools that actually make money?</strong></p>
+<a href="${SITE_URL}/ai-tools/" class="cta-btn">See Tested Tools →</a>
+</section>
+`)}
+
 ${clusterBlock}
 
 <section class="comparison-block">
@@ -843,6 +849,14 @@ ${post.title} vs ${p.title}
 <ul class="internal-list">
 ${inlineRecs}
 </ul>
+</section>
+
+<section class="money-cta">
+<h3>Best AI Tool Right Now</h3>
+<p>This tool is currently outperforming others in ROI and usability.</p>
+<a href="${SITE_URL}/ai-tools/ai-writing-tools/" class="cta-btn">
+View #1 Recommendation →
+</a>
 </section>
 
 <h3 class="pagination">Related Reviews</h3>
@@ -1343,6 +1357,8 @@ const homepage = `<!doctype html>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="canonical" href="${SITE_URL}/">
 <link rel="stylesheet" href="${SITE_URL}/assets/styles.css">
+
+<meta name="robots" content="index, follow">
 
 <script type="application/ld+json">
 [
