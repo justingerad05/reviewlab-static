@@ -426,7 +426,7 @@ h1{
   align-self:start;
 
   margin-left:0;
-  padding-left:50px;
+  padding-left:90px;
 
   z-index: 5; /* below header */
 }
