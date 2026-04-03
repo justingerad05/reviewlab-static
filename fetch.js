@@ -751,6 +751,9 @@ const page = `<!doctype html>
 <link rel="preconnect" href="https://i.ytimg.com">
 <link rel="dns-prefetch" href="//img.youtube.com">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="google-site-verification" content="JVwKXzn2GLXsQvxWNM1oDIehqkxZ_oa0I3kddnLnY1A" />
+<meta name="msvalidate.01" content="EFCFE264BAC6BD46CDE25837ADBBBEEC" />
+<meta name="robots" content="index, follow">
 
 <title>${post.title}</title>
 
@@ -1397,7 +1400,8 @@ const homepage = `<!doctype html>
 <title>ReviewLab – Honest AI Tool Reviews</title>
 <meta name="description" content="ReviewLab publishes deeply tested AI software reviews.">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="google-site-verification" content="wxs10fPDDR1ULxnxGIWKouLfjkiJrD8RUMORzDPnLwk" />
+<meta name="google-site-verification" content="JVwKXzn2GLXsQvxWNM1oDIehqkxZ_oa0I3kddnLnY1A" />
+<meta name="msvalidate.01" content="EFCFE264BAC6BD46CDE25837ADBBBEEC" />
 <meta name="robots" content="index, follow">
 <link rel="canonical" href="${SITE_URL}/">
 <link rel="stylesheet" href="${SITE_URL}/assets/styles.css">
