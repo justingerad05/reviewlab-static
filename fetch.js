@@ -866,6 +866,11 @@ View #1 Recommendation →
 </a>
 </section>
 
+<div class="sticky-cta">
+<a href="/ai-tools/" class="cta-btn">
+🔥 See #1 AI Tool (Tested)
+</a>
+
 <h3 class="pagination">Related Reviews</h3>
 <ul class="post-list">
 ${related}
@@ -963,10 +968,6 @@ hover.classList.remove("hover-centered");
 });
 </script>
 
-<div class="sticky-cta">
-<a href="/ai-tools/" class="cta-btn">
-🔥 See #1 AI Tool (Tested)
-</a>
 </div>
 
 </body>
