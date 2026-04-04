@@ -430,6 +430,7 @@ h1{
   max-width:300px;
   position: sticky;
   top:100px;
+  padding-left:120px;
 }
 
 .sidebar h3{
