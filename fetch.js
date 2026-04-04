@@ -1485,6 +1485,11 @@ and real-world monetization potential — not marketing claims.
 <h3>Get AI Tools Worth Using</h3>
 <p>Only performance-tested software with real implementation value.
 No spam. No affiliate-first bias.</p>
+
+<p style="font-size:14px; color:#64748b;">
+Join 1,000+ readers discovering AI tools that actually generate income.
+</p>
+
 <form action="https://docs.google.com/forms/d/e/1FAIpQLSchzs0bE9se3YCR2TTiFl3Ohi0nbx0XPBjvK_dbANuI_eI1Aw/formResponse" method="POST" target="_blank">
 <div class="form-row">
 <input type="email" name="entry.364499249" placeholder="Enter your email address" required>
