@@ -410,15 +410,16 @@ h1{
 .post-page{
   background:#ffffff;
   color:#111827;
-  padding:50px 60px;
-  border-radius:24px;
+  padding:40px; /* reduced from 60px */
+  border-radius:20px;
   box-shadow:0 30px 90px rgba(0,0,0,.08);
   width:100%;
+  max-width:100%; /* 🔥 CRITICAL FIX */
 }
 
 .page-wrapper{
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 260px;
+  grid-template-columns: 1fr 280px; /* flexible main */
   gap: 40px;
   max-width: 1100px;
   margin: 0 auto;
@@ -443,9 +444,11 @@ h1{
 
 .sidebar{
   position: sticky;
-  top: 110px;
-  width: 260px;
+  top: 140px; /* 🔥 pushes BELOW nav + spacing */
+  width: 100%;
+  max-width: 280px;
   align-self: start;
+  background: transparent; /* keep clean */
 }
 
 .sidebar-highlight{font-size:13px;opacity:.8;}
@@ -456,7 +459,7 @@ h1{
   background: #ffffff;
   border-radius: 14px;
   border: 1px solid #e5e7eb;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.08); /* ADD THIS */
+  box-shadow: 0 12px 30px rgba(0,0,0,0.08); /* stronger depth */
 }
 
 .sidebar-card h3{
@@ -1068,44 +1071,4 @@ body::before{
   overflow-x: hidden;
 }
   
-}
-
-/* ===============================
-   DESKTOP LAYOUT (FINAL FIXED)
-================================ */
-
-@media (min-width: 1100px){
-
-  .page-wrapper{
-    display: grid;
-
-    /* Perfect structure */
-    grid-template-columns: minmax(0, 740px) 260px;
-
-    gap: 40px;
-
-    max-width: 1100px;
-    margin: 0 auto;
-
-    align-items: start;
-  }
-
-  .main-content{
-    width: 100%;
-    max-width: 740px;
-  }
-
-  .sidebar{
-    width: 100%;
-    max-width: 260px;
-
-    /* THIS pushes it under nav cleanly */
-    margin-top: 20px;
-
-    position: sticky;
-    top: 110px; /* aligns under header */
-
-    align-self: start;
-  }
-
 }
