@@ -844,6 +844,8 @@ ${clusterBlock}
   <a href="/ai-tools/" class="cta-btn">View Best Alternative →</a>
 </section>
 
+  post.html.replace(/<\/p>/, `</p> YOUR_CTA `);
+
 <section class="comparison-block">
 <h3>Compare This Tool</h3>
 <ul>
@@ -1111,8 +1113,6 @@ We test AI tools based on real-world performance, monetization potential, and wo
 See #1 Tool →
 </a>
 </section>
-
-post.html.replace(/<\/p>/, `</p> YOUR_CTA `);
                  
 <!-- 🔥 CATEGORY GRID -->
 <section class="hub-grid">
