@@ -835,7 +835,6 @@ ${post.html.replace(/(<p>.*?<\/p>){2}/, `$&
     Tested for real ROI — not just features.
   </p>
 </section>
-`)}
 
 ${clusterBlock}
 
