@@ -844,8 +844,8 @@ ${clusterBlock}
   <a href="/ai-tools/" class="cta-btn">View Best Alternative →</a>
 </section>
 
-  post.html.replace(/<\/p>/, `</p> YOUR_CTA `);
-
+  ${post.html.replace(/(<p>.*?<\/p>){2}/, `$&
+  
 <section class="comparison-block">
 <h3>Compare This Tool</h3>
 <ul>
