@@ -825,15 +825,17 @@ By <a href="${SITE_URL}/author/" rel="author">Justin Gerald</a> • ${post.readT
 <p class="trust">No spam. Only tested tools.</p>
 </section>
 
-post.html = post.html.replace(/<\/p>/, `</p>
+${post.html.replace(/(<p>.*?<\/p>){2}/, `$&
 
-<div class="mid-cta">
+<section class="mid-cta">
   <p><strong>Most AI tools are hype. This one actually converts.</strong></p>
   <a href="/ai-tools/" class="cta-btn">See The Proven Tool →</a>
-  <p class="mid-ctaa">Tested for real ROI — not just features.</p>
-</div>
 
-`);
+  <p class="mid-ctaa">
+    Tested for real ROI — not just features.
+  </p>
+</section>
+`)}
 
 ${clusterBlock}
 
