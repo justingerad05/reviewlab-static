@@ -306,11 +306,8 @@ body {
 }
 
 .container{
-  max-width: var(--site-width);
-  margin: 0 auto;
-  padding: 60px 24px 40px 24px;
-  position: relative;
-  z-index: 2;
+  width: 100%;
+  padding: 60px 20px 40px;
 }
 
 h1{
@@ -420,9 +417,10 @@ h1{
 
 .page-wrapper{
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 280px;
+  grid-template-columns: 740px 260px;
   gap: 40px;
-
+  max-width: 1100px;
+  margin: 0 auto;
   align-items: start;
 }
 
@@ -442,16 +440,11 @@ h1{
   z-index: 20;
 }
 
-/* SIDEBAR FIX */
 .sidebar{
   position: sticky;
-  top: 100px;
-
-  height: fit-content;
-
-  max-width: 100%;
-  width: 100%;
-
+  top: 110px;
+  width: 260px;
+  justify-self: end; /* 🔥 THIS IS THE KEY */
   align-self: start;
 }
 
