@@ -802,6 +802,11 @@ ${breadcrumbSchema}
 
 <h1 class="overhead">${post.title}</h1>
 
+<div class="top-cta">
+  <p><strong>🚀 Want the exact AI tool that’s making people money right now?</strong></p>
+  <a href="/ai-tools/" class="cta-btn">See #1 Tool →</a>
+</div>
+
 <p class="sub">
 By <a href="${SITE_URL}/author/" rel="author">Justin Gerald</a> • ${post.readTime} min read
 </p>
@@ -820,16 +825,24 @@ By <a href="${SITE_URL}/author/" rel="author">Justin Gerald</a> • ${post.readT
 <p class="trust">No spam. Only tested tools.</p>
 </section>
 
-${post.html.replace(/(<p>.*?<\/p>){2}/, `$&
 <section class="mid-cta">
-<p><strong>Want the exact AI tools that actually make money?</strong></p>
-<a href="${SITE_URL}/ai-tools/" class="cta-btn">See Tested Tools →</a>
-<p><strong>Most tools fail. This one doesn’t.</strong></p>
-<a href="/ai-tools/" class="cta-btn">See Why →</a>
+  <p><strong>Most AI tools are hype. This one actually converts.</strong></p>
+  <a href="/ai-tools/" class="cta-btn">See The Proven Tool →</a>
+
+  <p class="mid-ctaa">
+    Tested for real ROI — not just features.
+  </p>
 </section>
 `)}
 
 ${clusterBlock}
+
+<section class="decision-cta">
+  <h3>So… is this tool actually worth it?</h3>
+  <p>If you want something that delivers real results, this is the one most people switch to.</p>
+
+  <a href="/ai-tools/" class="cta-btn">View Best Alternative →</a>
+</section>
 
 <section class="comparison-block">
 <h3>Compare This Tool</h3>
@@ -881,7 +894,10 @@ ${related}
 
 <!-- 🔥 MONEY CTA -->
 <div class="sidebar-card highlight">
-  <h3>🔥 #1 AI Tool Right Now</h3>
+  <h3>🔥 #1 Tool (Tested & Profitable)</h3>
+  <p class="sidebar-highlight">
+Used by creators making real income.
+</p>
   <p>Tested for real ROI and performance.</p>
   <a href="/ai-tools/" class="sidebar-btn">See Top Tool →</a>
 </div>
@@ -992,7 +1008,7 @@ hover.classList.remove("hover-centered");
 
 <div class="sticky-cta">
 <a href="/ai-tools/" class="cta-btn">
-🔥 See #1 AI Tool (Tested)
+🔥 See The Tool Everyone Is Switching To
 </a>
 
 </div>
@@ -1096,6 +1112,8 @@ See #1 Tool →
 </a>
 </section>
 
+post.html.replace(/<\/p>/, `</p> YOUR_CTA `);
+                 
 <!-- 🔥 CATEGORY GRID -->
 <section class="hub-grid">
 ${Object.keys(topics).map(cat => `
