@@ -825,6 +825,8 @@ By <a href="${SITE_URL}/author/" rel="author">Justin Gerald</a> • ${post.readT
 <p class="trust">No spam. Only tested tools.</p>
 </section>
 
+${post.html.replace(/(<p>.*?<\/p>){2}/, `$&
+
 <section class="mid-cta">
   <p><strong>Most AI tools are hype. This one actually converts.</strong></p>
   <a href="/ai-tools/" class="cta-btn">See The Proven Tool →</a>
@@ -843,8 +845,6 @@ ${clusterBlock}
 
   <a href="/ai-tools/" class="cta-btn">View Best Alternative →</a>
 </section>
-
-  ${post.html.replace(/(<p>.*?<\/p>){2}/, `$&
   
 <section class="comparison-block">
 <h3>Compare This Tool</h3>
