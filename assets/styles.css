@@ -223,6 +223,16 @@ body.homepage-bg::before{
   text-align:center;
 }
 
+.mid-ctaa{margin-top:10px;font-size:14px;opacity:.8;}
+
+.decision-cta{
+  margin:50px 0;
+  padding:25px;
+  background:#f3f4f6;
+  border-radius:14px;
+  text-align:center;
+}
+
 .cta-btn {
   background: linear-gradient(135deg, #ff4d4d, #ff9900);
   color: #fff;
@@ -258,6 +268,14 @@ body.homepage-bg::before{
   bottom:20px;
   right:20px;
   z-index:9999;
+}
+
+.top-cta{
+  margin:20px 0 30px;
+  padding:18px;
+  background:#111827;
+  border-radius:12px;
+  text-align:center;
 }
 
 /* ===== Base Layout ===== */
@@ -402,17 +420,15 @@ h1{
 
 .page-wrapper{
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 300px;
+  grid-template-columns: minmax(0, 1fr) 280px;
   gap: 40px;
-  max-width: 1100px;
-  margin: 0 auto;
+
   align-items: start;
-  margin-top: 20px;
 }
 
-.main-content {
-  flex: 1;
-  max-width: 760px;   /* CONTROL CONTENT WIDTH */
+/* CRITICAL: prevent overflow */
+.main-content{
+  min-width: 0;
 }
 
 /* Allow sidebar links themselves to still work */
@@ -426,23 +442,20 @@ h1{
   z-index: 20;
 }
 
+/* SIDEBAR FIX */
 .sidebar{
-  width:100%;
-  max-width:260px;
-
   position: sticky;
-  top: 120px;
+  top: 100px;
 
-  /* REAL FIX */
-  padding: 20px;
-  background: #f9fafb;
-  border-radius: 16px;
+  height: fit-content;
 
-  /* separation from post */
-  box-shadow: 0 10px 30px rgba(0,0,0,.06);
+  max-width: 100%;
+  width: 100%;
 
   align-self: start;
 }
+
+.sidebar-highlight{font-size:13px;opacity:.8;}
 
 .sidebar-card{
   margin-bottom: 20px;
@@ -903,9 +916,8 @@ color:#6b7280;
   .sidebar{
     position: relative;
     top: 0;
-    max-width: 100%;
-    padding-left: 0;
-    margin-top: 40px;
+    width: 100%;
+    margin-top: 30px;
   }
 
   .post-page{
@@ -1015,6 +1027,10 @@ color:#6b7280;
   .related-title{
   white-space: normal;
 }
+
+  .main-content{
+    max-width: 100%;
+  }
 
   *{
   box-sizing: border-box;
