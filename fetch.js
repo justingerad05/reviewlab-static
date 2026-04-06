@@ -894,17 +894,20 @@ ${related}
 
 <aside class="sidebar">
 
-<!-- 🔥 MONEY CTA -->
-<div class="sidebar-card highlight">
-  <h3>🔥 #1 Tool (Tested & Profitable)</h3>
-  <p class="sidebar-highlight">
-Used by creators making real income.
-</p>
-  <p>Tested for real ROI and performance.</p>
-  <a href="/ai-tools/" class="sidebar-btn">See Top Tool →</a>
+<!-- 1. PRIMARY MONEY CTA (Sticky + Dynamic) -->
+<div class="sidebar-card highlight sticky-main-cta">
+  <h3>🚀 Start Making Money With This</h3>
+  <p>Beginner-friendly system. No tech skills needed.</p>
+  <a href="/ai-tools/" class="sidebar-btn">Get Instant Access</a>
 </div>
 
-<!-- 📧 EMAIL CAPTURE -->
+<!-- 2. SOCIAL PROOF -->
+<div class="sidebar-card">
+  <h3>💬 Real Results</h3>
+  <p>Used by 3,000+ beginners generating passive income online.</p>
+</div>
+
+<!-- 4. EMAIL CAPTURE (SECONDARY) -->
 <div class="sidebar-card">
   <h3>Get Winning AI Tools</h3>
   <p>Only tools that actually generate income.</p>
@@ -919,7 +922,17 @@ Used by creators making real income.
   </p>
 </div>
 
-<!-- 📂 CATEGORIES -->
+<!-- 5. INTERNAL LINKS -->
+<div class="sidebar-card">
+  <h3>📚 Related Guides</h3>
+  <ul>
+    <li><a href="/ai-tools/">Best AI Tools for Beginners</a></li>
+    <li><a href="/posts/">How I Made My First $100 Online</a></li>
+    <li><a href="/ai-tools/">Top Passive Income Systems</a></li>
+  </ul>
+</div>
+
+<!-- 6. CATEGORIES -->
 <div class="sidebar-card">
   <h3>Categories</h3>
   <ul>
@@ -1006,6 +1019,27 @@ hover.classList.remove("hover-centered");
 });
 
 });
+
+document.addEventListener("DOMContentLoaded",()=>{
+
+// EXISTING CODE...
+
+window.addEventListener("scroll", function(){
+  const cta = document.querySelector(".sticky-main-cta");
+
+  if(!cta) return;
+
+  if(window.scrollY > 600){
+    cta.innerHTML = `
+      <h3>⚡ Don’t Miss This Opportunity</h3>
+      <p>This tool is getting popular fast. Get in early.</p>
+      <a href="/ai-tools/" class="sidebar-btn">Claim Access Now</a>
+    `;
+  }
+});
+
+});
+
 </script>
 
 <div class="sticky-cta">
