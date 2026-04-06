@@ -414,8 +414,8 @@ h1{
 
 .page-wrapper{
   display: grid;
-  grid-template-columns: 1fr 280px; /* flexible main */
-  gap: 40px;
+  grid-template-columns: minmax(0, 1fr) 280px;
+  gap: 50px; /* increase spacing instead of margin hack */
   max-width: 1100px;
   margin: 0 auto;
   align-items: start;
@@ -439,12 +439,14 @@ h1{
 
 .sidebar{
   position: sticky;
-  top: 140px; /* 🔥 pushes BELOW nav + spacing */
+  top: 140px;
   width: 100%;
   max-width: 280px;
   align-self: start;
-  background: transparent; /* keep clean */
-  margin-left: 90px;
+  background: #f9fafb; /* 👈 FIX */
+  padding: 14px;
+  border-radius: 16px;
+  box-shadow: 0 20px 50px rgba(0,0,0,.08);
 }
 
 .sidebar-highlight{font-size:13px;opacity:.8;}
