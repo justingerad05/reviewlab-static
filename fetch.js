@@ -1020,20 +1020,6 @@ hover.classList.remove("hover-centered");
 
 });
 
-window.addEventListener("scroll", function(){
-  const cta = document.querySelector(".sticky-main-cta");
-
-  if(!cta) return;
-
-  if(window.scrollY > 600){
-    cta.innerHTML = `
-      <h3>⚡ Don’t Miss This Opportunity</h3>
-      <p>This tool is getting popular fast. Get in early.</p>
-      <a href="/ai-tools/" class="sidebar-btn">Claim Access Now</a>
-    `;
-  }
-});
-
 </script>
 
 <div class="sticky-cta">
