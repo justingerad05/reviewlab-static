@@ -1033,7 +1033,6 @@ window.addEventListener("scroll", function(){
     `;
   }
 });
-});
 
 </script>
 
