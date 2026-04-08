@@ -1020,8 +1020,6 @@ hover.classList.remove("hover-centered");
 
 });
 
-document.addEventListener("DOMContentLoaded",()=>{
-
 // EXISTING CODE...
 
 window.addEventListener("scroll", function(){
