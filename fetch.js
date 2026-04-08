@@ -1036,8 +1036,6 @@ window.addEventListener("scroll", function(){
   }
 });
 
-});
-
 </script>
 
 <div class="sticky-cta">
