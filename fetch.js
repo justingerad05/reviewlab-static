@@ -1020,20 +1020,27 @@ hover.classList.remove("hover-centered");
 
 });
 
-document.addEventListener("DOMContentLoaded",()=>{
 window.addEventListener("scroll", function(){
-  const cta = document.querySelector(".sticky-main-cta");
 
+  const cta = document.querySelector(".sticky-main-cta");
   if(!cta) return;
 
-  if(window.scrollY > 600){
-    cta.innerHTML = `
-      <h3>⚡ Don’t Miss This Opportunity</h3>
-      <p>This tool is getting popular fast. Get in early.</p>
-      <a href="#" class="sidebar-btn">Claim Access Now</a>
-    `;
+  if(window.scrollY > 600 && !cta.classList.contains("active")){
+
+    cta.classList.add("active");
+
+    const title = cta.querySelector("h3");
+    const text = cta.querySelector("p");
+    const link = cta.querySelector("a");
+
+    if(title) title.textContent = "⚡ Don’t Miss This Opportunity";
+    if(text) text.textContent = "This tool is getting popular fast. Get in early.";
+    if(link){
+      link.textContent = "Claim Access Now";
+      link.href = "/ai-tools/"; // IMPORTANT FIX
+    }
   }
-});
+
 });
 
 document.addEventListener("mouseout", function(e){
