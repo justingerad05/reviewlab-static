@@ -1045,18 +1045,14 @@ window.addEventListener("scroll", function(){
 document.addEventListener("mouseout", function(e){
   if(e.clientY < 10){
     const popup = document.createElement("div");
-    popup.innerHTML = `
-      <div class="exit-popup">
-        <h3>Wait — Before You Leave</h3>
-        <p>This tool is helping beginners generate income.</p>
-        <a href="javascript:void(0)" class="cta-btn">See It Now →</a>
-      </div>
-    `;
+    popup.innerHTML = '<div class="exit-popup">' +
+  '<h3>Wait — Before You Leave</h3>' +
+  '<p>This tool is helping beginners generating income.</p>' +
+  '<a href="javascript:void(0)" class="cta-btn">See It Now →</a>' +
+'</div>';
     document.body.appendChild(popup);
   }
 });
-
-</script>
 
 </script>
 
