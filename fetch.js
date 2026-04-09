@@ -1121,8 +1121,8 @@ window.addEventListener("load", function(){
     };
 
   });
-
 });
+
 </script>
 
 <div class="sticky-cta">
