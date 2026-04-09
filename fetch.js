@@ -1026,20 +1026,16 @@ hover.classList.remove("hover-centered");
 <script>
 window.addEventListener("load", function(){
 
-  /* =========================
-     SMART CTA ROUTING
-  ========================= */
+  var text = document.body.innerText.toLowerCase();
 
-  const text = document.body.innerText.toLowerCase();
-
-  const routes = {
+  var routes = {
     writing: "/ai-tools/ai-writing-tools/",
     image: "/ai-tools/ai-image-generators/",
     automation: "/ai-tools/automation-tools/",
     general: "/ai-tools/"
   };
 
-  let primary = routes.general;
+  var primary = routes.general;
 
   if(text.includes("automation") || text.includes("workflow")){
     primary = routes.automation;
@@ -1049,7 +1045,7 @@ window.addEventListener("load", function(){
     primary = routes.writing;
   }
 
-  const allRoutes = [
+  var allRoutes = [
     primary,
     routes.writing,
     routes.image,
@@ -1057,18 +1053,16 @@ window.addEventListener("load", function(){
     routes.general
   ];
 
-  let i = 0;
+  var i = 0;
 
-  document.querySelectorAll(".cta-btn, .sidebar-btn").forEach(btn=>{
+  document.querySelectorAll(".cta-btn, .sidebar-btn").forEach(function(btn){
     btn.setAttribute("href", allRoutes[i % allRoutes.length]);
     i++;
   });
 
-  /* =========================
-     SCROLL CTA ACTIVATION
-  ========================= */
+  /* SCROLL CTA */
 
-  const cta = document.querySelector(".sticky-main-cta");
+  var cta = document.querySelector(".sticky-main-cta");
 
   if(cta){
     window.addEventListener("scroll", function(){
@@ -1077,23 +1071,21 @@ window.addEventListener("load", function(){
 
         cta.classList.add("active");
 
-        const title = cta.querySelector("h3");
-        const text = cta.querySelector("p");
-        const link = cta.querySelector("a");
+        var title = cta.querySelector("h3");
+        var textEl = cta.querySelector("p");
+        var link = cta.querySelector("a");
 
         if(title) title.textContent = "⚡ Don’t Miss This Opportunity";
-        if(text) text.textContent = "This tool is getting popular fast. Get in early.";
+        if(textEl) textEl.textContent = "This tool is getting popular fast. Get in early.";
         if(link) link.textContent = "Claim Access Now";
       }
 
     });
   }
 
-  /* =========================
-     EXIT INTENT POPUP (FIXED)
-  ========================= */
+  /* EXIT POPUP (SAFE STRING) */
 
-  let popupShown = false;
+  var popupShown = false;
 
   document.addEventListener("mouseleave", function(e){
 
@@ -1102,27 +1094,26 @@ window.addEventListener("load", function(){
 
     popupShown = true;
 
-    const popup = document.createElement("div");
+    var popup = document.createElement("div");
     popup.className = "exit-popup-overlay";
 
-    popup.innerHTML = `
-      <div class="exit-popup">
-        <h3>Wait — Before You Leave</h3>
-        <p>This AI system is helping beginners generate income.</p>
-        <a href="${primary}" class="cta-btn">See It Now →</a>
-        <span class="close-popup">✕</span>
-      </div>
-    `;
+    popup.innerHTML =
+      '<div class="exit-popup">' +
+        '<h3>Wait — Before You Leave</h3>' +
+        '<p>This AI system is helping beginners generate income.</p>' +
+        '<a href="' + primary + '" class="cta-btn">See It Now →</a>' +
+        '<span class="close-popup">✕</span>' +
+      '</div>';
 
     document.body.appendChild(popup);
 
-    popup.querySelector(".close-popup").onclick = ()=>{
+    popup.querySelector(".close-popup").onclick = function(){
       popup.remove();
     };
 
   });
-});
 
+});
 </script>
 
 <div class="sticky-cta">
