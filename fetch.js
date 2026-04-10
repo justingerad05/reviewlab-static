@@ -1060,77 +1060,60 @@ window.addEventListener("load", function(){
     i++;
   });
 
-  /* SCROLL CTA FIX */
+  /* SCROLL CTA */
 
-window.addEventListener("load", function () {
-  const cta = document.querySelector(".sticky-main-ct");
+  var cta = document.querySelector(".sticky-main.cta");
 
-  if (!cta) return;
+  if(cta){
+    window.addEventListener("scroll", function(){
 
-  window.addEventListener("scroll", function () {
-    if (window.scrollY > 600) {
-      cta.classList.add("active");
-    } else {
-      cta.classList.remove("active");
+      if(window.scrollY > 600 && !cta.classList.contains("active")){
 
-      var title = cta.querySelector("h3");
-      var textEl = cta.querySelector("p");
-      var link = cta.querySelector("a");
+        cta.classList.add("active");
 
-      if(title) title.textContent = "⚡ Don’t Miss This Opportunity";
-      if(textEl) textEl.textContent = "This tool is getting popular fast. Get in early.";
-      if(link) link.textContent = "Claim Access Now";
-    }
+        var title = cta.querySelector("h3");
+        var textEl = cta.querySelector("p");
+        var link = cta.querySelector("a");
 
-  });
-}
+        if(title) title.textContent = "⚡ Don’t Miss This Opportunity";
+        if(textEl) textEl.textContent = "This tool is getting popular fast. Get in early.";
+        if(link) link.textContent = "Claim Access Now";
+      }
 
-/* EXIT POPUP (PERSISTENT + SMART) */
-
-(function () {
-  const KEY = "reviewlab_exit_popup";
-  const HOURS = 6;
-
-  function canShow() {
-    const last = localStorage.getItem(KEY);
-    if (!last) return true;
-    return Date.now() - Number(last) > HOURS * 60 * 60 * 1000;
+    });
   }
 
-  function markShown() {
-    localStorage.setItem(KEY, Date.now());
-  }
+  /* EXIT POPUP (SAFE STRING) */
 
-  function createPopup(primaryLink) {
-    const overlay = document.createElement("div");
-    overlay.className = "exit-popup-overlay";
+  var popupShown = false;
 
-    overlay.innerHTML = `
-      <div class="exit-popup">
-        <h3>Wait Before You Leave</h3>
-        <p>This AI system is helping beginners generate income.</p>
-        <a href="${primaryLink}" class="cta-btn">See It Now →</a>
-        <span class="close-popup">✕</span>
-      </div>
-    `;
+  document.addEventListener("mouseleave", function(e){
 
-    document.body.appendChild(overlay);
+    if(e.clientY > 0) return;
+    if(popupShown) return;
 
-    overlay.querySelector(".close-popup").onclick = () => {
-      overlay.remove();
-      markShown();
+    popupShown = true;
+
+    var popup = document.createElement("div");
+    popup.className = "exit-popup-overlay";
+
+    popup.innerHTML =
+      '<div class="exit-popup">' +
+        '<h3>Wait — Before You Leave</h3>' +
+        '<p>This AI system is helping beginners generate income.</p>' +
+        '<a href="' + primary + '" class="cta-btn">See It Now →</a>' +
+        '<span class="close-popup">✕</span>' +
+      '</div>';
+
+    document.body.appendChild(popup);
+
+    popup.querySelector(".close-popup").onclick = function(){
+      popup.remove();
     };
 
-    markShown();
-  }
-
-  document.addEventListener("mouseleave", function (e) {
-    if (e.clientY > 0) return;
-    if (!canShow()) return;
-
-    createPopup("/ai-tools/");
   });
-})();
+
+});
 </script>
 
 <div class="sticky-cta">
