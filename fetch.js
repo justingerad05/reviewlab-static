@@ -1123,10 +1123,10 @@ if(cta){
 });
 </script>
 
-<div class="sticky-cta">
-<a href="javascript:void(0)" class="cta-btn">
-🔥 See The Tool Everyone Is Switching To
-</a>
+<div class="stroll-main-cta">
+  <h3>🚀 Recommended Tool</h3>
+  <p>Proven system beginners are using right now.</p>
+  <a href="javascript:void(0)" class="cta-btn">See Tool →</a>
 </div>
 
 </body>
