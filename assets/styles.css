@@ -321,7 +321,7 @@ body.homepage-bg::before{
 .stroll-main-cta{
   position: fixed;
   bottom: 20px;
-  right: 20px;
+  left: 20px;
   width: 300px;
   background: #0f172a;
   color: #fff;
@@ -374,9 +374,12 @@ body.homepage-bg::before{
   z-index:9999;
 }
 
-.sticky-main-cta{
-  position: relative;
-  overflow: hidden;
+@media (max-width: 900px){
+  .stroll-main-cta{
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: 10px;
+  }
 }
 
 /* ===== Base Layout ===== */
@@ -590,6 +593,11 @@ h1{
 
 .sidebar-card a:hover{
   text-decoration: underline;
+}
+
+.sticky-main-cta{
+  position: relative;
+  overflow: hidden;
 }
 
 .sticky-main-cta::after{
