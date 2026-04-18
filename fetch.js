@@ -1089,37 +1089,63 @@ if(cta){
   });
 
 }
-  
-  /* EXIT POPUP (SAFE STRING) */
 
-  var popupShown = false;
+});
+</script>
 
-  document.addEventListener("mouseleave", function(e){
+<script>
+(function(){
 
-    if(e.clientY > 0) return;
-    if(popupShown) return;
+  let popupShown = false;
+
+  function showExitPopup() {
+    if (popupShown) return;
 
     popupShown = true;
 
-    var popup = document.createElement("div");
-    popup.className = "exit-popup-overlay";
+    const overlay = document.createElement("div");
+    overlay.className = "exit-popup-overlay";
 
-    popup.innerHTML =
-      '<div class="exit-popup">' +
-        '<h3>Wait — Before You Leave</h3>' +
-        '<p>This AI system is helping beginners generate income.</p>' +
-        '<a href="' + primary + '" class="cta-btn">See It Now →</a>' +
-        '<span class="close-popup">✕</span>' +
-      '</div>';
+    overlay.innerHTML = `
+      <div class="exit-popup">
+        <span class="close-popup" style="position:absolute;top:10px;right:15px;cursor:pointer;">✖</span>
+        <h3>Wait! Don’t Leave Yet 🚀</h3>
+        <p>Before you go, check this out — it could change everything.</p>
+        <a href="YOUR_AFFILIATE_LINK_HERE">See It Now →</a>
+      </div>
+    `;
 
-    document.body.appendChild(popup);
+    document.body.appendChild(overlay);
 
-    popup.querySelector(".close-popup").onclick = function(){
-      popup.remove();
+    // CLOSE BUTTON
+    overlay.querySelector(".close-popup").onclick = function() {
+      overlay.remove();
+      popupShown = false; // 🔥 allow retrigger
     };
 
+    // CLICK OUTSIDE TO CLOSE
+    overlay.onclick = function(e) {
+      if (e.target === overlay) {
+        overlay.remove();
+        popupShown = false;
+      }
+    };
+  }
+
+  // EXIT INTENT (DESKTOP)
+  document.addEventListener("mouseout", function(e) {
+    if (e.clientY <= 0) {
+      showExitPopup();
+    }
   });
 
+})();
+
+// MOBILE BACK BUTTON / SCROLL TRIGGER
+window.addEventListener("scroll", function() {
+  if (window.scrollY > 400 && !popupShown) {
+    showExitPopup();
+  }
 });
 </script>
 
