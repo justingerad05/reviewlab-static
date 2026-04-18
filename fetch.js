@@ -1068,7 +1068,9 @@ if(cta){
 
   window.addEventListener("scroll", function(){
 
-    if(window.scrollY > 600){
+    const scrollPercent = (window.scrollY / document.body.scrollHeight) * 100;
+
+if(scrollPercent > 35){
 
       if(!cta.classList.contains("active")){
         cta.classList.add("active");
