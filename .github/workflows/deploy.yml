@@ -31,5 +31,5 @@ jobs:
         run: ls -R
  
       - name: Ping Google
-        run: curl https://www.google.com/ping?sitemap=https://reviewlab-static.pages.dev/sitemap.xml
+        run: curl https://www.google.com/ping?sitemap=https://reviewlab.pages.dev/sitemap.xml
 
