@@ -200,6 +200,21 @@ if(!rawHtml) continue;
 rawHtml = sanitizeHTML(rawHtml);
   
 const title = entry.title["#text"];
+
+  // Extract Blogger labels (categories)
+const labels = entry.category
+  ? (Array.isArray(entry.category)
+      ? entry.category.map(c => c.term.toLowerCase())
+      : [entry.category.term.toLowerCase()])
+  : [];
+
+// Base category from title
+let category = detectTopic(title);
+
+// Manual override using labels
+if (labels.includes("writing")) category = "ai-writing-tools";
+if (labels.includes("image")) category = "ai-image-generators";
+if (labels.includes("automation")) category = "automation-tools";
   
 let baseSlug = title.toLowerCase()
 .replace(/[^a-z0-9]+/g,"-")
@@ -287,7 +302,7 @@ thumb:primaryOG,
 readTime,
 date:entry.published,
 lastmod: new Date().toISOString(),
-category: detectTopic(title),
+category: category,
 schemas:JSON.stringify([articleSchema,productSchema])
 });
 }
@@ -918,9 +933,10 @@ ${related}
   </form>
 
   <p class="sidebar-trust">
-    ✔ Bonus guide sent instantly after signup<br>
-    ✔ No spam. Only proven tools
-  </p>
+✔ Bonus guide sent instantly after signup<br>
+📩 Didn’t see it? Check your Spam or Promotions tab<br>
+✔ No spam. Only proven tools
+</p>
 </div>
 
 <!-- 5. INTERNAL LINKS -->
