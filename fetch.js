@@ -200,21 +200,6 @@ if(!rawHtml) continue;
 rawHtml = sanitizeHTML(rawHtml);
   
 const title = entry.title["#text"];
-
-  // Extract Blogger labels (categories)
-const labels = entry.category
-  ? (Array.isArray(entry.category)
-      ? entry.category.map(c => c.term.toLowerCase())
-      : [entry.category.term.toLowerCase()])
-  : [];
-
-// Base category from title
-let category = detectTopic(title);
-
-// Manual override using labels
-if (labels.includes("writing")) category = "ai-writing-tools";
-if (labels.includes("image")) category = "ai-image-generators";
-if (labels.includes("automation")) category = "automation-tools";
   
 let baseSlug = title.toLowerCase()
 .replace(/[^a-z0-9]+/g,"-")
@@ -302,7 +287,7 @@ thumb:primaryOG,
 readTime,
 date:entry.published,
 lastmod: new Date().toISOString(),
-category: category,
+category: detectTopic(title),
 schemas:JSON.stringify([articleSchema,productSchema])
 });
 }
