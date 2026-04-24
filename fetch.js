@@ -200,6 +200,25 @@ if(!rawHtml) continue;
 rawHtml = sanitizeHTML(rawHtml);
   
 const title = entry.title["#text"];
+
+/* SAFE LABEL EXTRACTION */
+let labels = [];
+
+if (entry.category) {
+  if (Array.isArray(entry.category)) {
+    labels = entry.category.map(c => (c.term || "").toLowerCase());
+  } else if (entry.category.term) {
+    labels = [entry.category.term.toLowerCase()];
+  }
+}
+
+/* CATEGORY ENGINE */
+let category = detectTopic(title);
+
+// Manual override (only if label exists)
+if (labels.includes("writing")) category = "ai-writing-tools";
+if (labels.includes("image")) category = "ai-image-generators";
+if (labels.includes("automation")) category = "automation-tools";
   
 let baseSlug = title.toLowerCase()
 .replace(/[^a-z0-9]+/g,"-")
@@ -287,7 +306,7 @@ thumb:primaryOG,
 readTime,
 date:entry.published,
 lastmod: new Date().toISOString(),
-category: detectTopic(title),
+category: category,
 schemas:JSON.stringify([articleSchema,productSchema])
 });
 }
