@@ -1154,7 +1154,7 @@ document.addEventListener("DOMContentLoaded", function(){
       const email = input.value;
       const source = form.dataset.source;
 
-      const res = await fetch("/api/subscribe", {
+      const res = await fetch("https://email-api.justingerad05.workers.dev/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, source })
