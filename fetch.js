@@ -1822,4 +1822,7 @@ fs.mkdirSync(`_site/page/${page}`,{recursive:true});
 fs.writeFileSync(outputPath, homepage);
 }
 
+fs.mkdirSync("_site/admin", { recursive: true });
+fs.copyFileSync("admin/index.html", "_site/admin/index.html");
+
 console.log("✅ Homepage + Pagination Built Successfully");
