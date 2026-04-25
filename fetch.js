@@ -992,6 +992,8 @@ ${related}
 
 </footer>
 
+<script src="/assets/email.js"></script>
+
 <script>
 document.addEventListener("DOMContentLoaded",()=>{
 
@@ -1550,6 +1552,8 @@ fs.copyFileSync("assets/styles.css","_site/assets/styles.css");
 
 fs.copyFileSync("assets/og-default.jpg","_site/assets/og-default.jpg");
 fs.copyFileSync("assets/og-cta-tested.jpg","_site/assets/og-cta-tested.jpg");
+
+fs.copyFileSync("assets/email.js","_site/assets/email.js");
 
 /* =========================
    HOMEPAGE + PAGINATION
