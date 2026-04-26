@@ -41,8 +41,10 @@ document.addEventListener("DOMContentLoaded", () => {
       console.log("API RESPONSE:", text);
 
       if (!res.ok) {
-        throw new Error(text || "API failed");
-      }
+  console.error("FULL ERROR:", text);
+  alert(text || "API error");
+  return;
+}
 
       showPopup(source);
       input.value = "";
