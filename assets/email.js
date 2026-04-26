@@ -27,15 +27,15 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       const res = await fetch("https://email-api.justingerad05.workers.dev/", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          email,
-          source
-        })
-      });
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({
+    email: email.trim(),
+    source: source || "unknown"
+  })
+});
 
       const text = await res.text();
       console.log("API RESPONSE:", text);
