@@ -1,33 +1,172 @@
+<!-- admin/index.html -->
 <!doctype html>
-<html>
+<html lang="en">
 <head>
 <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Admin Dashboard</title>
 <style>
-body { font-family: Arial; padding: 20px; }
-table { width: 100%; border-collapse: collapse; }
-td, th { border: 1px solid #ddd; padding: 8px; }
+  body { font-family: Arial, sans-serif; padding: 20px; max-width: 1200px; margin: 0 auto; }
+  .card { border: 1px solid #e5e7eb; border-radius: 14px; padding: 16px; margin-bottom: 16px; background: #fff; }
+  .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+  input { padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 10px; min-width: 280px; }
+  button { padding: 10px 14px; border: 0; border-radius: 10px; cursor: pointer; background: #111827; color: #fff; }
+  button.secondary { background: #6b7280; }
+  table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+  th, td { border: 1px solid #e5e7eb; padding: 8px; text-align: left; vertical-align: top; }
+  th { background: #f9fafb; }
+  pre { white-space: pre-wrap; word-break: break-word; }
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; }
+  .stat { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 12px; padding: 12px; }
+  .muted { color: #6b7280; font-size: 14px; }
 </style>
 </head>
 <body>
 
 <h1>Email Subscribers</h1>
+<p class="muted">Paste the same ADMIN_KEY you created in the Cloudflare dashboard.</p>
 
-<button onclick="load()">Load Users</button>
+<div class="card">
+  <div class="row">
+    <input id="adminKey" type="password" placeholder="ADMIN_KEY">
+    <button type="button" onclick="loadUsers()">Load Users</button>
+    <button type="button" class="secondary" onclick="clearKey()">Clear Key</button>
+  </div>
+</div>
 
-<pre id="out"></pre>
+<div class="card">
+  <h2>Stats</h2>
+  <div id="stats" class="stats"></div>
+</div>
+
+<div class="card">
+  <h2>Subscribers</h2>
+  <div id="out" class="muted">No data loaded yet.</div>
+  <div id="tableWrap"></div>
+</div>
 
 <script>
-async function load() {
+const API = "https://email-api.justingerad05.workers.dev/admin";
 
-  const res = await fetch("https://email-api.justingerad05.workers.dev/admin", {
+window.addEventListener("DOMContentLoaded", () => {
+  const saved = localStorage.getItem("reviewlab_admin_key");
+  if (saved) document.getElementById("adminKey").value = saved;
+});
+
+function clearKey() {
+  localStorage.removeItem("reviewlab_admin_key");
+  document.getElementById("adminKey").value = "";
+  document.getElementById("out").textContent = "Key cleared.";
+  document.getElementById("stats").innerHTML = "";
+  document.getElementById("tableWrap").innerHTML = "";
+}
+
+async function loadUsers() {
+  const key = document.getElementById("adminKey").value.trim();
+  if (!key) {
+    alert("Paste the ADMIN_KEY first.");
+    return;
+  }
+
+  localStorage.setItem("reviewlab_admin_key", key);
+
+  const out = document.getElementById("out");
+  const statsBox = document.getElementById("stats");
+  const tableWrap = document.getElementById("tableWrap");
+
+  out.textContent = "Loading...";
+
+  const res = await fetch(API, {
     headers: {
-      "Authorization": "Bearer God-loves2me"
+      "Authorization": "Bearer " + key
     }
   });
 
-  const data = await res.json();
-  document.getElementById("out").textContent = JSON.stringify(data, null, 2);
+  const text = await res.text();
+
+  if (!res.ok) {
+    out.textContent = text || ("Request failed: " + res.status);
+    statsBox.innerHTML = "";
+    tableWrap.innerHTML = "";
+    return;
+  }
+
+  let data;
+  try {
+    data = JSON.parse(text);
+  } catch {
+    out.textContent = text;
+    return;
+  }
+
+  const users = Array.isArray(data) ? data : (data.users || []);
+  const stats = Array.isArray(data) ? null : (data.stats || null);
+
+  out.textContent = JSON.stringify(data, null, 2);
+
+  if (stats) {
+    statsBox.innerHTML = `
+      <div class="stat"><strong>Total</strong><div>${stats.total || 0}</div></div>
+      <div class="stat"><strong>Hot</strong><div>${stats.hot || 0}</div></div>
+      <div class="stat"><strong>Clicked</strong><div>${stats.clicked || 0}</div></div>
+      <div class="stat"><strong>Sources</strong><div>${Object.keys(stats.bySource || {}).length}</div></div>
+    `;
+  }
+
+  tableWrap.innerHTML = renderTable(users);
+}
+
+function renderTable(users) {
+  if (!users.length) return "<p class='muted'>No subscribers yet.</p>";
+
+  const rows = users.map(u => `
+    <tr>
+      <td>${escapeHtml(u.email || "")}</td>
+      <td>${escapeHtml(u.source || "")}</td>
+      <td>${escapeHtml(String(u.step ?? ""))}</td>
+      <td>${escapeHtml(u.intent || "")}</td>
+      <td>${Number(u.clickedAffiliate) ? "Yes" : "No"}</td>
+      <td>${formatDate(u.lastClick)}</td>
+      <td>${formatDate(u.lastSent)}</td>
+      <td>${formatDate(u.createdAt)}</td>
+      <td>${escapeHtml(Array.isArray(u.tags) ? u.tags.join(", ") : String(u.tags || ""))}</td>
+    </tr>
+  `).join("");
+
+  return `
+    <table>
+      <thead>
+        <tr>
+          <th>Email</th>
+          <th>Source</th>
+          <th>Step</th>
+          <th>Intent</th>
+          <th>Clicked</th>
+          <th>Last Click</th>
+          <th>Last Sent</th>
+          <th>Created</th>
+          <th>Tags</th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>
+  `;
+}
+
+function formatDate(value) {
+  if (!value) return "";
+  const n = Number(value);
+  if (!Number.isFinite(n)) return "";
+  return new Date(n).toLocaleString();
+}
+
+function escapeHtml(value) {
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
 }
 </script>
 
