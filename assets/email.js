@@ -64,6 +64,8 @@ document.addEventListener("DOMContentLoaded", () => {
 function showPopup(source, email) {
   const popup = document.createElement("div");
 
+  let title = "📩 Great choice!";
+  let message = "More tools coming your way.";
   let bonus = "";
 
   if (source === "sidebar") {
@@ -82,8 +84,8 @@ function showPopup(source, email) {
 
   popup.innerHTML = `
     <div class="popup-box" style="max-width:420px;width:calc(100% - 32px);background:#fff;border-radius:16px;padding:24px;box-shadow:0 20px 50px rgba(0,0,0,.25);text-align:center;">
-      <h3>🎁 You're in!</h3>
-      <p>More tools coming your way.</p>
+      <h3 style="margin:0 0 12px;">${title}</h3>
+      <p style="margin:0 0 16px;">${message}</p>
       ${bonus}
       <button style="margin-top:16px;padding:10px 16px;border:0;border-radius:10px;cursor:pointer;"
         onclick="this.closest('.email-popup').remove()">Close</button>
