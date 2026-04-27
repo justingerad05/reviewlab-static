@@ -77,9 +77,7 @@ function showPopup(source, email) {
 
   if (source === "sidebar") {
     const trackedLink = `https://email-api.justingerad05.workers.dev/click?email=${encodeURIComponent(email)}&to=${encodeURIComponent("https://drive.google.com/file/d/1EPUhdkvyRV1y5SDpHVb4t7woPPnGzctC/view?usp=drive_link")}`;
-    title = "📩 Great choice! 🎁 Here's your bonus";
-    message = "More tools coming your way.";
-
+    
     bonus = `
       <a href="${trackedLink}"
          target="_blank"
@@ -89,6 +87,11 @@ function showPopup(source, email) {
     `;
   }
 
+  if (source === "sidebar") {
+    title = "📩 Great choice! 🎁 Here's your bonus";
+    message = "More tools coming your way.";
+  }
+   
   popup.innerHTML = `
     <div class="popup-box" style="max-width:420px;width:calc(100% - 32px);background:#fff;border-radius:16px;padding:24px;box-shadow:0 20px 50px rgba(0,0,0,.25);text-align:center;">
       <h3 style="margin:0 0 12px;">${title}</h3>
