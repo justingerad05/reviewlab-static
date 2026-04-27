@@ -94,8 +94,7 @@ function showPopup(source, email) {
       <h3 style="margin:0 0 12px;">${title}</h3>
       <p style="margin:0 0 16px;">${message}</p>
       ${bonus}
-      <button style="margin-top:16px;padding:10px 16px;border:0;border-radius:10px;cursor:pointer;"
-        onclick="this.closest('.email-popup').remove()">Close</button>
+      <button onclick="this.closest('.email-popup').remove()">Close</button>
     </div>
   `;
 
