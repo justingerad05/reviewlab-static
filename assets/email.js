@@ -67,8 +67,10 @@ function showPopup(source, email) {
   let bonus = "";
 
   if (source === "sidebar") {
-    const trackedLink = `https://email-api.justingerad05.workers.dev/click?email=${encodeURIComponent(email)}&to=${encodeURIComponent("https://your-affiliate-link.com")}`;
-
+    const trackedLink = `https://email-api.justingerad05.workers.dev/click?email=${encodeURIComponent(email)}&to=${encodeURIComponent("https://drive.google.com/file/d/1EPUhdkvyRV1y5SDpHVb4t7woPPnGzctC/view?usp=drive_link")}`;
+    title = "📩 Great choice! 🎁 Here's your bonus";
+    message = "More tools coming your way.";
+    
     bonus = `
       <a href="${trackedLink}"
          target="_blank"
