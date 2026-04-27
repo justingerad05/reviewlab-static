@@ -53,6 +53,16 @@
 
   <p class="muted">Uses BCC for safe sending.</p>
 </div>
+
+  <div class="card">
+  <h2>Filters</h2>
+  <div class="row">
+    <button onclick="applyFilter('all')">All</button>
+    <button onclick="applyFilter('hot')">🔥 Hot</button>
+    <button onclick="applyFilter('cold')">❄️ Cold</button>
+    <button onclick="applyFilter('clicked')">🖱 Clicked</button>
+  </div>
+</div>
   
 <div class="card">
   <h2>Subscribers</h2>
@@ -233,6 +243,27 @@ function clearKey() {
     alert("Error deleting user");
   }
 }
+
+  let ALL_USERS = [];
+
+function applyFilter(type) {
+  let filtered = [];
+
+  if (type === "hot") {
+    filtered = ALL_USERS.filter(u => u.intent === "hot");
+  } 
+  else if (type === "cold") {
+    filtered = ALL_USERS.filter(u => u.intent === "cold");
+  } 
+  else if (type === "clicked") {
+    filtered = ALL_USERS.filter(u => Number(u.clickedAffiliate) === 1);
+  } 
+  else {
+    filtered = ALL_USERS;
+  }
+
+  document.getElementById("tableWrap").innerHTML = renderTable(filtered);
+}
   
 async function loadUsers() {
   const key = document.getElementById("adminKey").value.trim();
@@ -273,6 +304,8 @@ async function loadUsers() {
   }
 
   const users = Array.isArray(data) ? data : (data.users || []);
+ALL_USERS = users; // ✅ store globally
+  
   const stats = Array.isArray(data) ? null : (data.stats || null);
 
   out.textContent = JSON.stringify(data, null, 2);
