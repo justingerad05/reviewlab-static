@@ -1034,7 +1034,7 @@ color:#6b7280;
 }
 
 .popup-box{
-  background:#fff;
+  background: linear-gradient(135deg,#22c55e,#16a34a);
   padding:30px;
   border-radius:10px;
   text-align:center;
