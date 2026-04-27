@@ -77,7 +77,7 @@ function showPopup(source) {
 
   // 🔥 ONLY sidebar gets bonus
   if (source === "sidebar") {
-    title = "📩 Great choice!" "🎁 Here's your bonus";
+    title = "📩 Great choice! 🎁 Here's your bonus";
     message = "More tools coming your way.";
 
     bonus = `
@@ -90,7 +90,7 @@ function showPopup(source) {
   }
 
   popup.innerHTML = `
-    <div style="max-width:420px;width:calc(100% - 32px);background:#fff;border-radius:16px;padding:24px;box-shadow:0 20px 50px rgba(0,0,0,.25);text-align:center;">
+    <div class="popup-box" style="max-width:420px;width:calc(100% - 32px);background:#fff;border-radius:16px;padding:24px;box-shadow:0 20px 50px rgba(0,0,0,.25);text-align:center;">
       <h3 style="margin:0 0 12px;">${title}</h3>
       <p style="margin:0 0 16px;">${message}</p>
       ${bonus}
