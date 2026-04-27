@@ -71,13 +71,14 @@ function showPopup(source) {
   popup.style.background = "rgba(0,0,0,.45)";
   popup.style.zIndex = "99999";
 
-  let title = "You're in!";
+  let title = "📩 Great choice!";
   let message = "More tools coming your way.";
   let bonus = "";
 
   // 🔥 ONLY sidebar gets bonus
   if (source === "sidebar") {
-    title = "🎁 Here's your bonus";
+    title = "📩 Great choice!
+      🎁 Here's your bonus";
     message = "More tools coming your way.";
 
     bonus = `
