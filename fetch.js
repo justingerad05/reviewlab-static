@@ -1,11 +1,19 @@
 import fs from "fs";
-import fetch from "node-fetch";
 import { marked } from "marked";
 import { XMLParser } from "fast-xml-parser";
 import { upscaleToOG } from "./generate-og.js";
 
 function escapeJson(str){
   return str.replace(/"/g,'\\"');
+}
+
+function escapeXML(str = "") {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&apos;");
 }
 
 function sanitizeHTML(html){
@@ -435,9 +443,10 @@ const rss = `<?xml version="1.0" encoding="UTF-8" ?>
 
 ${posts.slice(0,20).map(post=>`
 <item>
-<title>${post.title}</title>
+<title>${escapeXML(post.title)}</title>
 <link>${post.url}</link>
-<description>${post.description}</description>
+<guid>${post.url}</guid>
+<description>${escapeXML(post.description)}</description>
 <pubDate>${new Date(post.date).toUTCString()}</pubDate>
 </item>
 `).join("")}
