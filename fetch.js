@@ -1,4 +1,5 @@
 import fs from "fs";
+import fetch from "node-fetch";
 import { marked } from "marked";
 import { XMLParser } from "fast-xml-parser";
 import { upscaleToOG } from "./generate-og.js";
