@@ -316,49 +316,67 @@ body.homepage-bg::before{
   font-size:18px;
 }
 
-/* SCROLL CTA (Floating Box) */
-
-.stroll-main-cta{
+/* ===== FIXED STROLL CTA (Mobile & Desktop) ===== */
+.stroll-main-cta {
   position: fixed;
   bottom: 20px;
   left: 20px;
-  width: 300px;
+  width: calc(100% - 40px); /* Responsive width */
+  max-width: 350px;
   background: #0f172a;
   color: #fff;
-  padding: 16px;
-  border-radius: 12px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+  padding: 20px;
+  border-radius: 16px;
+  box-shadow: 0 15px 40px rgba(0,0,0,0.4);
   z-index: 9999;
+  border: 1px solid rgba(255,255,255,0.1);
+  backdrop-filter: blur(10px);
 
-  transform: translateY(120%);
+  transform: translateY(150%); /* Hidden state */
   opacity: 0;
-  transition: all 0.4s ease;
+  transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.stroll-main-cta.active{
+.stroll-main-cta.active {
   transform: translateY(0);
   opacity: 1;
 }
 
-.stroll-main-cta h3{
-  font-size: 16px;
-  margin-bottom: 6px;
+/* Fix for breaking text in mobile */
+.stroll-main-cta h3 {
+  font-size: 17px;
+  margin-top: 0;
+  margin-bottom: 8px;
+  line-height: 1.3;
+  color: #7dd3fc;
+  word-wrap: break-word; /* Prevents long word breaks */
 }
 
-.stroll-main-cta p{
+.stroll-main-cta p {
   font-size: 14px;
-  margin-bottom: 10px;
-  color: #cbd5f5;
+  margin-bottom: 15px;
+  color: #cbd5e1;
+  line-height: 1.5;
 }
 
-.stroll-main-cta .cta-btn{
-  display: inline-block;
-  background: #22c55e;
-  color: #000;
-  padding: 10px 14px;
-  border-radius: 8px;
-  font-weight: bold;
-  text-decoration: none;
+.stroll-main-cta .cta-btn {
+  display: block; /* Full width button on mobile for better UX */
+  text-align: center;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+@media (max-width: 600px) {
+  .stroll-main-cta {
+    left: 5%;
+    width: 90%;
+    bottom: 15px;
+    padding: 16px;
+  }
+  
+  .stroll-main-cta h3 {
+    font-size: 16px;
+  }
 }
 
 .exit-popup-overlay{
@@ -372,14 +390,6 @@ body.homepage-bg::before{
   align-items:center;
   justify-content:center;
   z-index:9999;
-}
-
-@media (max-width: 900px){
-  .stroll-main-cta{
-    left: 50%;
-    transform: translateX(-50%);
-    bottom: 10px;
-  }
 }
 
 /* ===== Base Layout ===== */
