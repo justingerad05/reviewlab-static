@@ -98,7 +98,6 @@ if(!Array.isArray(entries)) entries=[entries];
 /* YOUTUBE IMAGE ENGINE */
 
 async function getYouTubeImages(html, slug) {
-
   const match = html.match(/(?:youtube\.com\/(?:embed\/|watch\?v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
 
   if (!match) {
@@ -107,28 +106,20 @@ async function getYouTubeImages(html, slug) {
 
   const id = match[1];
 
-  const candidates = [
-    `https://img.youtube.com/vi/${id}/maxresdefault.jpg`,
-    `https://img.youtube.com/vi/${id}/sddefault.jpg`,
-    `https://img.youtube.com/vi/${id}/hqdefault.jpg`
-  ];
-
-  for (const img of candidates) {
-    try {
-      const res = await fetch(img, { method: "HEAD" });
-      if (res.ok) {
-        return [img];
-      }
-    } catch {}
-  }
-
+  // Attempt to upscale the highest resolution available
   const success = await upscaleToOG(
-    `https://img.youtube.com/vi/${id}/hqdefault.jpg`,
+    `https://img.youtube.com/vi/${id}/maxresdefault.jpg`,
     slug
   );
 
-  if (success && fs.existsSync(`_site/og-images/${slug}.jpg`)) {
-    return [`${SITE_URL}/og-images/${slug}.jpg`];
+  // If maxres fails, try hqdefault
+  if (!success) {
+    await upscaleToOG(`https://img.youtube.com/vi/${id}/hqdefault.jpg`, slug);
+  }
+
+  // Check if the file was created with the .webp extension
+  if (fs.existsSync(`_site/og-images/${slug}.webp`)) {
+    return [`${SITE_URL}/og-images/${slug}.webp` ];
   }
 
   return [`${SITE_URL}/assets/og-default.jpg`];
