@@ -1,140 +1,53 @@
 import fs from "fs";
-import satori from "satori";
-import { Resvg } from "@resvg/resvg-js";
 import fetch from "node-fetch";
+import sharp from "sharp";
 
-/* Ensure folder */
-
-if(!fs.existsSync("./_site/og-images")){
- fs.mkdirSync("./_site/og-images",{recursive:true});
+/* Ensure folder exists */
+if (!fs.existsSync("./_site/og-images")) {
+  fs.mkdirSync("./_site/og-images", { recursive: true });
 }
 
-/* FONT SAFE LOAD */
+/**
+ * UPSCALE ENGINE (Sharp version)
+ * Downloads YouTube thumbnail and converts/resizes to 1200x630 .webp
+ */
+export async function upscaleToOG(url, slug) {
+  try {
+    const res = await fetch(url);
+    if (!res.ok) return false;
+    
+    const buffer = await res.arrayBuffer();
 
-let fontData=null;
+    await sharp(Buffer.from(buffer))
+      .resize(1200, 630, {
+        fit: 'cover',
+        position: 'center'
+      })
+      .webp({ quality: 85 }) // Output as WebP for performance
+      .toFile(`./_site/og-images/${slug}.webp`);
 
-try{
- fontData=fs.readFileSync("./fonts/Inter-Regular.ttf");
-}catch{}
-
-
-/* =============================
-UPSCALE ENGINE
-============================= */
-
-export async function upscaleToOG(url,slug){
-
- try{
-
-   const res = await fetch(url);
-   const buffer = await res.arrayBuffer();
-
-   const svg = await satori({
-     type:"div",
-     props:{
-       style:{
-         width:1200,
-         height:630,
-         display:"flex"
-       },
-       children:[
-         {
-           type:"img",
-           props:{
-             src:Buffer.from(buffer),
-             style:{
-               width:"1200px",
-               height:"630px",
-               objectFit:"cover"
-             }
-           }
-         }
-       ]
-     }
-   },{
-     width:1200,
-     height:630,
-     fonts:[]
-   });
-
-   const resvg = new Resvg(svg);
-   const image = resvg.render();
-
-   fs.writeFileSync(`./_site/og-images/${slug}.jpg`,
-     image.asJpeg(100)
-   );
-
-   return true;
-
- }catch{
-   return false;
- }
+    return true;
+  } catch (error) {
+    console.error(`Sharp failed for ${slug}:`, error);
+    return false;
+  }
 }
 
-
-
-/* =============================
-LAST RESORT GENERATOR
-============================= */
-
-export async function generateOG(slug,title){
-
- try{
-
-   const svg = await satori({
-     type:"div",
-     props:{
-       style:{
-         width:1200,
-         height:630,
-         background:"#020617",
-         display:"flex",
-         flexDirection:"column",
-         justifyContent:"center",
-         padding:"70px",
-         color:"#fff"
-       },
-       children:[
-         {
-           type:"div",
-           props:{
-             style:{
-               fontSize:64,
-               fontWeight:800
-             },
-             children:title.slice(0,80)
-           }
-         }
-       ]
-     }
-   },{
-     width:1200,
-     height:630,
-     fonts: fontData ? [{
-       name:"Inter",
-       data:fontData,
-       weight:400,
-       style:"normal"
-     }] : []
-   });
-
-   const resvg=new Resvg(svg);
-   const image=resvg.render();
-
-   fs.writeFileSync(
-     `./_site/og-images/${slug}.jpg`,
-     image.asJpeg(100)
-   );
-
-   return true;
-
- }catch{
-
-   fs.copyFileSync(
-     "og-default.jpg",
-     `./_site/og-images/${slug}.jpg`
-   );
-
-   return false;
- }
+/**
+ * FALLBACK GENERATOR
+ * If no YouTube image exists, this ensures a file is still created
+ */
+export async function generateOG(slug, title) {
+  try {
+    // If you have a default local image, copy it over renamed
+    if (fs.existsSync("./assets/og-default.jpg")) {
+        await sharp("./assets/og-default.jpg")
+            .webp()
+            .toFile(`./_site/og-images/${slug}.webp`);
+        return true;
+    }
+    return false;
+  } catch {
+    return false;
+  }
 }
