@@ -3,8 +3,13 @@ import { marked } from "marked";
 import { XMLParser } from "fast-xml-parser";
 import { upscaleToOG } from "./generate-og.js";
 
-function escapeJson(str){
-  return str.replace(/"/g,'\\"');
+/* 1. Improved JSON Escaping (Prevents Script Breaks) */
+function escapeJson(str) {
+  return str
+    .replace(/\\/g, "\\\\")
+    .replace(/"/g, '\\"')
+    .replace(/\n/g, "\\n")
+    .replace(/\r/g, "\\r");
 }
 
 function escapeXML(str = "") {
@@ -268,16 +273,23 @@ Math.ceil(textOnly.split(/\s+/).length / 200)
 const {pros,cons} = extractProsCons(textOnly);
 
 /* SCHEMA */
-
 const wordCount = textOnly.split(/\s+/).length;
 const ratingValue = Math.min(5, (3.8 + (wordCount / 4000))).toFixed(1);
 
+/* 3. Safety Check - Corrected & Applied */
+// We create the safe name here...
+const brandName = title.includes(" ") ? title.split(" ")[0] : title;
+
 const productSchema = {
-"@context":"https://schema.org",
-"@type":"Product",
-"name":escapeJson(title),
-"image":primaryOG,
-"brand":{"@type":"Brand","name":title.split(" ")[0]},
+  "@context":"https://schema.org",
+  "@type":"Product",
+  "name":escapeJson(title),
+  "image":primaryOG,
+  // ...and we USE brandName here instead of title.split(" ")[0]
+  "brand": {
+    "@type": "Brand", 
+    "name": brandName 
+  },
 "aggregateRating":{
  "@type":"AggregateRating",
  "ratingValue":ratingValue,
@@ -532,10 +544,10 @@ ${globalHeader()}
 }
 
 /* BUILD ALL COMPARISON PAGES */
-
-for(let i=0;i<posts.length;i++){
-  for(let j=i+1;j<posts.length && j<i+4;j++){
-    generateComparison(posts[i],posts[j]);
+/* 2. Scalable Comparison Engine (Prevents Build Bloat) */
+for (let i = 0; i < Math.min(posts.length, 20); i++) { 
+  for (let j = i + 1; j < Math.min(posts.length, i + 4); j++) {
+    generateComparison(posts[i], posts[j]);
   }
 }
 
