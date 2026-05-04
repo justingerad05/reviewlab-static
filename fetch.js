@@ -1832,7 +1832,7 @@ lazyImgs.forEach(img=>io.observe(img));
 </html>
 `;
 
-fs.copyFileSync("assets/hero-bg.jpg","_site/assets/hero-bg.jpg");
+fs.copyFileSync("assets/hero-bg.webp","_site/assets/hero-bg.webp");
   
 fs.mkdirSync(`_site/search`,{recursive:true});
 
