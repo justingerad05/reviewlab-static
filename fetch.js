@@ -76,17 +76,7 @@ fs.mkdirSync("_site/_data", { recursive: true });
 fs.mkdirSync(`_site/comparisons`, {recursive:true});
 
 /* FETCH */
-const parser = new XMLParser({
-  ignoreAttributes: false,
-
-  processEntities: true, // keep decoding entities
-
-  entityExpansionLimit: 10000,
-
-  // Optional but recommended for stability
-  allowBooleanAttributes: true,
-  parseTagValue: false, // prevents aggressive parsing
-});
+const parser = new XMLParser({ignoreAttributes:false});
 
 let xml = "";
 
@@ -98,16 +88,6 @@ try {
   console.error("Feed error:", err);
   process.exit(1);
 }
-
-// 🔥 Reduce entity overload before parsing
-xml = xml.replace(/&nbsp;/g, " ");
-xml = xml.replace(/&amp;/g, "&");
-
-// Optional aggressive cleanup (safe)
-xml = xml.replace(/&(#\d+|[a-zA-Z]+);/g, (match) => {
-  if (match.length > 10) return ""; // kill weird long entities
-  return match;
-});
 
 const data = parser.parse(xml);
 
