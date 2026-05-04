@@ -433,7 +433,7 @@ body.homepage-bg::before{
 }
 
 .vs-text {
-  color: #ff4d4d;
+  color: #000;
   font-style: italic;
   font-size: 0.8em;
 }
