@@ -81,8 +81,7 @@ const parser = new XMLParser({
 
   processEntities: true, // keep decoding entities
 
-  // 🔥 THIS IS THE FIX
-  entityExpansionLimit: 0, // 0 = unlimited (removes the cap)
+  entityExpansionLimit: 10000,
 
   // Optional but recommended for stability
   allowBooleanAttributes: true,
@@ -99,6 +98,16 @@ try {
   console.error("Feed error:", err);
   process.exit(1);
 }
+
+// 🔥 Reduce entity overload before parsing
+xml = xml.replace(/&nbsp;/g, " ");
+xml = xml.replace(/&amp;/g, "&");
+
+// Optional aggressive cleanup (safe)
+xml = xml.replace(/&(#\d+|[a-zA-Z]+);/g, (match) => {
+  if (match.length > 10) return ""; // kill weird long entities
+  return match;
+});
 
 const data = parser.parse(xml);
 
