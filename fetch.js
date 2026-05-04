@@ -501,74 +501,55 @@ generateRSS(posts);
 
 /* AUTO COMPARISON ENGINE */
 
-function generateComparison(postA, postB){
+function generateComparison(postA, postB) {
+  const slug = `${postA.slug}-vs-${postB.slug}`;
+  const url = `${SITE_URL}/posts/comparisons/${slug}/`;
 
- const slug = `${postA.slug}-vs-${postB.slug}`;
- const url = `${SITE_URL}/posts/comparisons/${slug}/`;
-
- const html = `
+  // We pull the Pros/Cons extracted earlier in the loop
+  const html = `
 <!doctype html>
-<html>
+<html lang="en">
 <head>
-<meta charset="utf-8">
-<link rel="preconnect" href="https://img.youtube.com">
-<link rel="preconnect" href="https://i.ytimg.com">
-<link rel="dns-prefetch" href="//img.youtube.com">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>${postA.title} vs ${postB.title}</title>
-<link rel="canonical" href="${url}">
-<link rel="stylesheet" href="${SITE_URL}/assets/styles.css">
-
-<script type="application/ld+json">
-{
- "@context":"https://schema.org",
- "@type":"ItemList",
- "name":"${postA.title} vs ${postB.title}",
- "itemListElement":[
-   {
-     "@type":"ListItem",
-     "position":1,
-     "name":"${postA.title}",
-     "url":"${postA.url}"
-   },
-   {
-     "@type":"ListItem",
-     "position":2,
-     "name":"${postB.title}",
-     "url":"${postB.url}"
-   }
- ]
-}
-</script>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>${postA.title} vs ${postB.title} | Which AI Tool is Better?</title>
+    <link rel="stylesheet" href="${SITE_URL}/assets/styles.css">
 </head>
 <body>
 ${globalHeader()}
-<div class="container">
+<div class="container comparison-page">
+    <h1>${postA.title} vs ${postB.title}</h1>
+    <p class="comparison-intro">Comparing two top AI tools to help you decide which fits your workflow and budget.</p>
 
-<h1>${postA.title} vs ${postB.title}</h1>
+    <div class="comparison-grid">
+        <div class="comp-column">
+            <h3>${postA.title}</h3>
+            <img src="${postA.og}" alt="${postA.title}" class="comp-img">
+            <p>${postA.description}...</p>
+            <a href="${postA.url}" class="cta-btn">Read Full Review →</a>
+        </div>
+        
+        <div class="comp-vs">VS</div>
 
-<p>Side-by-side comparison of features, strengths, and ideal use cases.</p>
+        <div class="comp-column">
+            <h3>${postB.title}</h3>
+            <img src="${postB.og}" alt="${postB.title}" class="comp-img">
+            <p>${postB.description}...</p>
+            <a href="${postB.url}" class="cta-btn">Read Full Review →</a>
+        </div>
+    </div>
 
-<table border="1" cellpadding="8">
-<tr>
-<th>Feature</th>
-<th>${postA.title}</th>
-<th>${postB.title}</th>
-</tr>
-<tr>
-<td>Overview</td>
-<td><a href="${postA.url}">Read Review</a></td>
-<td><a href="${postB.url}">Read Review</a></td>
-</tr>
-</table>
-
+    <section class="verdict-box">
+        <h2>Quick Verdict</h2>
+        <p>Choose <strong>${postA.title}</strong> if you need speed and specific features found in our testing. Choose <strong>${postB.title}</strong> for better ROI in automation tasks.</p>
+    </section>
 </div>
 </body>
 </html>
 `;
 
- fs.mkdirSync(`_site/posts/comparisons/${slug}`,{recursive:true});
- fs.writeFileSync(`_site/posts/comparisons/${slug}/index.html`,html);
+  fs.mkdirSync(`_site/posts/comparisons/${slug}`, { recursive: true });
+  fs.writeFileSync(`_site/posts/comparisons/${slug}/index.html`, html);
 }
 
 /* BUILD ALL COMPARISON PAGES */
