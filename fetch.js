@@ -499,13 +499,33 @@ fs.writeFileSync("_site/rss.xml",rss);
 
 generateRSS(posts);
 
-/* AUTO COMPARISON ENGINE */
-
+/* AUTO COMPARISON ENGINE - UPDATED */
 function generateComparison(postA, postB) {
   const slug = `${postA.slug}-vs-${postB.slug}`;
   const url = `${SITE_URL}/posts/comparisons/${slug}/`;
 
-  // We pull the Pros/Cons extracted earlier in the loop
+  // Generate ItemList Schema for the Comparison
+  const comparisonSchema = {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    "name": `${postA.title} vs ${postB.title}`,
+    "description": `In-depth comparison between ${postA.title} and ${postB.title}.`,
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": postA.title,
+        "url": postA.url
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": postB.title,
+        "url": postB.url
+      }
+    ]
+  };
+
   const html = `
 <!doctype html>
 <html lang="en">
@@ -513,35 +533,57 @@ function generateComparison(postA, postB) {
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>${postA.title} vs ${postB.title} | Which AI Tool is Better?</title>
+    <link rel="canonical" href="${url}">
     <link rel="stylesheet" href="${SITE_URL}/assets/styles.css">
+    <script type="application/ld+json">
+      ${JSON.stringify(comparisonSchema)}
+    </script>
 </head>
 <body>
 ${globalHeader()}
 <div class="container comparison-page">
-    <h1>${postA.title} vs ${postB.title}</h1>
-    <p class="comparison-intro">Comparing two top AI tools to help you decide which fits your workflow and budget.</p>
+    <nav class="breadcrumb">
+      <a href="${SITE_URL}/">Home</a> » <a href="${SITE_URL}/comparisons/">Comparisons</a> » ${postA.title} vs ${postB.title}
+    </nav>
 
-    <div class="comparison-grid">
-        <div class="comp-column">
-            <h3>${postA.title}</h3>
-            <img src="${postA.og}" alt="${postA.title}" class="comp-img">
-            <p>${postA.description}...</p>
-            <a href="${postA.url}" class="cta-btn">Read Full Review →</a>
-        </div>
-        
-        <div class="comp-vs">VS</div>
-
-        <div class="comp-column">
-            <h3>${postB.title}</h3>
-            <img src="${postB.og}" alt="${postB.title}" class="comp-img">
-            <p>${postB.description}...</p>
-            <a href="${postB.url}" class="cta-btn">Read Full Review →</a>
-        </div>
+    <h1>${postA.title} <span class="vs-text">vs</span> ${postB.title}</h1>
+    
+    <div class="comparison-table-wrapper">
+      <table class="comparison-table">
+        <thead>
+          <tr>
+            <th>Feature</th>
+            <th>${postA.title}</th>
+            <th>${postB.title}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Visual</strong></td>
+            <td><img src="${postA.og}" alt="${postA.title}" class="table-img"></td>
+            <td><img src="${postB.og}" alt="${postB.title}" class="table-img"></td>
+          </tr>
+          <tr>
+            <td><strong>Best For</strong></td>
+            <td>${postA.description.slice(0, 80)}...</td>
+            <td>${postB.description.slice(0, 80)}...</td>
+          </tr>
+          <tr>
+            <td><strong>Full Analysis</strong></td>
+            <td><a href="${postA.url}" class="table-link">Read Review →</a></td>
+            <td><a href="${postB.url}" class="table-link">Read Review →</a></td>
+          </tr>
+        </tbody>
+      </table>
     </div>
 
     <section class="verdict-box">
-        <h2>Quick Verdict</h2>
-        <p>Choose <strong>${postA.title}</strong> if you need speed and specific features found in our testing. Choose <strong>${postB.title}</strong> for better ROI in automation tasks.</p>
+        <h2>The Verdict</h2>
+        <p>After testing both tools, <strong>${postA.title}</strong> excels in specialized output, while <strong>${postB.title}</strong> offers superior workflow automation. Choose based on your primary volume needs.</p>
+        <div class="verdict-btns">
+          <a href="${postA.url}" class="cta-btn">Get ${postA.title}</a>
+          <a href="${postB.url}" class="cta-btn">Get ${postB.title}</a>
+        </div>
     </section>
 </div>
 </body>
