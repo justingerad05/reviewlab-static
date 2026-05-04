@@ -488,13 +488,44 @@ body.homepage-bg::before{
   text-decoration: underline;
 }
 
+/* FIXED VERDICT BOX - HIGH CONTRAST */
 .verdict-box {
-  background: #f8fafc;
-  border: 2px solid #e2e8f0;
+  background: #1e293b; /* Dark Navy/Slate background */
   padding: 40px;
   border-radius: 20px;
   text-align: center;
   margin-top: 50px;
+  border: 1px solid #334155;
+}
+
+.verdict-box h2 {
+  color: #f8fafc; /* Near white for the heading */
+  margin-bottom: 15px;
+  font-size: 2rem;
+}
+
+.verdict-box p {
+  color: #cbd5e1; /* Light gray for the paragraph text */
+  font-size: 1.1rem;
+  line-height: 1.6;
+  max-width: 800px;
+  margin: 0 auto 25px auto;
+}
+
+.verdict-box strong {
+  color: #38bdf8; /* Highlight the winner in a bright sky blue */
+}
+
+/* Subtle styling for the Breadcrumb nav */
+.breadcrumb {
+  margin-bottom: 20px;
+  font-size: 0.9rem;
+  color: #64748b;
+}
+
+.breadcrumb a {
+  color: #3b82f6;
+  text-decoration: none;
 }
 
 .verdict-btns {
