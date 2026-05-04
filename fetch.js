@@ -1152,15 +1152,17 @@ window.addEventListener("load", function(){
   else if(bodyText.includes("writing") || bodyText.includes("copy")) category = "ai-writing-tools";
 
   const targetUrls = ctaData[category] || ctaData["general"];
-  const primaryUrl = targetUrls[0];
+  const primaryUrl = targetUrls[0]; // The absolute #1 best post for this page
 
-  // 2. Swap URLs in all Page Buttons
+  // 2. UNIQUE URL Swapper: Distributes different posts to different buttons
   const buttons = document.querySelectorAll(".cta-btn, .sidebar-btn");
   buttons.forEach((btn, index) => {
-    btn.setAttribute("href", targetUrls[index % targetUrls.length]);
+    // This uses the modulo operator (%) to cycle through the 3 URLs in targetUrls
+    const uniqueUrl = targetUrls[index % targetUrls.length];
+    btn.setAttribute("href", uniqueUrl);
   });
 
-  // 3. Scroll CTA Logic
+  // 3. Scroll CTA Logic (Points to #1 Best Post)
   const strollCta = document.querySelector(".stroll-main-cta");
   if(strollCta) {
     window.addEventListener("scroll", function(){
