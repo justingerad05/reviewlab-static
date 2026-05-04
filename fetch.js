@@ -78,9 +78,15 @@ fs.mkdirSync(`_site/comparisons`, {recursive:true});
 /* FETCH */
 const parser = new XMLParser({
   ignoreAttributes: false,
-  processEntities: true,
-  ignoreDeclaration: true, // New: Helps bypass deep XML nesting issues
-  entityThreshold: 2000000 // Doubled the limit
+
+  processEntities: true, // keep decoding entities
+
+  // 🔥 THIS IS THE FIX
+  entityExpansionLimit: 0, // 0 = unlimited (removes the cap)
+
+  // Optional but recommended for stability
+  allowBooleanAttributes: true,
+  parseTagValue: false, // prevents aggressive parsing
 });
 
 let xml = "";
