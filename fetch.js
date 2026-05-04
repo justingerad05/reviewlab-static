@@ -272,7 +272,6 @@ const wordCount = textOnly.split(/\s+/).length;
 const ratingValue = Math.min(5, (3.8 + (wordCount / 4000))).toFixed(1);
 
 /* 3. Safety Check - Corrected & Applied */
-// We create the safe name here...
 const brandName = title.includes(" ") ? title.split(" ")[0] : title;
 
 const productSchema = {
@@ -371,6 +370,40 @@ posts.sort((a,b)=> new Date(b.date)-new Date(a.date));
 
 const POSTS_PER_PAGE = 10;
 const totalPages = Math.ceil(posts.length / POSTS_PER_PAGE);
+
+function generateToC(html) {
+  const regex = /<h2.*?>(.*?)<\/h2>/g;
+  let match;
+  const headings = [];
+
+  // Find all H2 headings and create IDs for them
+  while ((match = regex.exec(html)) !== null) {
+    const text = match[1].replace(/<[^>]+>/g, ""); // Clean any inner tags
+    const id = text.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+    headings.push({ text, id });
+  }
+
+  if (headings.length === 0) return { tocHtml: "", updatedHtml: html };
+
+  // Create the ToC HTML block
+  let tocHtml = `
+  <div class="table-of-contents">
+    <h3>In This Review</h3>
+    <ul>
+      ${headings.map(h => `<li><a href="#${h.id}">${h.text}</a></li>`).join("")}
+    </ul>
+  </div>`;
+
+  // Inject IDs into the actual H2 tags in the content
+  let updatedHtml = html;
+  headings.forEach(h => {
+    // This replaces <h2>Heading</h2> with <h2 id="heading">Heading</h2>
+    const hRegex = new RegExp(`(<h2.*?>)${h.text}(<\/h2>)`, "i");
+    updatedHtml = updatedHtml.replace(hRegex, `<h2 id="${h.id}">${h.text}</h2>`);
+  });
+
+  return { tocHtml, updatedHtml };
+}
 
  /* =========================
    DYNAMIC SITEMAP GENERATOR
@@ -682,6 +715,8 @@ fs.mkdirSync(`_site/posts/${post.slug}`,{recursive:true});
 
 /* SAFE RECOMMENDATION ENGINE */
 
+const { tocHtml, updatedHtml } = generateToC(post.html);
+
 const relatedPosts = posts
 .filter(p=>p.slug!==post.slug)
 .map(p=>{
@@ -730,7 +765,7 @@ const related = relatedPosts
 </a>
 </li>`).join("");
 
- const category = post.category || "ai-writing-tools";
+const category = post.category || "ai-writing-tools";
 const categoryTitle = formatCategoryTitle(category);
 
 const breadcrumbHTML = `
@@ -868,8 +903,8 @@ By <a href="${SITE_URL}/author/" rel="author">Justin Gerald</a> • ${post.readT
 <p class="trust">No spam. Only tested tools.</p>
 </section>
 
-${post.html.replace(/(<p>.*?<\/p>){2}/, `$&
-`)}
+${tocHtml} 
+${updatedHtml.replace(/(<p>.*?<\/p>){2}/, `$&`)}
 
 <section class="mid-cta">
   <p><strong>Most AI tools are hype. This one actually converts.</strong></p>
