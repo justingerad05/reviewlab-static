@@ -77,7 +77,11 @@ fs.mkdirSync(`_site/comparisons`, {recursive:true});
 
 /* FETCH */
 
-const parser = new XMLParser({ignoreAttributes:false});
+const parser = new XMLParser({
+    ignoreAttributes: false,
+    attributeNamePrefix: "@_",
+    entityThreshold: 5000 // Increased to prevent the expansion limit error
+});
 
 let xml = "";
 
