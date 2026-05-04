@@ -98,31 +98,35 @@ if(!Array.isArray(entries)) entries=[entries];
 /* YOUTUBE IMAGE ENGINE */
 
 async function getYouTubeImages(html, slug) {
+  // Regex to extract the 11-character YouTube ID
   const match = html.match(/(?:youtube\.com\/(?:embed\/|watch\?v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
 
   if (!match) {
-    return [`${SITE_URL}/assets/og-default.jpg` || DEFAULT]; //
+    return [`${SITE_URL}/assets/og-default.jpg`];
   }
 
   const id = match[1];
+  
+  // Ordered by quality: Max Resolution -> Standard Def -> High Quality
   const candidates = [
     `https://img.youtube.com/vi/${id}/maxresdefault.jpg`,
     `https://img.youtube.com/vi/${id}/sddefault.jpg`,
     `https://img.youtube.com/vi/${id}/hqdefault.jpg`
   ];
 
-  // Loop through candidates until one works
   let success = false;
   for (const imgUrl of candidates) {
+    // Try to upscale each candidate until one returns true
     success = await upscaleToOG(imgUrl, slug);
     if (success) break; 
   }
 
+  // Verification: Ensure the file exists before returning the local URL[cite: 3]
   if (success && fs.existsSync(`_site/og-images/${slug}.webp`)) {
     return [`${SITE_URL}/og-images/${slug}.webp` ];
   }
 
-  return [`${SITE_URL}/assets/og-default.jpg` || DEFAULT]; //
+  return [`${SITE_URL}/assets/og-default.jpg`];
 }
 
 /* SEMANTIC INTERNAL LINK GRAPH */
