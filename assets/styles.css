@@ -516,18 +516,6 @@ body.homepage-bg::before{
   color: #38bdf8; /* Highlight the winner in a bright sky blue */
 }
 
-/* Subtle styling for the Breadcrumb nav */
-.breadcrumb {
-  margin-bottom: 20px;
-  font-size: 0.9rem;
-  color: #64748b;
-}
-
-.breadcrumb a {
-  color: #3b82f6;
-  text-decoration: none;
-}
-
 .verdict-btns {
   display: flex;
   gap: 20px;
