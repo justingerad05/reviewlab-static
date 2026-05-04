@@ -76,11 +76,11 @@ fs.mkdirSync("_site/_data", { recursive: true });
 fs.mkdirSync(`_site/comparisons`, {recursive:true});
 
 /* FETCH */
-
 const parser = new XMLParser({
   ignoreAttributes: false,
   processEntities: true,
-  entityThreshold: 999999 // Effectively removes the limit for large posts
+  ignoreDeclaration: true, // New: Helps bypass deep XML nesting issues
+  entityThreshold: 2000000 // Doubled the limit
 });
 
 let xml = "";
