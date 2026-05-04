@@ -78,9 +78,9 @@ fs.mkdirSync(`_site/comparisons`, {recursive:true});
 /* FETCH */
 
 const parser = new XMLParser({
-    ignoreAttributes: false,
-    attributeNamePrefix: "@_",
-    entityThreshold: 5000 // Increased to prevent the expansion limit error
+  ignoreAttributes: false,
+  processEntities: true,
+  entityThreshold: 999999 // Effectively removes the limit for large posts
 });
 
 let xml = "";
@@ -712,6 +712,15 @@ const topics = {
   "automation-tools": []
 };
 
+// Map top performing URLs by category for the AI Swapper
+const ctaMap = {
+  "ai-writing-tools": posts.filter(p => p.category === "ai-writing-tools").slice(0, 3).map(p => p.url),
+  "ai-image-generators": posts.filter(p => p.category === "ai-image-generators").slice(0, 3).map(p => p.url),
+  "automation-tools": posts.filter(p => p.category === "automation-tools").slice(0, 3).map(p => p.url),
+  "general": posts.slice(0, 5).map(p => p.url)
+};
+const ctaJson = JSON.stringify(ctaMap);
+
 posts.forEach(p=>{
  if(!topics[p.category]) topics[p.category]=[];
  topics[p.category].push(p);
@@ -1133,103 +1142,60 @@ hover.classList.remove("hover-centered");
 
 <script>
 window.addEventListener("load", function(){
+  const ctaData = ${ctaJson};
+  const bodyText = document.body.innerText.toLowerCase();
+  
+  // 1. AI Category Detection
+  let category = "general";
+  if(bodyText.includes("automation") || bodyText.includes("workflow")) category = "automation-tools";
+  else if(bodyText.includes("image") || bodyText.includes("design")) category = "ai-image-generators";
+  else if(bodyText.includes("writing") || bodyText.includes("copy")) category = "ai-writing-tools";
 
-  var text = document.body.innerText.toLowerCase();
+  const targetUrls = ctaData[category] || ctaData["general"];
+  const primaryUrl = targetUrls[0];
 
-  var routes = {
-    writing: "/ai-tools/ai-writing-tools/",
-    image: "/ai-tools/ai-image-generators/",
-    automation: "/ai-tools/automation-tools/",
-    general: "/ai-tools/"
-  };
+  // 2. Swap URLs in all Page Buttons
+  const buttons = document.querySelectorAll(".cta-btn, .sidebar-btn");
+  buttons.forEach((btn, index) => {
+    btn.setAttribute("href", targetUrls[index % targetUrls.length]);
+  });
 
-  var primary = routes.general;
-
-  if(text.includes("automation") || text.includes("workflow")){
-    primary = routes.automation;
-  } else if(text.includes("image") || text.includes("design")){
-    primary = routes.image;
-  } else if(text.includes("writing") || text.includes("copy")){
-    primary = routes.writing;
+  // 3. Scroll CTA Logic
+  const strollCta = document.querySelector(".stroll-main-cta");
+  if(strollCta) {
+    window.addEventListener("scroll", function(){
+      const scrollPercent = (window.scrollY / document.body.scrollHeight) * 100;
+      if(scrollPercent > 35){
+         if(!strollCta.classList.contains("active")){
+            strollCta.classList.add("active");
+            const link = strollCta.querySelector("a");
+            if(link) link.href = primaryUrl;
+         }
+      } else {
+         strollCta.classList.remove("active");
+      }
+    });
   }
 
-  var allRoutes = [
-    primary,
-    routes.writing,
-    routes.image,
-    routes.automation,
-    routes.general
-  ];
-
-  var i = 0;
-
-  document.querySelectorAll(".cta-btn, .sidebar-btn").forEach(function(btn){
-    btn.setAttribute("href", allRoutes[i % allRoutes.length]);
-    i++;
-  });
-
-  /* SCROLL CTA — FIXED */
-
-var cta = document.querySelector(".stroll-main-cta");
-
-if(cta){
-
-  window.addEventListener("scroll", function(){
-
-    const scrollPercent = (window.scrollY / document.body.scrollHeight) * 100;
-
-if(scrollPercent > 35){
-
-      if(!cta.classList.contains("active")){
-        cta.classList.add("active");
-
-        var title = cta.querySelector("h3");
-        var textEl = cta.querySelector("p");
-        var link = cta.querySelector("a");
-
-        if(title) title.textContent = "⚡ Don’t Miss This Opportunity";
-        if(textEl) textEl.textContent = "This tool is getting popular fast. Get in early.";
-        if(link) link.textContent = "Claim Access Now";
-      }
-
-    } else {
-      cta.classList.remove("active"); // optional reset when scrolling up
-    }
-
-  });
-
-}
-  
-  /* EXIT POPUP (SAFE STRING) */
-
-  var popupShown = false;
-
+  // 4. Exit Popup Logic
+  let popupShown = false;
   document.addEventListener("mouseleave", function(e){
-
-    if(e.clientY > 0) return;
-    if(popupShown) return;
-
+    if(e.clientY > 0 || popupShown) return;
     popupShown = true;
 
-    var popup = document.createElement("div");
+    const popup = document.createElement("div");
     popup.className = "exit-popup-overlay";
-
-    popup.innerHTML =
-      '<div class="exit-popup">' +
-        '<h3>Wait — Before You Leave</h3>' +
-        '<p>This AI system is helping beginners generate income.</p>' +
-        '<a href="' + primary + '" class="cta-btn">See It Now →</a>' +
-        '<span class="close-popup">✕</span>' +
-      '</div>';
+    popup.innerHTML = \`
+      <div class="exit-popup">
+        <h3>Wait — Before You Leave</h3>
+        <p>This AI system is helping beginners generate income.</p>
+        <a href="\${primaryUrl}" class="cta-btn">See It Now →</a>
+        <span class="close-popup">✕</span>
+      </div>\`;
 
     document.body.appendChild(popup);
-
-    popup.querySelector(".close-popup").onclick = function(){
-      popup.remove();
-    };
-
+    popup.querySelector(".close-popup").onclick = () => popup.remove();
   });
-
 });
 </script>
 
