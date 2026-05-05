@@ -31,7 +31,14 @@ jobs:
         
       - name: List files
         run: ls -R
- 
+        
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/pages-action@v1
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          projectName: reviewlab
+          directory: _site
+    
       - name: Ping Google
         run: curl https://www.google.com/ping?sitemap=https://reviewlab.pages.dev/sitemap.xml
-
