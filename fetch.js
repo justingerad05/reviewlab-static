@@ -95,10 +95,15 @@ fs.mkdirSync(`_site/comparisons`, {recursive:true});
 /* FETCH */
 const parser = new XMLParser({
   ignoreAttributes: false,
-  processEntities: true,
-  htmlEntities: true,
-  trimValues: false,
-  removeNSPrefix: true,   // 🔥 CRITICAL FIX
+
+  processEntities: true,          // ✅ keep ON (important)
+  htmlEntities: true,             // ✅ decode common HTML entities
+
+  allowBooleanAttributes: true,
+  parseTagValue: false,
+  trimValues: false,              // ✅ prevents content trimming issues
+
+  entityExpansionLimit: 10000      // ✅ safe upper bound
 });
 
 process.on("unhandledRejection", err => {
@@ -120,10 +125,6 @@ try {
 
   console.log("Feed status:", res.status);
 
-  console.log("FEED KEYS:", Object.keys(data || {}));
-console.log("ENTRIES TYPE:", typeof entries);
-console.log("ENTRIES LENGTH:", entries.length);
-
   if (!res.ok) {
     const text = await res.text();
     console.error("Feed failed:", text);
@@ -132,10 +133,6 @@ console.log("ENTRIES LENGTH:", entries.length);
 
   xml = await res.text();
 
-  fs.writeFileSync("_site/debug-feed.xml", xml);
-console.log("RAW FEED LENGTH:", xml.length);
-console.log("FEED START:", xml.slice(0, 300));
-
 } catch (err) {
   console.error("Feed error:", err);
   process.exit(1);
@@ -143,10 +140,8 @@ console.log("FEED START:", xml.slice(0, 300));
 
 const data = parser.parse(xml);
 
-let feed = data.feed || data;
-let entries = feed.entry || feed?.feed?.entry || [];
-
-if (!Array.isArray(entries)) entries = [entries].filter(Boolean);
+let entries = data.feed.entry || [];
+if(!Array.isArray(entries)) entries=[entries];
 
 console.log("TOTAL ENTRIES FROM FEED:", entries.length);
 
@@ -286,13 +281,8 @@ if (!title || title.trim() === "") {
   continue;
 }
 
-function getText(field) {
-  if (!field) return "";
-  if (typeof field === "string") return field;
-  if (field["#text"]) return field["#text"];
-  if (field["$t"]) return field["$t"];   // 🔥 CRITICAL FIX FOR BLOGGER
-  return "";
-}
+// ✅ THEN get content
+rawHtml = getText(entry.content) || getText(entry.summary);
 
 // Final fallback
 if (!rawHtml || rawHtml.trim() === "") {
@@ -419,15 +409,6 @@ category: category,
 schemas:JSON.stringify([articleSchema,productSchema])
 });
 }
-
-// AI-Driven URL Selection Map
-const ctaMap = {
-  "ai-writing-tools": posts.filter(p => p.category === "ai-writing-tools").slice(0, 3).map(p => p.url),
-  "ai-image-generators": posts.filter(p => p.category === "ai-image-generators").slice(0, 3).map(p => p.url),
-  "automation-tools": posts.filter(p => p.category === "automation-tools").slice(0, 3).map(p => p.url),
-  "general": posts.slice(0, 5).map(p => p.url)
-};
-const ctaJson = JSON.stringify(ctaMap);
 
 /* APPLY LINKS */
 
@@ -803,6 +784,15 @@ const topics = {
   "ai-image-generators": [],
   "automation-tools": []
 };
+
+// Map top performing URLs by category for the AI Swapper
+const ctaMap = {
+  "ai-writing-tools": posts.filter(p => p.category === "ai-writing-tools").slice(0, 3).map(p => p.url),
+  "ai-image-generators": posts.filter(p => p.category === "ai-image-generators").slice(0, 3).map(p => p.url),
+  "automation-tools": posts.filter(p => p.category === "automation-tools").slice(0, 3).map(p => p.url),
+  "general": posts.slice(0, 5).map(p => p.url)
+};
+const ctaJson = JSON.stringify(ctaMap);
 
 posts.forEach(p=>{
  if(!topics[p.category]) topics[p.category]=[];
@@ -1228,41 +1218,46 @@ window.addEventListener("load", function(){
   const ctaData = ${ctaJson};
   const bodyText = document.body.innerText.toLowerCase();
   
-  // 1. Detect Category
+  // 1. AI Category Detection
   let category = "general";
   if(bodyText.includes("automation") || bodyText.includes("workflow")) category = "automation-tools";
   else if(bodyText.includes("image") || bodyText.includes("design")) category = "ai-image-generators";
   else if(bodyText.includes("writing") || bodyText.includes("copy")) category = "ai-writing-tools";
 
   const targetUrls = ctaData[category] || ctaData["general"];
-  const primaryUrl = targetUrls[0];
+  const primaryUrl = targetUrls[0]; // The absolute #1 best post for this page
 
-  // 2. Rotate unique URLs across all buttons
+  // 2. UNIQUE URL Swapper: Distributes different posts to different buttons
   const buttons = document.querySelectorAll(".cta-btn, .sidebar-btn");
   buttons.forEach((btn, index) => {
-    // If you have 3 URLs and 6 buttons, this cycles through them (0,1,2,0,1,2)
-    btn.setAttribute("href", targetUrls[index % targetUrls.length]);
+    // This uses the modulo operator (%) to cycle through the 3 URLs in targetUrls
+    const uniqueUrl = targetUrls[index % targetUrls.length];
+    btn.setAttribute("href", uniqueUrl);
   });
 
-  // 3. Scroll CTA
+  // 3. Scroll CTA Logic (Points to #1 Best Post)
   const strollCta = document.querySelector(".stroll-main-cta");
   if(strollCta) {
     window.addEventListener("scroll", function(){
       const scrollPercent = (window.scrollY / document.body.scrollHeight) * 100;
-      if(scrollPercent > 35 && !strollCta.classList.contains("active")){
-        strollCta.classList.add("active");
-        strollCta.querySelector("a").href = primaryUrl;
-      } else if(scrollPercent < 10) {
-        strollCta.classList.remove("active");
+      if(scrollPercent > 35){
+         if(!strollCta.classList.contains("active")){
+            strollCta.classList.add("active");
+            const link = strollCta.querySelector("a");
+            if(link) link.href = primaryUrl;
+         }
+      } else {
+         strollCta.classList.remove("active");
       }
     });
   }
 
-  // 4. Exit Popup
+  // 4. Exit Popup Logic
   let popupShown = false;
   document.addEventListener("mouseleave", function(e){
     if(e.clientY > 0 || popupShown) return;
     popupShown = true;
+
     const popup = document.createElement("div");
     popup.className = "exit-popup-overlay";
     popup.innerHTML = \`
@@ -1272,6 +1267,7 @@ window.addEventListener("load", function(){
         <a href="\${primaryUrl}" class="cta-btn">See It Now →</a>
         <span class="close-popup">✕</span>
       </div>\`;
+
     document.body.appendChild(popup);
     popup.querySelector(".close-popup").onclick = () => popup.remove();
   });
