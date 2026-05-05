@@ -93,17 +93,13 @@ fs.mkdirSync("_site/_data", { recursive: true });
 fs.mkdirSync(`_site/comparisons`, {recursive:true});
 
 /* FETCH */
+// This configuration bypasses the security limits for very large XML feeds
 const parser = new XMLParser({
   ignoreAttributes: false,
-
-  processEntities: true,          // ✅ keep ON (important)
-  htmlEntities: true,             // ✅ decode common HTML entities
-
-  allowBooleanAttributes: true,
-  parseTagValue: false,
-  trimValues: false,              // ✅ prevents content trimming issues
-
-  entityExpansionLimit: 10000      // ✅ safe upper bound
+  processEntities: false, // Change to false: This stops the expansion check entirely
+  htmlEntities: true,    // Handles the entities without the expansion limit check
+  ignoreDeclaration: true,
+  stopNodes: ["*.content", "*.summary"] // Prevents deep parsing of content blocks that cause the crash
 });
 
 process.on("unhandledRejection", err => {
