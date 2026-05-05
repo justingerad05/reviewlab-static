@@ -115,22 +115,6 @@ const data = parser.parse(xml);
 let entries = data.feed.entry || [];
 if(!Array.isArray(entries)) entries=[entries];
 
-let entries = data.feed.entry || [];
-if (!Array.isArray(entries)) entries = [entries];
-
-const posts = entries.map(entry => {
-  let content = entry.content?.["#text"] || "";
-
-  // 🔥 decode HTML properly
-  content = decodeHTML(content);
-
-  return {
-    title: entry.title?.["#text"] || "",
-    content: content,
-    link: entry.link?.find(l => l["@_rel"] === "alternate")?.["@_href"] || ""
-  };
-});
-
 /* YOUTUBE IMAGE ENGINE */
 
 async function getYouTubeImages(html, slug) {
@@ -252,6 +236,8 @@ for(const entry of entries){
 let rawHtml = entry.content?.["#text"];
 if(!rawHtml) continue;
 
+rawHtml = decodeHTML(rawHtml);
+  
 rawHtml = sanitizeHTML(rawHtml);
   
 const title = entry.title["#text"];
@@ -403,6 +389,9 @@ faqSchema
 });
 
 posts.sort((a,b)=> new Date(b.date)-new Date(a.date));
+
+console.log("FIRST POST HTML:");
+console.log(posts[0]?.html);
 
 const POSTS_PER_PAGE = 10;
 const totalPages = Math.ceil(posts.length / POSTS_PER_PAGE);
