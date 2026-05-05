@@ -23,22 +23,29 @@ jobs:
         with:
           node-version: '24'
 
+      - name: Force Sync Dependencies
+        # This fixes the "out of sync" error you saw in the logs 
+        # by updating your existing package-lock.json automatically.
+        run: npm install --package-lock-only
+
       - name: Install dependencies
         run: npm install
 
       - name: Fetch Blogger posts
         run: node fetch.js
-        
-      - name: List files
-        run: ls -R
-        
+        env:
+          # We pass these so the purge code inside fetch.js can use them
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ZONE_ID }}
+
       - name: Deploy to Cloudflare Pages
         uses: cloudflare/pages-action@v1
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          # Use the Secret where you stored your Account ID
+          accountId: ${{ secrets.CLOUDFLARE_ZONE_ID }} 
           projectName: reviewlab
           directory: _site
     
       - name: Ping Google
-        run: curl https://www.google.com/ping?sitemap=https://reviewlab.pages.dev/sitemap.xml
+        run: curl "https://www.google.com/ping?sitemap=https://reviewlab.pages.dev/sitemap.xml"
