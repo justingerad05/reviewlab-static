@@ -44,8 +44,7 @@ function getText(field) {
   return "";
 }
 
-const FEED_URL =
-"https://honestproductreviewlab.blogspot.com/feeds/posts/default?alt=atom";
+const FEED_URL = `https://honestproductreviewlab.blogspot.com/feeds/posts/default?alt=atom&v=${Date.now()}`;
 
 import site from "./_data/site.json" with { type: "json" };
 
