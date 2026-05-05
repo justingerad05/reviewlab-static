@@ -21,6 +21,16 @@ function escapeXML(str = "") {
     .replace(/'/g, "&apos;");
 }
 
+function decodeHTML(html) {
+  return html
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&amp;/g, "&")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&nbsp;/g, " ");
+}
+
 function sanitizeHTML(html){
   return html
     .replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi,"")
@@ -76,7 +86,18 @@ fs.mkdirSync("_site/_data", { recursive: true });
 fs.mkdirSync(`_site/comparisons`, {recursive:true});
 
 /* FETCH */
-const parser = new XMLParser({ignoreAttributes:false});
+const parser = new XMLParser({
+  ignoreAttributes: false,
+
+  processEntities: true,          // ✅ keep ON (important)
+  htmlEntities: true,             // ✅ decode common HTML entities
+
+  allowBooleanAttributes: true,
+  parseTagValue: false,
+  trimValues: false,              // ✅ prevents content trimming issues
+
+  entityExpansionLimit: 10000      // ✅ safe upper bound
+});
 
 let xml = "";
 
@@ -93,6 +114,22 @@ const data = parser.parse(xml);
 
 let entries = data.feed.entry || [];
 if(!Array.isArray(entries)) entries=[entries];
+
+let entries = data.feed.entry || [];
+if (!Array.isArray(entries)) entries = [entries];
+
+const posts = entries.map(entry => {
+  let content = entry.content?.["#text"] || "";
+
+  // 🔥 decode HTML properly
+  content = decodeHTML(content);
+
+  return {
+    title: entry.title?.["#text"] || "",
+    content: content,
+    link: entry.link?.find(l => l["@_rel"] === "alternate")?.["@_href"] || ""
+  };
+});
 
 /* YOUTUBE IMAGE ENGINE */
 
