@@ -273,24 +273,26 @@ for(const entry of entries){
 
 let rawHtml = "";
 
-rawHtml = getText(entry.content) || getText(entry.summary);
+// ✅ DEFINE TITLE FIRST (CRITICAL FIX)
+const title = getText(entry.title);
 
 if (!title || title.trim() === "") {
   console.log("⚠ Skipping post (no title)");
   continue;
 }
-  
+
+// ✅ THEN get content
+rawHtml = getText(entry.content) || getText(entry.summary);
+
 // Final fallback
 if (!rawHtml || rawHtml.trim() === "") {
-  console.log("⚠ Skipping post (no content):", entry.title?.["#text"]);
+  console.log("⚠ Skipping post (no content):", title);
   continue;
 }
 
+// ✅ THEN process HTML
 rawHtml = decodeHTML(rawHtml);
-  
 rawHtml = sanitizeHTML(rawHtml);
-  
-const title = getText(entry.title);
 
 /* SAFE LABEL EXTRACTION */
 let labels = [];
