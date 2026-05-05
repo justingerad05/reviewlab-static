@@ -121,8 +121,11 @@ try {
   xml = await res.text();
 
 } catch (err) {
-  console.error("CRITICAL FETCH ERROR:", err);
-  process.exit(1);
+  // This ensures the red error in GitHub Actions actually tells us the cause
+  console.error("FAILED TO FETCH BLOGGER POSTS:");
+  console.error("Error Message:", err.message);
+  console.error("Stack Trace:", err.stack);
+  process.exit(1); // Force the action to show as failed
 }
 
 const data = parser.parse(xml);
