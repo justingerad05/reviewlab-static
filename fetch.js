@@ -92,62 +92,51 @@ fs.mkdirSync("_site/assets", { recursive: true });
 fs.mkdirSync("_site/_data", { recursive: true });
 fs.mkdirSync(`_site/comparisons`, {recursive:true});
 
-/* FETCH */
-// This configuration bypasses the security limits for very large XML feeds
+/* FETCH (Bypass Cache + Enhanced Error Handling) */
 const parser = new XMLParser({
   ignoreAttributes: false,
-  processEntities: false, // Change to false: This stops the expansion check entirely
-  htmlEntities: true,    // Handles the entities without the expansion limit check
-  ignoreDeclaration: true,
-  stopNodes: ["*.content", "*.summary"] // Prevents deep parsing of content blocks that cause the crash
-});
-
-process.on("unhandledRejection", err => {
-  console.error("UNHANDLED REJECTION:", err);
-  process.exit(1);
-});
-
-process.on("uncaughtException", err => {
-  console.error("UNCAUGHT EXCEPTION:", err);
-  process.exit(1);
+  processEntities: true,
+  htmlEntities: true,
+  allowBooleanAttributes: true,
+  parseTagValue: false,
+  trimValues: false,
+  entityExpansionLimit: 10000 
 });
 
 let xml = "";
 
 try {
-  console.log("Fetching feed...");
+  // We add a timestamp to the URL to force Blogger to give us the freshest data
+  const CACHE_BUSTER = `&t=${Date.now()}`;
+  console.log("Fetching fresh feed...");
 
-  const res = await fetch(FEED_URL);
+  const res = await fetch(FEED_URL + CACHE_BUSTER);
 
   console.log("Feed status:", res.status);
 
   if (!res.ok) {
-    const text = await res.text();
-    console.error("Feed failed:", text);
-    process.exit(1);
+    throw new Error(`Blogger Feed returned status ${res.status}`);
   }
 
   xml = await res.text();
 
 } catch (err) {
-  console.error("Feed error:", err);
+  console.error("CRITICAL FETCH ERROR:", err);
   process.exit(1);
 }
 
 const data = parser.parse(xml);
 
-let entries = data.feed.entry || [];
+// Safety check for empty feeds
+if (!data.feed || !data.feed.entry) {
+  console.error("❌ No entries found in the feed. Check if the Blogger URL is correct.");
+  process.exit(1);
+}
+
+let entries = data.feed.entry;
 if(!Array.isArray(entries)) entries=[entries];
 
 console.log("TOTAL ENTRIES FROM FEED:", entries.length);
-
-entries.slice(0,3).forEach((e, i) => {
-  console.log(`ENTRY ${i}:`, {
-    title: e.title?.["#text"],
-    hasContent: !!e.content,
-    hasSummary: !!e.summary
-  });
-});
 
 /* YOUTUBE IMAGE ENGINE */
 
@@ -263,33 +252,29 @@ if(t.includes("automation") || t.includes("auto") || t.includes("workflow"))
 return "ai-writing-tools";
 }
 
-/* BUILD DATA */
+/* BUILD DATA (Reinforced) */
 
 for(const entry of entries){
+  
+  // 1. Get Title with fallback
+  let title = getText(entry.title) || "Untitled Post " + Date.now();
 
-let rawHtml = "";
+  // 2. Get Content - check both 'content' and 'summary'
+  let rawHtml = "";
+  if (entry.content) {
+      rawHtml = getText(entry.content);
+  } else if (entry.summary) {
+      rawHtml = getText(entry.summary);
+  }
 
-// ✅ DEFINE TITLE FIRST (CRITICAL FIX)
-const title = getText(entry.title);
+  // 3. Skip if absolutely empty, otherwise proceed
+  if (!rawHtml || rawHtml.trim().length < 10) {
+    console.log(`⚠ Skipping post "${title}" - Content is empty or too short.`);
+    continue;
+  }
 
-if (!title || title.trim() === "") {
-  console.log("⚠ Skipping post (no title)");
-  continue;
-}
-
-// ✅ THEN get content
-rawHtml = getText(entry.content) || getText(entry.summary);
-
-// Final fallback
-if (!rawHtml || rawHtml.trim() === "") {
-  console.log("⚠ Skipping post (no content):", title);
-  continue;
-}
-
-// ✅ THEN process HTML
-rawHtml = decodeHTML(rawHtml);
-rawHtml = sanitizeHTML(rawHtml);
-
+  rawHtml = decodeHTML(rawHtml);
+  rawHtml = sanitizeHTML(rawHtml);
 /* SAFE LABEL EXTRACTION */
 let labels = [];
 
