@@ -1931,4 +1931,6 @@ fs.writeFileSync(outputPath, homepage);
 fs.mkdirSync("_site/admin", { recursive: true });
 fs.copyFileSync("admin/index.html", "_site/admin/index.html");
 
+console.log("✅ Verification: Files in _site/posts/ are:", fs.readdirSync("_site/posts"));
+
 console.log("✅ Homepage + Pagination Built Successfully");
