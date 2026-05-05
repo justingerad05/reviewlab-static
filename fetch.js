@@ -37,6 +37,13 @@ function sanitizeHTML(html){
     .replace(/on\w+="[^"]*"/gi,""); // remove inline JS only
 }
 
+function getText(field) {
+  if (!field) return "";
+  if (typeof field === "string") return field;
+  if (field["#text"]) return field["#text"];
+  return "";
+}
+
 const FEED_URL =
 "https://honestproductreviewlab.blogspot.com/feeds/posts/default?alt=atom";
 
@@ -99,25 +106,34 @@ const parser = new XMLParser({
   entityExpansionLimit: 10000      // ✅ safe upper bound
 });
 
+process.on("unhandledRejection", err => {
+  console.error("UNHANDLED REJECTION:", err);
+  process.exit(1);
+});
+
+process.on("uncaughtException", err => {
+  console.error("UNCAUGHT EXCEPTION:", err);
+  process.exit(1);
+});
+
 let xml = "";
 
 try {
-  const res = await fetch(FEED_URL);
-  
   console.log("Fetching feed...");
 
-const res = await fetch(FEED_URL);
+  const res = await fetch(FEED_URL);
 
-console.log("Feed status:", res.status);
+  console.log("Feed status:", res.status);
 
-if (!res.ok) {
-  const text = await res.text();
-  console.error("Feed failed:", text);
-  process.exit(1);
-}
-  
+  if (!res.ok) {
+    const text = await res.text();
+    console.error("Feed failed:", text);
+    process.exit(1);
+  }
+
   xml = await res.text();
-} catch(err){
+
+} catch (err) {
   console.error("Feed error:", err);
   process.exit(1);
 }
@@ -257,15 +273,13 @@ for(const entry of entries){
 
 let rawHtml = "";
 
-// Try all possible Blogger formats
-if (typeof entry.content === "string") {
-  rawHtml = entry.content;
-} else if (entry.content?.["#text"]) {
-  rawHtml = entry.content["#text"];
-} else if (entry.summary?.["#text"]) {
-  rawHtml = entry.summary["#text"];
-}
+rawHtml = getText(entry.content) || getText(entry.summary);
 
+if (!title || title.trim() === "") {
+  console.log("⚠ Skipping post (no title)");
+  continue;
+}
+  
 // Final fallback
 if (!rawHtml || rawHtml.trim() === "") {
   console.log("⚠ Skipping post (no content):", entry.title?.["#text"]);
@@ -276,19 +290,19 @@ rawHtml = decodeHTML(rawHtml);
   
 rawHtml = sanitizeHTML(rawHtml);
   
-const title = entry.title["#text"];
+const title = getText(entry.title);
 
 /* SAFE LABEL EXTRACTION */
 let labels = [];
 
 if (entry.category) {
-  if (Array.isArray(entry.category)) {
-    labels = entry.category.map(c => (c.term || "").toLowerCase());
-  } else if (entry.category.term) {
-    labels = [entry.category.term.toLowerCase()];
-  }
-}
+  const cats = Array.isArray(entry.category)
+    ? entry.category
+    : [entry.category];
 
+  labels = cats.map(c => (c.term || "").toLowerCase());
+}
+  
 /* CATEGORY ENGINE */
 let category = detectTopic(title);
 
