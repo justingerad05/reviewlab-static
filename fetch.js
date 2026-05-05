@@ -1934,3 +1934,40 @@ fs.copyFileSync("admin/index.html", "_site/admin/index.html");
 console.log("✅ Verification: Files in _site/posts/ are:", fs.readdirSync("_site/posts"));
 
 console.log("✅ Homepage + Pagination Built Successfully");
+
+/* AUTOMATIC CACHE PURGE */
+async function purgeCloudflareCache() {
+  const ZONE_ID = process.env.CLOUDFLARE_ZONE_ID; 
+  const API_TOKEN = process.env.CLOUDFLARE_API_TOKEN;
+
+  if (!API_TOKEN || !ZONE_ID) {
+    console.log("⚠ Skipping purge: Missing API_TOKEN or ZONE_ID env variables.");
+    return;
+  }
+
+  console.log(`Attempting to purge cache for Zone: ${ZONE_ID}...`);
+
+  try {
+    const response = await fetch(`https://api.cloudflare.com/client/v4/zones/${ZONE_ID}/purge_cache`, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${API_TOKEN}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ purge_everything: true })
+    });
+
+    const result = await response.json();
+    
+    if (result.success) {
+      console.log("✅ SUCCESS: Cloudflare cache purged!");
+    } else {
+      console.error("❌ FAILED: Cloudflare API returned errors:");
+      console.error(JSON.stringify(result.errors, null, 2));
+    }
+  } catch (err) {
+    console.error("❌ CRITICAL ERROR during cache purge:", err.message);
+  }
+}
+
+await purgeCloudflareCache();
