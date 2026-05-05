@@ -95,15 +95,10 @@ fs.mkdirSync(`_site/comparisons`, {recursive:true});
 /* FETCH */
 const parser = new XMLParser({
   ignoreAttributes: false,
-
-  processEntities: true,          // ✅ keep ON (important)
-  htmlEntities: true,             // ✅ decode common HTML entities
-
-  allowBooleanAttributes: true,
-  parseTagValue: false,
-  trimValues: false,              // ✅ prevents content trimming issues
-
-  entityExpansionLimit: 10000      // ✅ safe upper bound
+  processEntities: true,
+  htmlEntities: true,
+  trimValues: false,
+  removeNSPrefix: true,   // 🔥 CRITICAL FIX
 });
 
 process.on("unhandledRejection", err => {
@@ -125,6 +120,10 @@ try {
 
   console.log("Feed status:", res.status);
 
+  console.log("FEED KEYS:", Object.keys(data || {}));
+console.log("ENTRIES TYPE:", typeof entries);
+console.log("ENTRIES LENGTH:", entries.length);
+
   if (!res.ok) {
     const text = await res.text();
     console.error("Feed failed:", text);
@@ -133,6 +132,10 @@ try {
 
   xml = await res.text();
 
+  fs.writeFileSync("_site/debug-feed.xml", xml);
+console.log("RAW FEED LENGTH:", xml.length);
+console.log("FEED START:", xml.slice(0, 300));
+
 } catch (err) {
   console.error("Feed error:", err);
   process.exit(1);
@@ -140,8 +143,10 @@ try {
 
 const data = parser.parse(xml);
 
-let entries = data.feed.entry || [];
-if(!Array.isArray(entries)) entries=[entries];
+let feed = data.feed || data;
+let entries = feed.entry || feed?.feed?.entry || [];
+
+if (!Array.isArray(entries)) entries = [entries].filter(Boolean);
 
 console.log("TOTAL ENTRIES FROM FEED:", entries.length);
 
@@ -281,8 +286,13 @@ if (!title || title.trim() === "") {
   continue;
 }
 
-// ✅ THEN get content
-rawHtml = getText(entry.content) || getText(entry.summary);
+function getText(field) {
+  if (!field) return "";
+  if (typeof field === "string") return field;
+  if (field["#text"]) return field["#text"];
+  if (field["$t"]) return field["$t"];   // 🔥 CRITICAL FIX FOR BLOGGER
+  return "";
+}
 
 // Final fallback
 if (!rawHtml || rawHtml.trim() === "") {
