@@ -103,7 +103,19 @@ let xml = "";
 
 try {
   const res = await fetch(FEED_URL);
-  if(!res.ok) throw new Error("Feed fetch failed");
+  
+  console.log("Fetching feed...");
+
+const res = await fetch(FEED_URL);
+
+console.log("Feed status:", res.status);
+
+if (!res.ok) {
+  const text = await res.text();
+  console.error("Feed failed:", text);
+  process.exit(1);
+}
+  
   xml = await res.text();
 } catch(err){
   console.error("Feed error:", err);
@@ -114,6 +126,16 @@ const data = parser.parse(xml);
 
 let entries = data.feed.entry || [];
 if(!Array.isArray(entries)) entries=[entries];
+
+console.log("TOTAL ENTRIES FROM FEED:", entries.length);
+
+entries.slice(0,3).forEach((e, i) => {
+  console.log(`ENTRY ${i}:`, {
+    title: e.title?.["#text"],
+    hasContent: !!e.content,
+    hasSummary: !!e.summary
+  });
+});
 
 /* YOUTUBE IMAGE ENGINE */
 
@@ -233,8 +255,22 @@ return "ai-writing-tools";
 
 for(const entry of entries){
 
-let rawHtml = entry.content?.["#text"];
-if(!rawHtml) continue;
+let rawHtml = "";
+
+// Try all possible Blogger formats
+if (typeof entry.content === "string") {
+  rawHtml = entry.content;
+} else if (entry.content?.["#text"]) {
+  rawHtml = entry.content["#text"];
+} else if (entry.summary?.["#text"]) {
+  rawHtml = entry.summary["#text"];
+}
+
+// Final fallback
+if (!rawHtml || rawHtml.trim() === "") {
+  console.log("⚠ Skipping post (no content):", entry.title?.["#text"]);
+  continue;
+}
 
 rawHtml = decodeHTML(rawHtml);
   
