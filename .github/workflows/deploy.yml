@@ -2,7 +2,7 @@ name: Build and Deploy Static Site
 
 on:
   schedule:
-    - cron: "0 */6 * * *"  # every 6 hours
+    - cron: "0 */6 * * *"
   push:
     branches:
       - main
@@ -24,8 +24,6 @@ jobs:
           node-version: '24'
 
       - name: Force Sync Dependencies
-        # This fixes the "out of sync" error you saw in the logs 
-        # by updating your existing package-lock.json automatically.
         run: npm install --package-lock-only
 
       - name: Install dependencies
@@ -34,7 +32,6 @@ jobs:
       - name: Fetch Blogger posts
         run: node fetch.js
         env:
-          # We pass these so the purge code inside fetch.js can use them
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ZONE_ID }}
 
@@ -42,7 +39,6 @@ jobs:
         uses: cloudflare/pages-action@v1
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          # Use the Secret where you stored your Account ID
           accountId: ${{ secrets.CLOUDFLARE_ZONE_ID }} 
           projectName: reviewlab
           directory: _site
