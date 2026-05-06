@@ -276,8 +276,12 @@ for(const entry of entries){
     continue;
   }
 
-  rawHtml = decodeHTML(rawHtml);
-  rawHtml = sanitizeHTML(rawHtml);
+  // ✅ THEN process HTML
+rawHtml = decodeHTML(rawHtml);
+// First, remove style blocks to prevent CSS from entering descriptions/table
+rawHtml = rawHtml.replace(/<style[\s\S]*?>[\s\S]*?<\/style>/gi, "");
+rawHtml = sanitizeHTML(rawHtml);
+  
 /* SAFE LABEL EXTRACTION */
 let labels = [];
 
@@ -292,10 +296,11 @@ if (entry.category) {
 /* CATEGORY ENGINE */
 let category = detectTopic(title);
 
-// Manual override (only if label exists)
-if (labels.includes("writing")) category = "ai-writing-tools";
-if (labels.includes("image")) category = "ai-image-generators";
-if (labels.includes("automation")) category = "automation-tools";
+// Manual override (only if specific label keywords exist)
+// We check if the labels array contains our target keyword
+if (labels.some(l => l.includes("writing") || l.includes("copy"))) category = "ai-writing-tools";
+if (labels.some(l => l.includes("image") || l.includes("art") || l.includes("design") || l.includes("voice"))) category = "ai-image-generators";
+if (labels.some(l => l.includes("automation") || l.includes("auto") || l.includes("workflow"))) category = "automation-tools";
   
 let baseSlug = title.toLowerCase()
 .replace(/[^a-z0-9]+/g,"-")
