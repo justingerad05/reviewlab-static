@@ -939,8 +939,8 @@ h1{
 }
 
 .footer{margin-top: 60px;
-         font-size: 14px;
-         opacity:.7;
+  font-size: 14px;
+  opacity:.7;
 }
   
 .hover-centered{
@@ -1252,10 +1252,11 @@ color:#6b7280;
 
   img, iframe, video{
   max-width:100%;
-  height:auto;
+  height: auto;
+  aspect-ratio: attr(width) / attr(height); /* Keeps video shape stable */
   display:block;
+  border-radius: 12px;
 }
-
 .post-title{
   display:block;
   margin-top:10px;
