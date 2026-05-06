@@ -774,14 +774,13 @@ const topics = {
   "automation-tools": []
 };
 
-// Map top performing URLs by category for the AI Swapper
-const ctaMap = {
-  "ai-writing-tools": posts.filter(p => p.category === "ai-writing-tools").slice(0, 3).map(p => p.url),
-  "ai-image-generators": posts.filter(p => p.category === "ai-image-generators").slice(0, 3).map(p => p.url),
-  "automation-tools": posts.filter(p => p.category === "automation-tools").slice(0, 3).map(p => p.url),
-  "general": posts.slice(0, 5).map(p => p.url)
-};
-const ctaJson = JSON.stringify(ctaMap);
+// ✅ NEW: Post Rotator Logic
+// This creates a list of the 5 most recent posts to rotate through the CTAs
+const topPosts = posts.slice(0, 5).map(p => ({
+  title: p.title,
+  url: p.url
+}));
+const ctaJson = JSON.stringify(topPosts);
 
 posts.forEach(p=>{
  if(!topics[p.category]) topics[p.category]=[];
