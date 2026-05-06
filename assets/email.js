@@ -69,7 +69,7 @@ function showPopup(source, email) {
   let bonus = "";
 
   if (source === "sidebar") {
-    const trackedLink = `https://email-api.justingerad05.workers.dev/click?email=${encodeURIComponent(email)}&to=${encodeURIComponent("https://drive.google.com/file/d/1EPUhdkvyRV1y5SDpHVb4t7woPPnGzctC/view?usp=drive_link")}`;
+    const trackedLink = `https://email-api.justingerad05.workers.dev/click?email=${encodeURIComponent(email)}&to=${encodeURIComponent("https://drive.google.com/file/d/1SH64kCm8iRY879UjUYiE3iCMDqc3TNMP/view?usp=sharing")}`;
     title = "📩 Great choice! 🎁 Here's your bonus";
     message = "More tools coming your way.";
     
