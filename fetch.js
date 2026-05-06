@@ -239,20 +239,34 @@ const seenSlugs = new Set();
 
 const posts=[];
 
-function detectTopic(title){
+function detectTopic(title, html) {
+  const content = (title + " " + html).toLowerCase();
+  
+  // Define keyword weights for the "AI Brain"
+  const weights = {
+    "ai-writing-tools": ["writer", "copy", "blog", "content", "text", "article", "seo", "writing", "grammar"],
+    "ai-image-generators": ["image", "art", "design", "logo", "photo", "voice", "speech", "audio", "video", "generator"],
+    "automation-tools": ["automation", "workflow", "integration", "zapier", "api", "passive", "system", "auto"]
+  };
 
-const t = title.toLowerCase();
+  let bestCategory = "ai-writing-tools"; // Default fallback
+  let highestScore = -1;
 
-if(t.includes("writer") || t.includes("copy"))
-  return "ai-writing-tools";
+  for (const [category, keywords] of Object.entries(weights)) {
+    let score = 0;
+    keywords.forEach(word => {
+      // Count how many times each keyword appears
+      const count = (content.match(new RegExp("\\b" + word + "\\b", "g")) || []).length;
+      score += count;
+    });
 
-if(t.includes("image") || t.includes("art") || t.includes("design"))
-  return "ai-image-generators";
+    if (score > highestScore) {
+      highestScore = score;
+      bestCategory = category;
+    }
+  }
 
-if(t.includes("automation") || t.includes("auto") || t.includes("workflow"))
-  return "automation-tools";
-
-return "ai-writing-tools";
+  return bestCategory;
 }
 
 /* BUILD DATA (Reinforced) */
@@ -276,10 +290,13 @@ for(const entry of entries){
     continue;
   }
 
-  // ✅ THEN process HTML
+  // ✅ NEW SURGICAL STYLE CLEANING
 rawHtml = decodeHTML(rawHtml);
-// First, remove style blocks to prevent CSS from entering descriptions/table
-rawHtml = rawHtml.replace(/<style[\s\S]*?>[\s\S]*?<\/style>/gi, "");
+
+// Only remove the specific CSS block that breaks descriptions, 
+// rather than stripping ALL styles which shrunk your videos.
+rawHtml = rawHtml.replace(/\.authority-review\s*\{[\s\S]*?\}/gi, "");
+
 rawHtml = sanitizeHTML(rawHtml);
   
 /* SAFE LABEL EXTRACTION */
@@ -292,12 +309,11 @@ if (entry.category) {
 
   labels = cats.map(c => (c.term || "").toLowerCase());
 }
-  
-/* CATEGORY ENGINE */
-let category = detectTopic(title);
 
-// Manual override (only if specific label keywords exist)
-// We check if the labels array contains our target keyword
+/* NEW AI-DRIVEN CATEGORY ENGINE */
+
+let category = detectTopic(title, rawHtml); 
+
 if (labels.some(l => l.includes("writing") || l.includes("copy"))) category = "ai-writing-tools";
 if (labels.some(l => l.includes("image") || l.includes("art") || l.includes("design") || l.includes("voice"))) category = "ai-image-generators";
 if (labels.some(l => l.includes("automation") || l.includes("auto") || l.includes("workflow"))) category = "automation-tools";
