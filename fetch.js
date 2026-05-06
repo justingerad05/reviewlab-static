@@ -817,21 +817,14 @@ const { tocHtml, updatedHtml } = generateToC(post.html);
 const relatedPosts = posts
 .filter(p=>p.slug!==post.slug)
 .map(p=>{
+  let score = 0;
+  if(p.category === post.category) score += 10; // Boost same category
+  score += scoreSimilarity(post.title, p.title) * 2; // High weight on title similarity
+  
+  // Random "Variety" boost to prevent the same 3 posts showing everywhere
+  score += Math.random() * 5; 
 
-let score = 0;
-
-/* Same category boost */
-if(p.category === post.category) score += 15;
-
-/* Title similarity */
-score += scoreSimilarity(post.title,p.title);
-
-/* Recency boost */
-const daysOld = (Date.now() - new Date(p.date)) / (1000*60*60*24);
-if(daysOld < 60) score += 2;
-
-return {post:p,score};
-
+  return {post:p, score};
 })
 .sort((a,b)=>b.score-a.score)
 .slice(0,4)
@@ -1203,27 +1196,31 @@ hover.classList.remove("hover-centered");
 
 <script>
 window.addEventListener("load", function(){
-  const ctaData = ${ctaJson};
-  const bodyText = document.body.innerText.toLowerCase();
+  // 1. Load the real post data from the backend
+  const postPool = ${ctaJson}; 
+  if (!postPool || postPool.length === 0) return;
+
+  // The #1 "Best Tool" is always the very first item in the list
+  const primaryPost = postPool[0];
+
+  // 2. PROFESSIONAL CTA ROTATOR
+  // This selects every button: top-cta, mid-cta, decision-cta, money-cta, and sidebar
+  const allButtons = document.querySelectorAll(".cta-btn, .sidebar-btn");
   
-  // 1. AI Category Detection
-  let category = "general";
-  if(bodyText.includes("automation") || bodyText.includes("workflow")) category = "automation-tools";
-  else if(bodyText.includes("image") || bodyText.includes("design")) category = "ai-image-generators";
-  else if(bodyText.includes("writing") || bodyText.includes("copy")) category = "ai-writing-tools";
-
-  const targetUrls = ctaData[category] || ctaData["general"];
-  const primaryUrl = targetUrls[0]; // The absolute #1 best post for this page
-
-  // 2. UNIQUE URL Swapper: Distributes different posts to different buttons
-  const buttons = document.querySelectorAll(".cta-btn, .sidebar-btn");
-  buttons.forEach((btn, index) => {
-    // This uses the modulo operator (%) to cycle through the 3 URLs in targetUrls
-    const uniqueUrl = targetUrls[index % targetUrls.length];
-    btn.setAttribute("href", uniqueUrl);
+  allButtons.forEach((btn, index) => {
+    // We use the modulo (%) to cycle through the 5 posts 
+    // so every button on the page points to a DIFFERENT real review.
+    const assignedPost = postPool[index % postPool.length];
+    
+    btn.setAttribute("href", assignedPost.url);
+    
+    // Optional: Update button text to be more specific if it's a generic button
+    if(btn.innerText.includes("See #1 Tool") || btn.innerText.includes("See Tool")) {
+       btn.innerHTML = \`Check Out \${assignedPost.title} →\`;
+    }
   });
 
-  // 3. Scroll CTA Logic (Points to #1 Best Post)
+  // 3. SCROLLING CTA (Always points to the #1 Best performing post)
   const strollCta = document.querySelector(".stroll-main-cta");
   if(strollCta) {
     window.addEventListener("scroll", function(){
@@ -1232,7 +1229,10 @@ window.addEventListener("load", function(){
          if(!strollCta.classList.contains("active")){
             strollCta.classList.add("active");
             const link = strollCta.querySelector("a");
-            if(link) link.href = primaryUrl;
+            if(link) {
+              link.href = primaryPost.url;
+              link.innerHTML = \`Top Choice: \${primaryPost.title} →\`;
+            }
          }
       } else {
          strollCta.classList.remove("active");
@@ -1240,7 +1240,7 @@ window.addEventListener("load", function(){
     });
   }
 
-  // 4. Exit Popup Logic
+  // 4. EXIT POPUP (Promotes the #1 Best performing post)
   let popupShown = false;
   document.addEventListener("mouseleave", function(e){
     if(e.clientY > 0 || popupShown) return;
@@ -1250,9 +1250,9 @@ window.addEventListener("load", function(){
     popup.className = "exit-popup-overlay";
     popup.innerHTML = \`
       <div class="exit-popup">
-        <h3>Wait — Before You Leave</h3>
-        <p>This AI system is helping beginners generate income.</p>
-        <a href="\${primaryUrl}" class="cta-btn">See It Now →</a>
+        <h3>Don't Miss Our #1 Recommendation</h3>
+        <p>Our testing shows <strong>\${primaryPost.title}</strong> is currently delivering the best results.</p>
+        <a href="\${primaryPost.url}" class="cta-btn">Read Full Review →</a>
         <span class="close-popup">✕</span>
       </div>\`;
 
