@@ -100,13 +100,12 @@ const parser = new XMLParser({
   allowBooleanAttributes: true,
   parseTagValue: false,
   trimValues: false,
-  entityExpansionLimit: 10000 
+  entityExpansionLimit: 50000 
 });
 
 let xml = "";
 
 try {
-  // We add a timestamp to the URL to force Blogger to give us the freshest data
   const CACHE_BUSTER = `&t=${Date.now()}`;
   console.log("Fetching fresh feed...");
 
@@ -121,16 +120,14 @@ try {
   xml = await res.text();
 
 } catch (err) {
-  // This ensures the red error in GitHub Actions actually tells us the cause
   console.error("FAILED TO FETCH BLOGGER POSTS:");
   console.error("Error Message:", err.message);
   console.error("Stack Trace:", err.stack);
-  process.exit(1); // Force the action to show as failed
+  process.exit(1); 
 }
 
 const data = parser.parse(xml);
 
-// Safety check for empty feeds
 if (!data.feed || !data.feed.entry) {
   console.error("❌ No entries found in the feed. Check if the Blogger URL is correct.");
   process.exit(1);
@@ -142,9 +139,8 @@ if(!Array.isArray(entries)) entries=[entries];
 console.log("TOTAL ENTRIES FROM FEED:", entries.length);
 
 /* YOUTUBE IMAGE ENGINE */
-
 async function getYouTubeImages(html, slug) {
-  // Regex to extract the 11-character YouTube ID
+ 
   const match = html.match(/(?:youtube\.com\/(?:embed\/|watch\?v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
 
   if (!match) {
@@ -153,7 +149,6 @@ async function getYouTubeImages(html, slug) {
 
   const id = match[1];
   
-  // Ordered by quality: Max Resolution -> Standard Def -> High Quality
   const candidates = [
     `https://img.youtube.com/vi/${id}/maxresdefault.jpg`,
     `https://img.youtube.com/vi/${id}/sddefault.jpg`,
@@ -162,12 +157,10 @@ async function getYouTubeImages(html, slug) {
 
   let success = false;
   for (const imgUrl of candidates) {
-    // Try to upscale each candidate until one returns true
     success = await upscaleToOG(imgUrl, slug);
     if (success) break; 
   }
 
-  // Verification: Ensure the file exists before returning the local URL[cite: 3]
   if (success && fs.existsSync(`_site/og-images/${slug}.webp`)) {
     return [`${SITE_URL}/og-images/${slug}.webp` ];
   }
@@ -176,7 +169,6 @@ async function getYouTubeImages(html, slug) {
 }
 
 /* SEMANTIC INTERNAL LINK GRAPH */
-
 function scoreSimilarity(a,b){
 const aw = a.toLowerCase().split(/\W+/);
 const bw = b.toLowerCase().split(/\W+/);
@@ -272,11 +264,8 @@ function detectTopic(title, html) {
 /* BUILD DATA (Reinforced) */
 
 for(const entry of entries){
-  
-  // 1. Get Title with fallback
   let title = getText(entry.title) || "Untitled Post " + Date.now();
 
-  // 2. Get Content - check both 'content' and 'summary'
   let rawHtml = "";
   if (entry.content) {
       rawHtml = getText(entry.content);
@@ -284,7 +273,6 @@ for(const entry of entries){
       rawHtml = getText(entry.summary);
   }
 
-  // 3. Skip if absolutely empty, otherwise proceed
   if (!rawHtml || rawHtml.trim().length < 10) {
     console.log(`⚠ Skipping post "${title}" - Content is empty or too short.`);
     continue;
@@ -292,9 +280,6 @@ for(const entry of entries){
 
   // ✅ NEW SURGICAL STYLE CLEANING
 rawHtml = decodeHTML(rawHtml);
-
-// Only remove the specific CSS block that breaks descriptions, 
-// rather than stripping ALL styles which shrunk your videos.
 rawHtml = rawHtml.replace(/\.authority-review\s*\{[\s\S]*?\}/gi, "");
 
 rawHtml = sanitizeHTML(rawHtml);
@@ -311,12 +296,9 @@ if (entry.category) {
 }
 
 /* NEW AI-DRIVEN CATEGORY ENGINE */
-
 let category = detectTopic(title, rawHtml); 
 
-if (labels.some(l => l.includes("writing") || l.includes("copy"))) category = "ai-writing-tools";
-if (labels.some(l => l.includes("image") || l.includes("art") || l.includes("design") || l.includes("voice"))) category = "ai-image-generators";
-if (labels.some(l => l.includes("automation") || l.includes("auto") || l.includes("workflow"))) category = "automation-tools";
+if (labels.includes("writing") && category !== "ai-writing-tools") category = "ai-writing-tools";
   
 let baseSlug = title.toLowerCase()
 .replace(/[^a-z0-9]+/g,"-")
@@ -677,12 +659,14 @@ ${globalHeader()}
 }
 
 /* BUILD ALL COMPARISON PAGES */
-/* 2. Scalable Comparison Engine (Prevents Build Bloat) */
-for (let i = 0; i < Math.min(posts.length, 20); i++) { 
-  for (let j = i + 1; j < Math.min(posts.length, i + 4); j++) {
-    generateComparison(posts[i], posts[j]);
-  }
-}
+/* 2. Professional Comparison Logic (Same-Category Only) */
+posts.forEach((postA, i) => {
+  const sameCategoryPosts = posts.filter((p, idx) => p.category === postA.category && idx > i);
+  // Limit to 3 comparisons per post to keep the build fast and stable
+  sameCategoryPosts.slice(0, 3).forEach(postB => {
+    generateComparison(postA, postB);
+  });
+});
 
 const comparisonLinks = [];
 
