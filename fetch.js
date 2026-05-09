@@ -138,46 +138,45 @@ if(!Array.isArray(entries)) entries=[entries];
 
 console.log("TOTAL ENTRIES FROM FEED:", entries.length);
 
-/* 10 PROFESSIONAL ROTATING IMAGES FOR SUPPORT POSTS */
-const SUPPORT_IMAGES = [
-  "og-pro-tips.jpg", "og-insider-access.jpg", "og-speed-result.jpg",
-  "og-hidden-features.jpg", "og-success-roadmap.jpg", "og-secret-workflow.jpg",
-  "og-bonus-vault.jpg", "og-expert-analysis.jpg", "og-revenue-hacks.jpg",
-  "og-the-verdict.jpg"
-];
-
-/* YOUTUBE IMAGE ENGINE + SUPPORT ROTATOR */
-async function getYouTubeImages(html, slug, index) {
- 
+/* YOUTUBE IMAGE ENGINE + BLOGGER FALLBACK (STRICT ARCHITECTURE) */
+async function getYouTubeImages(html, slug) {
+  
+  // 1. SEARCH FOR YOUTUBE VIDEO (PRIORITY)
   const match = html.match(/(?:youtube\.com\/(?:embed\/|watch\?v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
-  
-  // IF NO YOUTUBE VIDEO IS FOUND
-  if (!match) {
-    // This uses the "Modulo" operator to cycle through your 10 images 
-    const rotatingImage = SUPPORT_IMAGES[index % SUPPORT_IMAGES.length];
-    return [`${SITE_URL}/assets/${rotatingImage}`];
+
+  if (match) {
+    const id = match[1];
+    const candidates = [
+      `https://img.youtube.com/vi/${id}/maxresdefault.jpg`,
+      `https://img.youtube.com/vi/${id}/sddefault.jpg`,
+      `https://img.youtube.com/vi/${id}/hqdefault.jpg`
+    ];
+
+    let success = false;
+    for (const imgUrl of candidates) {
+      success = await upscaleToOG(imgUrl, slug);
+      if (success) break; 
+    }
+
+    if (success && fs.existsSync(`_site/og-images/${slug}.webp`)) {
+      return [`${SITE_URL}/og-images/${slug}.webp` ];
+    }
   }
 
-  // IF YOUTUBE VIDEO EXISTS (KEEP ORIGINAL LOGIC)
-  const id = match[1];
-  const candidates = [
-    `https://img.youtube.com/vi/${id}/maxresdefault.jpg`,
-    `https://img.youtube.com/vi/${id}/sddefault.jpg`,
-    `https://img.youtube.com/vi/${id}/hqdefault.jpg`
-  ];
-  
-  let success = false;
-  for (const imgUrl of candidates) {
-    success = await upscaleToOG(imgUrl, slug);
-    if (success) break; 
+  // 2. SEARCH FOR BLOGGER CONTENT IMAGE (SUPPORTING POSTS)
+  const bloggerImgMatch = html.match(/<img[^>]+src="([^">]+)"/i);
+  if (bloggerImgMatch && bloggerImgMatch[1]) {
+    const bloggerImgUrl = bloggerImgMatch[1];
+    
+    // Attempt to upscale the Blogger image into the same professional architecture
+    let success = await upscaleToOG(bloggerImgUrl, slug);
+    if (success && fs.existsSync(`_site/og-images/${slug}.webp`)) {
+      return [`${SITE_URL}/og-images/${slug}.webp` ];
+    }
   }
 
-  if (success && fs.existsSync(`_site/og-images/${slug}.webp`)) {
-    return [`${SITE_URL}/og-images/${slug}.webp` ];
-  }
-
-  // Fallback if upscale fails
-  return [`${SITE_URL}/assets/${SUPPORT_IMAGES[index % SUPPORT_IMAGES.length]}`];
+  // 3. FINAL FALLBACK: STABLE BRANDED ASSET
+  return [`${SITE_URL}/assets/og-default.jpg`];
 }
 
 /* SEMANTIC INTERNAL LINK GRAPH */
@@ -331,9 +330,7 @@ const textOnly = rawHtml.replace(/<[^>]+>/g," ");
 
 const description = textOnly.slice(0,155);
 
-// Add 'posts.length' as the third argument to provide the current index
-const ogImages = await getYouTubeImages(rawHtml, slug, posts.length);
-  
+const ogImages = await getYouTubeImages(rawHtml,slug);
 const primaryOG = ogImages[0];
 
 const readTime = Math.max(1,
