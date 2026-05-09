@@ -138,30 +138,35 @@ if(!Array.isArray(entries)) entries=[entries];
 
 console.log("TOTAL ENTRIES FROM FEED:", entries.length);
 
-/* YOUTUBE IMAGE ENGINE + BLOGGER FALLBACK (STRICT ARCHITECTURE) */
+"/* YOUTUBE IMAGE ENGINE */
 async function getYouTubeImages(html, slug) {
-  
-  // 1. SEARCH FOR YOUTUBE VIDEO (PRIORITY)
+ 
   const match = html.match(/(?:youtube\.com\/(?:embed\/|watch\?v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
 
-  if (match) {
-    const id = match[1];
-    const candidates = [
-      `https://img.youtube.com/vi/${id}/maxresdefault.jpg`,
-      `https://img.youtube.com/vi/${id}/sddefault.jpg`,
-      `https://img.youtube.com/vi/${id}/hqdefault.jpg`
-    ];
-
-    let success = false;
-    for (const imgUrl of candidates) {
-      success = await upscaleToOG(imgUrl, slug);
-      if (success) break; 
-    }
-
-    if (success && fs.existsSync(`_site/og-images/${slug}.webp`)) {
-      return [`${SITE_URL}/og-images/${slug}.webp` ];
-    }
+  if (!match) {
+    return [`${SITE_URL}/assets/og-default.jpg`];
   }
+
+  const id = match[1];
+  
+  const candidates = [
+    `https://img.youtube.com/vi/${id}/maxresdefault.jpg`,
+    `https://img.youtube.com/vi/${id}/sddefault.jpg`,
+    `https://img.youtube.com/vi/${id}/hqdefault.jpg`
+  ];
+
+  let success = false;
+  for (const imgUrl of candidates) {
+    success = await upscaleToOG(imgUrl, slug);
+    if (success) break; 
+  }
+
+  if (success && fs.existsSync(`_site/og-images/${slug}.webp`)) {
+    return [`${SITE_URL}/og-images/${slug}.webp` ];
+  }
+
+  return [`${SITE_URL}/assets/og-default.jpg`];
+}
 
   // 2. SEARCH FOR BLOGGER CONTENT IMAGE (SUPPORTING POSTS)
   const bloggerImgMatch = html.match(/<img[^>]+src="([^">]+)"/i);
