@@ -168,22 +168,6 @@ async function getYouTubeImages(html, slug) {
   return [`${SITE_URL}/assets/og-default.jpg`];
 }
 
-  // 2. SEARCH FOR BLOGGER CONTENT IMAGE (SUPPORTING POSTS)
-  const bloggerImgMatch = html.match(/<img[^>]+src="([^">]+)"/i);
-  if (bloggerImgMatch && bloggerImgMatch[1]) {
-    const bloggerImgUrl = bloggerImgMatch[1];
-    
-    // Attempt to upscale the Blogger image into the same professional architecture
-    let success = await upscaleToOG(bloggerImgUrl, slug);
-    if (success && fs.existsSync(`_site/og-images/${slug}.webp`)) {
-      return [`${SITE_URL}/og-images/${slug}.webp` ];
-    }
-  }
-
-  // 3. FINAL FALLBACK: STABLE BRANDED ASSET
-  return [`${SITE_URL}/assets/og-default.jpg`];
-}
-
 /* SEMANTIC INTERNAL LINK GRAPH */
 function scoreSimilarity(a,b){
 const aw = a.toLowerCase().split(/\W+/);
