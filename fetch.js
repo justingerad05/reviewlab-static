@@ -138,7 +138,7 @@ if(!Array.isArray(entries)) entries=[entries];
 
 console.log("TOTAL ENTRIES FROM FEED:", entries.length);
 
-"/* YOUTUBE IMAGE ENGINE */
+/* YOUTUBE IMAGE ENGINE */
 async function getYouTubeImages(html, slug) {
  
   const match = html.match(/(?:youtube\.com\/(?:embed\/|watch\?v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
