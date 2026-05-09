@@ -138,23 +138,34 @@ if(!Array.isArray(entries)) entries=[entries];
 
 console.log("TOTAL ENTRIES FROM FEED:", entries.length);
 
-/* YOUTUBE IMAGE ENGINE */
-async function getYouTubeImages(html, slug) {
+/* 10 PROFESSIONAL ROTATING IMAGES FOR SUPPORT POSTS */
+const SUPPORT_IMAGES = [
+  "og-pro-tips.jpg", "og-insider-access.jpg", "og-speed-result.jpg",
+  "og-hidden-features.jpg", "og-success-roadmap.jpg", "og-secret-workflow.jpg",
+  "og-bonus-vault.jpg", "og-expert-analysis.jpg", "og-revenue-hacks.jpg",
+  "og-the-verdict.jpg"
+];
+
+/* YOUTUBE IMAGE ENGINE + SUPPORT ROTATOR */
+async function getYouTubeImages(html, slug, index) {
  
   const match = html.match(/(?:youtube\.com\/(?:embed\/|watch\?v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
-
+  
+  // IF NO YOUTUBE VIDEO IS FOUND
   if (!match) {
-    return [`${SITE_URL}/assets/og-default.jpg`];
+    // This uses the "Modulo" operator to cycle through your 10 images 
+    const rotatingImage = SUPPORT_IMAGES[index % SUPPORT_IMAGES.length];
+    return [`${SITE_URL}/assets/${rotatingImage}`];
   }
 
+  // IF YOUTUBE VIDEO EXISTS (KEEP ORIGINAL LOGIC)
   const id = match[1];
-  
   const candidates = [
     `https://img.youtube.com/vi/${id}/maxresdefault.jpg`,
     `https://img.youtube.com/vi/${id}/sddefault.jpg`,
     `https://img.youtube.com/vi/${id}/hqdefault.jpg`
   ];
-
+  
   let success = false;
   for (const imgUrl of candidates) {
     success = await upscaleToOG(imgUrl, slug);
@@ -165,7 +176,8 @@ async function getYouTubeImages(html, slug) {
     return [`${SITE_URL}/og-images/${slug}.webp` ];
   }
 
-  return [`${SITE_URL}/assets/og-default.jpg`];
+  // Fallback if upscale fails
+  return [`${SITE_URL}/assets/${SUPPORT_IMAGES[index % SUPPORT_IMAGES.length]}`];
 }
 
 /* SEMANTIC INTERNAL LINK GRAPH */
@@ -319,7 +331,9 @@ const textOnly = rawHtml.replace(/<[^>]+>/g," ");
 
 const description = textOnly.slice(0,155);
 
-const ogImages = await getYouTubeImages(rawHtml,slug);
+// Add 'posts.length' as the third argument to provide the current index
+const ogImages = await getYouTubeImages(rawHtml, slug, posts.length);
+  
 const primaryOG = ogImages[0];
 
 const readTime = Math.max(1,
