@@ -31,10 +31,14 @@ function decodeHTML(html) {
     .replace(/&nbsp;/g, " ");
 }
 
-function sanitizeHTML(html){
+function sanitizeHTML(html) {
   return html
-    .replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi,"")
-    .replace(/on\w+="[^"]*"/gi,""); // remove inline JS only
+    /* 1. Remove dangerous executable scripts (onclick, onload, etc.) */
+    .replace(/on\w+="[^"]*"/gi, "") 
+    /* 2. Remove standard <script> tags but KEEP JSON-LD Schema scripts */
+    .replace(/<script(?![^>]*type=["']application\/ld\+json["'])[\s\S]*?>[\s\S]*?<\/script>/gi, "")
+    /* 3. Ensure <style> tags are NOT removed so your custom review designs work */
+    .trim(); 
 }
 
 function getText(field) {
