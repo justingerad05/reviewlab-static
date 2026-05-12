@@ -33,16 +33,13 @@ function decodeHTML(html) {
 
 function sanitizeHTML(html) {
   if (!html) return "";
-
   return html
-    /* 1. Remove standard script tags BUT keep JSON-LD Schema */
+    /* 1. Remove dangerous scripts BUT keep JSON-LD Schema */
     .replace(/<script(?![^>]*type=["']application\/ld\+json["'])[\s\S]*?<\/script>/gi, "")
-    
-    /* 2. Remove dangerous inline JS (onclick, etc.) */
+    /* 2. Remove inline JS events */
     .replace(/on\w+="[^"]*"/gi, "") 
-    
-    /* 3. Do NOT strip <style> tags. This ensures the CSS stays in its container and hidden from view. */
-    .trim(); 
+    /* 3. Do NOT touch <style> tags. This ensures CSS stays hidden. */
+    .trim();
 }
 
 function getText(field) {
@@ -282,11 +279,25 @@ function detectTopic(title, html) {
 
 /* BUILD DATA (Reinforced) */
 
-for(const entry of entries){ 
-  let rawHtml = entry.content?.["#text"]; 
-  if(!rawHtml) continue; 
-  rawHtml = sanitizeHTML(rawHtml); 
-  const title = entry.title["#text"];
+for (const entry of entries) {
+  let title = getText(entry.title) || "Untitled Post " + Date.now();
+
+  let rawHtml = "";
+  if (entry.content) {
+      rawHtml = getText(entry.content);
+  } else if (entry.summary) {
+      rawHtml = getText(entry.summary);
+  }
+
+  if (!rawHtml || rawHtml.trim().length < 10) {
+    console.log(`⚠ Skipping post "${title}" - Content is empty or too short.`);
+    continue;
+  }
+
+  // ✅ CORRECT DECODE & SANITIZE ONLY
+  // This keeps your <style> tags intact so the CSS remains invisible and functional
+  rawHtml = decodeHTML(rawHtml);
+  rawHtml = sanitizeHTML(rawHtml);
   
 /* SAFE LABEL EXTRACTION */
 let labels = [];
