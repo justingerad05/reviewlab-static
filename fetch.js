@@ -35,12 +35,17 @@ function sanitizeHTML(html) {
   if (!html) return "";
 
   return html
-    /* 1. Remove dangerous executable scripts (onclick, onload, etc.) */
+    /* 1. Remove dangerous executable inline JS (onclick, etc.) */
     .replace(/on\w+="[^"]*"/gi, "") 
-    /* 2. Remove standard <script> tags BUT specifically keep JSON-LD Schema scripts */
-    .replace(/<script(?![^>]*type=["']application\/ld\+json["'])[\s\S]*?>[\s\S]*?<\/script>/gi, "")
-    /* 3. ENSURE <style> tags are NOT touched. This keeps your CSS working and invisible. */
-    .trim(); 
+    
+    /* 2. ONLY remove scripts that are NOT JSON-LD Schemas */
+    .replace(/<script(?![^>]*type=["']application\/ld\+json["'])[\s\S]*?<\/script>/gi, "")
+
+    /* 3. PROTECT STYLE TAGS: Do not let the regular expression strip them. 
+       This ensures your CSS stays inside its container and remains invisible. */
+    .replace(/<style[\s\S]*?<\/style>/gi, (match) => match) 
+    
+    .trim();
 }
 
 function getText(field) {
