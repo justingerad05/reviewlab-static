@@ -32,12 +32,14 @@ function decodeHTML(html) {
 }
 
 function sanitizeHTML(html) {
+  if (!html) return "";
+
   return html
     /* 1. Remove dangerous executable scripts (onclick, onload, etc.) */
     .replace(/on\w+="[^"]*"/gi, "") 
-    /* 2. Remove standard <script> tags but KEEP JSON-LD Schema scripts */
+    /* 2. Remove standard <script> tags BUT specifically keep JSON-LD Schema scripts */
     .replace(/<script(?![^>]*type=["']application\/ld\+json["'])[\s\S]*?>[\s\S]*?<\/script>/gi, "")
-    /* 3. Ensure <style> tags are NOT removed so your custom review designs work */
+    /* 3. ENSURE <style> tags are NOT touched. This keeps your CSS working and invisible. */
     .trim(); 
 }
 
