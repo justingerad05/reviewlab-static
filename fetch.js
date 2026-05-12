@@ -35,17 +35,14 @@ function sanitizeHTML(html) {
   if (!html) return "";
 
   return html
-    /* 1. Remove dangerous executable inline JS (onclick, etc.) */
+    /* 1. Remove standard script tags BUT keep JSON-LD Schema */
+    .replace(/<script(?![^>]*type=["']application\/ld\+json["'])[\s\S]*?<\/script>/gi, "")
+    
+    /* 2. Remove dangerous inline JS (onclick, etc.) */
     .replace(/on\w+="[^"]*"/gi, "") 
     
-    /* 2. ONLY remove scripts that are NOT JSON-LD Schemas */
-    .replace(/<script(?![^>]*type=["']application\/ld\+json["'])[\s\S]*?<\/script>/gi, "")
-
-    /* 3. PROTECT STYLE TAGS: Do not let the regular expression strip them. 
-       This ensures your CSS stays inside its container and remains invisible. */
-    .replace(/<style[\s\S]*?<\/style>/gi, (match) => match) 
-    
-    .trim();
+    /* 3. Do NOT strip <style> tags. This ensures the CSS stays in its container and hidden from view. */
+    .trim(); 
 }
 
 function getText(field) {
@@ -300,10 +297,8 @@ for(const entry of entries){
     continue;
   }
 
-  // ✅ NEW SURGICAL STYLE CLEANING
+ // ✅ DECODE AND SANITIZE ONLY
 rawHtml = decodeHTML(rawHtml);
-rawHtml = rawHtml.replace(/\.authority-review\s*\{[\s\S]*?\}/gi, "");
-
 rawHtml = sanitizeHTML(rawHtml);
   
 /* SAFE LABEL EXTRACTION */
