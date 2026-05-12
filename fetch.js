@@ -282,24 +282,11 @@ function detectTopic(title, html) {
 
 /* BUILD DATA (Reinforced) */
 
-for(const entry of entries){
-  let title = getText(entry.title) || "Untitled Post " + Date.now();
-
-  let rawHtml = "";
-  if (entry.content) {
-      rawHtml = getText(entry.content);
-  } else if (entry.summary) {
-      rawHtml = getText(entry.summary);
-  }
-
-  if (!rawHtml || rawHtml.trim().length < 10) {
-    console.log(`⚠ Skipping post "${title}" - Content is empty or too short.`);
-    continue;
-  }
-
- // ✅ DECODE AND SANITIZE ONLY
-rawHtml = decodeHTML(rawHtml);
-rawHtml = sanitizeHTML(rawHtml);
+for(const entry of entries){ 
+  let rawHtml = entry.content?.["#text"]; 
+  if(!rawHtml) continue; 
+  rawHtml = sanitizeHTML(rawHtml); 
+  const title = entry.title["#text"];
   
 /* SAFE LABEL EXTRACTION */
 let labels = [];
