@@ -32,22 +32,35 @@ function decodeHTML(html) {
 }
 
 function sanitizeHTML(html = "") {
-  return html
 
-    // Remove SCRIPT tags
-    .replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, "")
+  // Remove ONLY dangerous scripts
+  html = html.replace(
+    /<script[\s\S]*?>[\s\S]*?<\/script>/gi,
+    ""
+  );
 
-    // Remove STYLE tags completely
-    .replace(/<style[\s\S]*?>[\s\S]*?<\/style>/gi, "")
+  // Remove ONLY full standalone <style> blocks
+  html = html.replace(
+    /<style[\s\S]*?>[\s\S]*?<\/style>/gi,
+    ""
+  );
 
-    // Remove standalone CSS blocks accidentally pasted into content
-    .replace(/\.[a-zA-Z0-9_-]+\s*\{[\s\S]*?\}/g, "")
+  // Remove javascript: injections
+  html = html.replace(
+    /\s(href|src)=["']javascript:[^"']*["']/gi,
+    ""
+  );
 
-    // Remove inline JS handlers
-    .replace(/\son\w+="[^"]*"/gi, "")
+  // Remove inline event handlers
+  html = html.replace(
+    /\son\w+=["'][^"']*["']/gi,
+    ""
+  );
 
-    // Remove empty leftover lines
-    .replace(/\n\s*\n/g, "\n");
+  // Clean excessive blank lines
+  html = html.replace(/\n{3,}/g, "\n\n");
+
+  return html.trim();
 }
 
 function getText(field) {
@@ -617,6 +630,7 @@ function generateComparison(postA, postB) {
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="index,follow">
     <title>${postA.title} vs ${postB.title} | Which AI Tool is Better?</title>
     <link rel="canonical" href="${url}">
     <link rel="stylesheet" href="${SITE_URL}/assets/styles.css">
@@ -683,22 +697,39 @@ fs.writeFileSync(
 );
 }
 
+const generatedComparisons = new Map();
 const comparisonPairs = new Set();
 
 /* BUILD ALL COMPARISON PAGES */
 posts.forEach((postA, i) => {
 
   const sameCategoryPosts = posts.filter(
-    (p, idx) => p.category === postA.category && idx > i
+    (p, idx) =>
+      p.category === postA.category &&
+      idx > i
   );
 
   sameCategoryPosts.slice(0, 3).forEach(postB => {
 
-    const pairKey = `${postA.slug}::${postB.slug}`;
+    const slug =
+      `${postA.slug}-vs-${postB.slug}`;
 
-    if(comparisonPairs.has(pairKey)) return;
+    const pairKey =
+      `${postA.slug}::${postB.slug}`;
+
+    if (comparisonPairs.has(pairKey)) return;
 
     comparisonPairs.add(pairKey);
+
+    generatedComparisons.set(
+      postA.slug,
+      generatedComparisons.get(postA.slug) || []
+    );
+
+    generatedComparisons.get(postA.slug).push({
+      slug,
+      title: `${postA.title} vs ${postB.title}`
+    });
 
     generateComparison(postA, postB);
   });
@@ -968,13 +999,6 @@ const page = `<!doctype html>
 
 <link rel="preload" as="image" href="${post.og}">
 
-<script>
-if(location.href.endsWith("index.html")){
-  const clean = location.href.replace("index.html","");
-  history.replaceState(null,null,clean);
-}
-</script>
-
 <link rel="stylesheet" href="${SITE_URL}/assets/styles.css">
 <meta name="description" content="${post.description}">
 <meta property="og:title" content="${post.title}">
@@ -1053,20 +1077,14 @@ ${clusterBlock}
 <section class="comparison-block">
 <h3>Compare This Tool</h3>
 <ul>
-${posts
-.filter(p=>p.slug!==post.slug)
-.slice(0,3)
-.map(p=>{
-  const comparisonSlug = `${post.slug}-vs-${p.slug}`;
-
-return `
+${(generatedComparisons.get(post.slug) || [])
+.map(comp => `
 <li>
-<a href="${SITE_URL}/comparisons/${comparisonSlug}/">
-${post.title} vs ${p.title}
+<a href="${SITE_URL}/comparisons/${comp.slug}/">
+${comp.title}
 </a>
 </li>
-`;
-}).join("")}
+`).join("")}
 </ul>
 <p><strong>Don’t want to compare everything?</strong></p>
 <a href="javascript:void(0)" class="cta-btn">See Best Tool →</a>
