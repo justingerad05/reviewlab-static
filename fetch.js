@@ -34,11 +34,8 @@ function decodeHTML(html) {
 function sanitizeHTML(html) {
   if (!html) return "";
   return html
-    /* 1. Remove dangerous scripts BUT keep JSON-LD Schema */
     .replace(/<script(?![^>]*type=["']application\/ld\+json["'])[\s\S]*?<\/script>/gi, "")
-    /* 2. Remove inline JS events */
     .replace(/on\w+="[^"]*"/gi, "") 
-    /* 3. Do NOT touch <style> tags. This ensures CSS stays hidden. */
     .trim();
 }
 
@@ -100,8 +97,8 @@ fs.mkdirSync(`_site/comparisons`, {recursive:true});
 /* FETCH (Bypass Cache + Enhanced Error Handling) */
 const parser = new XMLParser({
   ignoreAttributes: false,
-  processEntities: true,
-  htmlEntities: true,
+  processEntities: false, // ✅ FIXED: Do not let the parser break your HTML tags
+  htmlEntities: false,    // ✅ FIXED: Keeps <style> tags as actual tags
   allowBooleanAttributes: true,
   parseTagValue: false,
   trimValues: false,
@@ -284,9 +281,10 @@ for (const entry of entries) {
 
   let rawHtml = "";
   if (entry.content) {
-      rawHtml = getText(entry.content);
+      // Use ['#text'] or .content depending on your feed structure
+      rawHtml = entry.content['#text'] || entry.content;
   } else if (entry.summary) {
-      rawHtml = getText(entry.summary);
+      rawHtml = entry.summary['#text'] || entry.summary;
   }
 
   if (!rawHtml || rawHtml.trim().length < 10) {
@@ -294,8 +292,7 @@ for (const entry of entries) {
     continue;
   }
 
-  // ✅ CORRECT DECODE & SANITIZE ONLY
-  // This keeps your <style> tags intact so the CSS remains invisible and functional
+  // ✅ DECODE AND SANITIZE ONLY
   rawHtml = decodeHTML(rawHtml);
   rawHtml = sanitizeHTML(rawHtml);
   
