@@ -41,9 +41,21 @@ function sanitizeHTML(html = "") {
 
   // Remove ONLY full standalone <style> blocks
   html = html.replace(
-    /<style[\s\S]*?>[\s\S]*?<\/style>/gi,
-    ""
-  );
+  /<style[\s\S]*?>[\s\S]*?<\/style>/gi,
+  (match) => {
+
+    // Remove dangerous imports/javascript only
+    if (
+      /expression\s*\(/i.test(match) ||
+      /javascript:/i.test(match) ||
+      /@import/i.test(match)
+    ) {
+      return "";
+    }
+
+    return match;
+  }
+);
 
   // Remove javascript: injections
   html = html.replace(
@@ -78,15 +90,38 @@ function normalizeResponsiveContent(html = "") {
 
   // Force responsive iframe wrapper
   html = html.replace(
-    /<iframe/gi,
-    '<iframe class="responsive-embed"'
-  );
+  /<iframe([^>]*)>/gi,
+  (match, attrs) => {
 
+    if (/class=/i.test(attrs)) {
+      return `<iframe${attrs.replace(
+        /class=["']([^"']*)["']/i,
+        `class="$1 responsive-embed"`
+      )}>`;
+    }
+
+    return `<iframe class="responsive-embed"${attrs}>`;
+  }
+);
+  
   // Remove inline width styles
   html = html.replace(
-    /style=["'][^"']*(width|max-width|min-width)[^"']*["']/gi,
-    ""
-  );
+  /style=(["'])(.*?)\1/gi,
+  (match, quote, styles) => {
+
+    // Remove ONLY width-related CSS properties
+    const cleaned = styles
+      .replace(/(?:^|;)\s*width\s*:[^;]+;?/gi, "")
+      .replace(/(?:^|;)\s*max-width\s*:[^;]+;?/gi, "")
+      .replace(/(?:^|;)\s*min-width\s*:[^;]+;?/gi, "")
+      .trim();
+
+    // Remove empty style=""
+    if (!cleaned) return "";
+
+    return `style=${quote}${cleaned}${quote}`;
+  }
+);
 
   // Remove fixed width attributes from images/videos
   html = html.replace(/\swidth=["'][^"']*["']/gi, "");
