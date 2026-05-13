@@ -1,0 +1,3 @@
+/comparisons/*   /comparisons/:splat   200
+/posts/*         /posts/:splat         200
+/ai-tools/*      /ai-tools/:splat      200
