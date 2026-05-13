@@ -77,57 +77,44 @@ function sanitizeHTML(html = "") {
 
 function normalizeResponsiveContent(html = "") {
 
-  // Remove fixed widths/heights from iframes
-  html = html.replace(
-    /<iframe([^>]*)width=["'][^"']*["']/gi,
-    '<iframe$1'
-  );
-
-  html = html.replace(
-    /<iframe([^>]*)height=["'][^"']*["']/gi,
-    '<iframe$1'
-  );
-
-  // Force responsive iframe wrapper
-  html = html.replace(
-  /<iframe([^>]*)>/gi,
-  (match, attrs) => {
-
-    if (/class=/i.test(attrs)) {
-      return `<iframe${attrs.replace(
-        /class=["']([^"']*)["']/i,
-        `class="$1 responsive-embed"`
-      )}>`;
-    }
-
-    return `<iframe class="responsive-embed"${attrs}>`;
-  }
-);
-  
-  // Remove inline width styles
-  html = html.replace(
-  /style=(["'])(.*?)\1/gi,
-  (match, quote, styles) => {
-
-    // Remove ONLY width-related CSS properties
-    const cleaned = styles
-      .replace(/(?:^|;)\s*width\s*:[^;]+;?/gi, "")
-      .replace(/(?:^|;)\s*max-width\s*:[^;]+;?/gi, "")
-      .replace(/(?:^|;)\s*min-width\s*:[^;]+;?/gi, "")
-      .trim();
-
-    // Remove empty style=""
-    if (!cleaned) return "";
-
-    return `style=${quote}${cleaned}${quote}`;
-  }
-);
-
-  // Remove fixed width attributes from images/videos
+  // Remove iframe fixed dimensions
   html = html.replace(/\swidth=["'][^"']*["']/gi, "");
   html = html.replace(/\sheight=["'][^"']*["']/gi, "");
 
-  // Wrap tables for mobile scrolling
+  // Preserve styles while removing ONLY width constraints
+  html = html.replace(
+    /style=(["'])(.*?)\1/gi,
+    (match, quote, styles) => {
+
+      const cleaned = styles
+        .replace(/(?:^|;)\s*width\s*:[^;]+;?/gi, "")
+        .replace(/(?:^|;)\s*max-width\s*:[^;]+;?/gi, "")
+        .replace(/(?:^|;)\s*min-width\s*:[^;]+;?/gi, "")
+        .trim();
+
+      if (!cleaned) return "";
+
+      return `style=${quote}${cleaned}${quote}`;
+    }
+  );
+
+  // Safe iframe enhancement
+  html = html.replace(
+    /<iframe([^>]*)>/gi,
+    (match, attrs) => {
+
+      if (/class=/i.test(attrs)) {
+        return `<iframe${attrs.replace(
+          /class=["']([^"']*)["']/i,
+          `class="$1 responsive-embed"`
+        )}>`;
+      }
+
+      return `<iframe class="responsive-embed"${attrs}>`;
+    }
+  );
+
+  // Responsive tables
   html = html.replace(
     /<table/gi,
     '<div class="table-scroll"><table'
