@@ -97,7 +97,6 @@ fs.mkdirSync("_site", { recursive: true });
 
 // Core folders
 fs.mkdirSync("_site/posts", { recursive: true });
-fs.mkdirSync("_site/posts/comparisons", { recursive: true });
 fs.mkdirSync("_site/ai-tools", { recursive: true });
 fs.mkdirSync("_site/author", { recursive: true });
 fs.mkdirSync("_site/og-images", { recursive: true });
@@ -588,7 +587,7 @@ generateRSS(posts);
 /* AUTO COMPARISON ENGINE - UPDATED */
 function generateComparison(postA, postB) {
   const slug = `${postA.slug}-vs-${postB.slug}`;
-  const url = `${SITE_URL}/posts/comparisons/${slug}/`;
+  const url = `${SITE_URL}/comparisons/${slug}/`;
 
   // Generate ItemList Schema for the Comparison
   const comparisonSchema = {
@@ -676,8 +675,12 @@ ${globalHeader()}
 </html>
 `;
 
-  fs.mkdirSync(`_site/posts/comparisons/${slug}`, { recursive: true });
-  fs.writeFileSync(`_site/posts/comparisons/${slug}/index.html`, html);
+  fs.mkdirSync(`_site/comparisons/${slug}`, { recursive: true });
+
+fs.writeFileSync(
+  `_site/comparisons/${slug}/index.html`,
+  html
+);
 }
 
 const comparisonPairs = new Set();
@@ -710,7 +713,7 @@ for(let i=0;i<posts.length;i++){
     
     comparisonLinks.push(`
 <li>
-<a href="${SITE_URL}/posts/comparisons/${slug}/">
+<a href="${SITE_URL}/comparisons/${slug}/">
 ${posts[i].title} vs ${posts[j].title}
 </a>
 </li>
@@ -1058,7 +1061,7 @@ ${posts
 
 return `
 <li>
-<a href="${SITE_URL}/posts/comparisons/${comparisonSlug}/">
+<a href="${SITE_URL}/comparisons/${comparisonSlug}/">
 ${post.title} vs ${p.title}
 </a>
 </li>
