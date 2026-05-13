@@ -31,10 +31,23 @@ function decodeHTML(html) {
     .replace(/&nbsp;/g, " ");
 }
 
-function sanitizeHTML(html){
+function sanitizeHTML(html = "") {
   return html
-    .replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi,"")
-    .replace(/on\w+="[^"]*"/gi,""); // remove inline JS only
+
+    // Remove SCRIPT tags
+    .replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, "")
+
+    // Remove STYLE tags completely
+    .replace(/<style[\s\S]*?>[\s\S]*?<\/style>/gi, "")
+
+    // Remove standalone CSS blocks accidentally pasted into content
+    .replace(/\.[a-zA-Z0-9_-]+\s*\{[\s\S]*?\}/g, "")
+
+    // Remove inline JS handlers
+    .replace(/\son\w+="[^"]*"/gi, "")
+
+    // Remove empty leftover lines
+    .replace(/\n\s*\n/g, "\n");
 }
 
 function getText(field) {
@@ -291,8 +304,6 @@ for(const entry of entries){
 
   // ✅ NEW SURGICAL STYLE CLEANING
 rawHtml = decodeHTML(rawHtml);
-rawHtml = rawHtml.replace(/\.authority-review\s*\{[\s\S]*?\}/gi, "");
-
 rawHtml = sanitizeHTML(rawHtml);
   
 /* SAFE LABEL EXTRACTION */
@@ -669,12 +680,23 @@ ${globalHeader()}
   fs.writeFileSync(`_site/posts/comparisons/${slug}/index.html`, html);
 }
 
+const comparisonPairs = new Set();
+
 /* BUILD ALL COMPARISON PAGES */
-/* 2. Professional Comparison Logic (Same-Category Only) */
 posts.forEach((postA, i) => {
-  const sameCategoryPosts = posts.filter((p, idx) => p.category === postA.category && idx > i);
-  // Limit to 3 comparisons per post to keep the build fast and stable
+
+  const sameCategoryPosts = posts.filter(
+    (p, idx) => p.category === postA.category && idx > i
+  );
+
   sameCategoryPosts.slice(0, 3).forEach(postB => {
+
+    const pairKey = `${postA.slug}::${postB.slug}`;
+
+    if(comparisonPairs.has(pairKey)) return;
+
+    comparisonPairs.add(pairKey);
+
     generateComparison(postA, postB);
   });
 });
@@ -684,7 +706,7 @@ const comparisonLinks = [];
 for(let i=0;i<posts.length;i++){
   for(let j=i+1;j<posts.length && j<i+4;j++){
     const slugs = [posts[i].slug, posts[j].slug];
-    const slug = `${slugs[0]}-vs-${slugs[1]}`;
+    const slug = `${posts[i].slug}-vs-${posts[j].slug}`;
     
     comparisonLinks.push(`
 <li>
@@ -1032,13 +1054,15 @@ ${posts
 .filter(p=>p.slug!==post.slug)
 .slice(0,3)
 .map(p=>{
-  const slugs = [post.slug, p.slug].sort();
-  return `
+  const comparisonSlug = `${post.slug}-vs-${p.slug}`;
+
+return `
 <li>
-<a href="${SITE_URL}/posts/comparisons/${slugs[0]}-vs-${slugs[1]}/">
+<a href="${SITE_URL}/posts/comparisons/${comparisonSlug}/">
 ${post.title} vs ${p.title}
 </a>
-</li>`;
+</li>
+`;
 }).join("")}
 </ul>
 <p><strong>Don’t want to compare everything?</strong></p>
