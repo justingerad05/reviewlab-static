@@ -31,10 +31,14 @@ function decodeHTML(html) {
     .replace(/&nbsp;/g, " ");
 }
 
-function sanitizeHTML(html){
+function sanitizeHTML(html) {
+  if (!html) return "";
   return html
-    .replace(/<script(?![^>]*type=["']application\/ld\+json["'])[\s\S]*?<\/script>/gi,"")
-    .replace(/on\w+="[^"]*"/gi,"") 
+    /* Removes scripts but protects JSON-LD (FAQ Schema) */
+    .replace(/<script(?![^>]*type=["']application\/ld\+json["'])[\s\S]*?<\/script>/gi, "")
+    /* Removes inline JS events (onclick, etc) */
+    .replace(/on\w+="[^"]*"/gi, "") 
+    /* Does NOT touch <style> tags so they stay hidden */
     .trim();
 }
 
@@ -96,8 +100,8 @@ fs.mkdirSync(`_site/comparisons`, {recursive:true});
 /* FETCH (Bypass Cache + Enhanced Error Handling) */
 const parser = new XMLParser({
   ignoreAttributes: false,
-  processEntities: false, // Change to false
-  htmlEntities: false,    // Change to false
+  processEntities: false, // Critical: Keeps tags as tags
+  htmlEntities: false,    // Critical: Stops conversion to text
   allowBooleanAttributes: true,
   parseTagValue: false,
   trimValues: false,
@@ -280,18 +284,14 @@ for (const entry of entries) {
 
   let rawHtml = "";
   if (entry.content) {
-      // Use ['#text'] or .content depending on your feed structure
+      // Direct access prevents the parser from double-encoding
       rawHtml = entry.content['#text'] || entry.content;
   } else if (entry.summary) {
       rawHtml = entry.summary['#text'] || entry.summary;
   }
 
-  if (!rawHtml || rawHtml.trim().length < 10) {
-    console.log(`⚠ Skipping post "${title}" - Content is empty or too short.`);
-    continue;
-  }
-
   // ✅ DECODE AND SANITIZE ONLY
+  // This restores the brackets and keeps the design hidden from the audience
   rawHtml = decodeHTML(rawHtml);
   rawHtml = sanitizeHTML(rawHtml);
   
