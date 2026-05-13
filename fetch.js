@@ -63,6 +63,49 @@ function sanitizeHTML(html = "") {
   return html.trim();
 }
 
+function normalizeResponsiveContent(html = "") {
+
+  // Remove fixed widths/heights from iframes
+  html = html.replace(
+    /<iframe([^>]*)width=["'][^"']*["']/gi,
+    '<iframe$1'
+  );
+
+  html = html.replace(
+    /<iframe([^>]*)height=["'][^"']*["']/gi,
+    '<iframe$1'
+  );
+
+  // Force responsive iframe wrapper
+  html = html.replace(
+    /<iframe/gi,
+    '<iframe class="responsive-embed"'
+  );
+
+  // Remove inline width styles
+  html = html.replace(
+    /style=["'][^"']*(width|max-width|min-width)[^"']*["']/gi,
+    ""
+  );
+
+  // Remove fixed width attributes from images/videos
+  html = html.replace(/\swidth=["'][^"']*["']/gi, "");
+  html = html.replace(/\sheight=["'][^"']*["']/gi, "");
+
+  // Wrap tables for mobile scrolling
+  html = html.replace(
+    /<table/gi,
+    '<div class="table-scroll"><table'
+  );
+
+  html = html.replace(
+    /<\/table>/gi,
+    '</table></div>'
+  );
+
+  return html;
+}
+
 function getText(field) {
   if (!field) return "";
   if (typeof field === "string") return field;
@@ -272,10 +315,25 @@ function detectTopic(title, html) {
   
   // Define keyword weights for the "AI Brain"
   const weights = {
-    "ai-writing-tools": ["writer", "copy", "blog", "content", "text", "article", "seo", "writing", "grammar"],
-    "ai-image-generators": ["image", "art", "design", "logo", "photo", "voice", "speech", "audio", "video", "generator"],
-    "automation-tools": ["automation", "workflow", "integration", "zapier", "api", "passive", "system", "auto"]
-  };
+  "ai-writing-tools": [
+    "writer","copy","blog","content","text",
+    "article","seo","writing","grammar"
+  ],
+
+  "ai-image-generators": [
+    "image","art","design","logo","photo"
+  ],
+
+  "ai-voice-tools": [
+    "voice","speech","audio","podcast",
+    "narration","tts","voiceover","music"
+  ],
+
+  "automation-tools": [
+    "automation","workflow","integration",
+    "zapier","api","passive","system","auto"
+  ]
+};
 
   let bestCategory = "ai-writing-tools"; // Default fallback
   let highestScore = -1;
@@ -317,6 +375,7 @@ for(const entry of entries){
   // ✅ NEW SURGICAL STYLE CLEANING
 rawHtml = decodeHTML(rawHtml);
 rawHtml = sanitizeHTML(rawHtml);
+rawHtml = normalizeResponsiveContent(rawHtml);
   
 /* SAFE LABEL EXTRACTION */
 let labels = [];
@@ -703,32 +762,43 @@ const comparisonPairs = new Set();
 /* BUILD ALL COMPARISON PAGES */
 posts.forEach((postA, i) => {
 
-  const sameCategoryPosts = posts.filter(
-    (p, idx) =>
-      p.category === postA.category &&
-      idx > i
-  );
+  const related = posts
+    .filter(p =>
+      p.slug !== postA.slug &&
+      p.category === postA.category
+    )
+    .slice(0,3);
 
-  sameCategoryPosts.slice(0, 3).forEach(postB => {
+  related.forEach(postB => {
 
-    const slug =
-      `${postA.slug}-vs-${postB.slug}`;
+    const sorted = [postA.slug, postB.slug].sort();
+    const pairKey = sorted.join("::");
 
-    const pairKey =
-      `${postA.slug}::${postB.slug}`;
-
-    if (comparisonPairs.has(pairKey)) return;
+    if(comparisonPairs.has(pairKey)) return;
 
     comparisonPairs.add(pairKey);
 
-    generatedComparisons.set(
-      postA.slug,
-      generatedComparisons.get(postA.slug) || []
-    );
+    const slug =
+      `${sorted[0]}-vs-${sorted[1]}`;
+
+    // SAVE FOR A
+    if(!generatedComparisons.has(postA.slug)){
+      generatedComparisons.set(postA.slug, []);
+    }
 
     generatedComparisons.get(postA.slug).push({
       slug,
       title: `${postA.title} vs ${postB.title}`
+    });
+
+    // SAVE FOR B
+    if(!generatedComparisons.has(postB.slug)){
+      generatedComparisons.set(postB.slug, []);
+    }
+
+    generatedComparisons.get(postB.slug).push({
+      slug,
+      title: `${postB.title} vs ${postA.title}`
     });
 
     generateComparison(postA, postB);
@@ -838,6 +908,7 @@ return slug.replace(/-/g," ").replace(/\b\w/g,l=>l.toUpperCase());
 const topics = {
   "ai-writing-tools": [],
   "ai-image-generators": [],
+  "ai-voice-tools": [],
   "automation-tools": []
 };
 
