@@ -31,14 +31,10 @@ function decodeHTML(html) {
     .replace(/&nbsp;/g, " ");
 }
 
-function sanitizeHTML(html) {
-  if (!html) return "";
+function sanitizeHTML(html){
   return html
-    /* 1. Remove dangerous scripts BUT keep JSON-LD Schema */
-    .replace(/<script(?![^>]*type=["']application\/ld\+json["'])[\s\S]*?<\/script>/gi, "")
-    /* 2. Remove inline JS events */
-    .replace(/on\w+="[^"]*"/gi, "") 
-    /* 3. Do NOT touch <style> tags. This ensures CSS stays hidden. */
+    .replace(/<script(?![^>]*type=["']application\/ld\+json["'])[\s\S]*?<\/script>/gi,"")
+    .replace(/on\w+="[^"]*"/gi,"") 
     .trim();
 }
 
@@ -100,8 +96,8 @@ fs.mkdirSync(`_site/comparisons`, {recursive:true});
 /* FETCH (Bypass Cache + Enhanced Error Handling) */
 const parser = new XMLParser({
   ignoreAttributes: false,
-  processEntities: false, // ✅ Set to false
-  htmlEntities: false,    // ✅ Set to false
+  processEntities: false, // Change to false
+  htmlEntities: false,    // Change to false
   allowBooleanAttributes: true,
   parseTagValue: false,
   trimValues: false,
