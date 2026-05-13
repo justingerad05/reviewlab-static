@@ -34,8 +34,11 @@ function decodeHTML(html) {
 function sanitizeHTML(html) {
   if (!html) return "";
   return html
+    /* 1. Remove dangerous scripts BUT keep JSON-LD Schema */
     .replace(/<script(?![^>]*type=["']application\/ld\+json["'])[\s\S]*?<\/script>/gi, "")
+    /* 2. Remove inline JS events */
     .replace(/on\w+="[^"]*"/gi, "") 
+    /* 3. Do NOT touch <style> tags. This ensures CSS stays hidden. */
     .trim();
 }
 
@@ -97,8 +100,8 @@ fs.mkdirSync(`_site/comparisons`, {recursive:true});
 /* FETCH (Bypass Cache + Enhanced Error Handling) */
 const parser = new XMLParser({
   ignoreAttributes: false,
-  processEntities: false, // ✅ FIXED: Do not let the parser break your HTML tags
-  htmlEntities: false,    // ✅ FIXED: Keeps <style> tags as actual tags
+  processEntities: false, // ✅ Set to false
+  htmlEntities: false,    // ✅ Set to false
   allowBooleanAttributes: true,
   parseTagValue: false,
   trimValues: false,
