@@ -31,15 +31,10 @@ function decodeHTML(html) {
     .replace(/&nbsp;/g, " ");
 }
 
-function sanitizeHTML(html) {
-  if (!html) return "";
+function sanitizeHTML(html){
   return html
-    /* Removes scripts but protects JSON-LD (FAQ Schema) */
-    .replace(/<script(?![^>]*type=["']application\/ld\+json["'])[\s\S]*?<\/script>/gi, "")
-    /* Removes inline JS events (onclick, etc) */
-    .replace(/on\w+="[^"]*"/gi, "") 
-    /* Does NOT touch <style> tags so they stay hidden */
-    .trim();
+    .replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi,"")
+    .replace(/on\w+="[^"]*"/gi,""); // remove inline JS only
 }
 
 function getText(field) {
@@ -100,8 +95,8 @@ fs.mkdirSync(`_site/comparisons`, {recursive:true});
 /* FETCH (Bypass Cache + Enhanced Error Handling) */
 const parser = new XMLParser({
   ignoreAttributes: false,
-  processEntities: false, // Critical: Keeps tags as tags
-  htmlEntities: false,    // Critical: Stops conversion to text
+  processEntities: true,
+  htmlEntities: true,
   allowBooleanAttributes: true,
   parseTagValue: false,
   trimValues: false,
@@ -279,21 +274,26 @@ function detectTopic(title, html) {
 
 /* BUILD DATA (Reinforced) */
 
-for (const entry of entries) {
+for(const entry of entries){
   let title = getText(entry.title) || "Untitled Post " + Date.now();
 
   let rawHtml = "";
   if (entry.content) {
-      // Direct access prevents the parser from double-encoding
-      rawHtml = entry.content['#text'] || entry.content;
+      rawHtml = getText(entry.content);
   } else if (entry.summary) {
-      rawHtml = entry.summary['#text'] || entry.summary;
+      rawHtml = getText(entry.summary);
   }
 
-  // ✅ DECODE AND SANITIZE ONLY
-  // This restores the brackets and keeps the design hidden from the audience
-  rawHtml = decodeHTML(rawHtml);
-  rawHtml = sanitizeHTML(rawHtml);
+  if (!rawHtml || rawHtml.trim().length < 10) {
+    console.log(`⚠ Skipping post "${title}" - Content is empty or too short.`);
+    continue;
+  }
+
+  // ✅ NEW SURGICAL STYLE CLEANING
+rawHtml = decodeHTML(rawHtml);
+rawHtml = rawHtml.replace(/\.authority-review\s*\{[\s\S]*?\}/gi, "");
+
+rawHtml = sanitizeHTML(rawHtml);
   
 /* SAFE LABEL EXTRACTION */
 let labels = [];
