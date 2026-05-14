@@ -297,6 +297,11 @@ for(const entry of entries){
   // ✅ NEW SURGICAL STYLE CLEANING
 rawHtml = decodeHTML(rawHtml);
 rawHtml = sanitizeHTML(rawHtml);
+
+rawHtml = rawHtml.replace(
+  /<div[^>]*data-seo-block=["']true["'][^>]*>[\s\S]*?<\/div>/gi,
+  ""
+);
   
 /* SAFE LABEL EXTRACTION */
 let labels = [];
