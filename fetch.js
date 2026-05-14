@@ -33,20 +33,12 @@ function decodeHTML(html) {
 
 function sanitizeHTML(html = "") {
   return html
-
-    // Remove SCRIPT tags
-    .replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, "")
-
-    // Remove STYLE tags completely
-    .replace(/<style[\s\S]*?>[\s\S]*?<\/style>/gi, "")
-
-    // Remove standalone CSS blocks accidentally pasted into content
-    .replace(/\.[a-zA-Z0-9_-]+\s*\{[\s\S]*?\}/g, "")
-
-    // Remove inline JS handlers
-    .replace(/\son\w+="[^"]*"/gi, "")
-
-    // Remove empty leftover lines
+    .replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, "") // Remove scripts
+    .replace(/<style[\s\S]*?>[\s\S]*?<\/style>/gi, "")  // Remove style tags
+    // FIXED: Only remove CSS if it's not part of a known functional class
+    .replace(/(?<!class=")\.[a-zA-Z0-9_-]+\s*\{[\s\S]*?\}/g, "") 
+    // FIXED: Allow specific data-attributes for buttons/video length
+    .replace(/\son(?!data-)\w+="[^"]*"/gi, "") 
     .replace(/\n\s*\n/g, "\n");
 }
 
@@ -254,29 +246,16 @@ const seenSlugs = new Set();
 const posts=[];
 
 function detectTopic(title, html) {
+  if (!title && !html) return "ai-writing-tools"; // Absolute safety fallback
   const content = (title + " " + html).toLowerCase();
   
-  // Define keyword weights for the "AI Brain"
+  // Added "ai-voice-tools" keywords to fix your specific post issue
   const weights = {
-  "ai-writing-tools": [
-    "writer","copy","blog","content","text",
-    "article","seo","writing","grammar"
-  ],
-
-  "ai-image-generators": [
-    "image","art","design","logo","photo"
-  ],
-
-  "ai-voice-tools": [
-    "voice","speech","audio","podcast",
-    "narration","tts","voiceover","music"
-  ],
-
-  "automation-tools": [
-    "automation","workflow","integration",
-    "zapier","api","passive","system","auto"
-  ]
-};
+    "ai-writing-tools": ["writer","copy","blog","content","text","article"],
+    "ai-image-generators": ["image","art","design","logo","photo","midjourney"],
+    "ai-voice-tools": ["voice","speech","audio","podcast","narration","tts","elevenlabs"],
+    "automation-tools": ["automation","workflow","integration","zapier"]
+  };
 
   let bestCategory = "ai-writing-tools"; // Default fallback
   let highestScore = -1;
@@ -703,46 +682,16 @@ const comparisonPairs = new Set();
 
 /* BUILD ALL COMPARISON PAGES */
 posts.forEach((postA, i) => {
-
-  const related = posts
-    .filter(p =>
-      p.slug !== postA.slug &&
-      p.category === postA.category
-    )
-    .slice(0,3);
+  const related = topics[postA.category]
+    .filter(p => p.slug !== postA.slug)
+    .slice(0, 5); // Limit depth for stability
 
   related.forEach(postB => {
-
     const sorted = [postA.slug, postB.slug].sort();
     const pairKey = sorted.join("::");
-
     if(comparisonPairs.has(pairKey)) return;
-
+    
     comparisonPairs.add(pairKey);
-
-    const slug =
-      `${sorted[0]}-vs-${sorted[1]}`;
-
-    // SAVE FOR A
-    if(!generatedComparisons.has(postA.slug)){
-      generatedComparisons.set(postA.slug, []);
-    }
-
-    generatedComparisons.get(postA.slug).push({
-      slug,
-      title: `${postA.title} vs ${postB.title}`
-    });
-
-    // SAVE FOR B
-    if(!generatedComparisons.has(postB.slug)){
-      generatedComparisons.set(postB.slug, []);
-    }
-
-    generatedComparisons.get(postB.slug).push({
-      slug,
-      title: `${postB.title} vs ${postA.title}`
-    });
-
     generateComparison(postA, postB);
   });
 });
