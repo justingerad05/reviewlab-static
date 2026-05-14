@@ -2,7 +2,6 @@ import fs from "fs";
 import { marked } from "marked";
 import { XMLParser } from "fast-xml-parser";
 import { upscaleToOG } from "./generate-og.js";
-import sanitizeHtml from "sanitize-html";
 
 /* 1. Improved JSON Escaping (Prevents Script Breaks) */
 function escapeJson(str) {
@@ -33,92 +32,22 @@ function decodeHTML(html) {
 }
 
 function sanitizeHTML(html = "") {
-  nonTextTags: [
-    "style",
-    "script",
-    "textarea",
-    "option"
-  ],
-    
-    allowedTags: [
-      ...sanitizeHtml.defaults.allowedTags,
-      "img",
-      "iframe",
-      "table",
-      "thead",
-      "tbody",
-      "tfoot",
-      "tr",
-      "td",
-      "th",
-      "style",
-      "div",
-      "span",
-      "section",
-      "article",
-      "center",
-      "video",
-      "source"
-    ],
+  return html
 
-    allowedAttributes: {
-      "*": [
-        "class",
-        "id",
-        "style",
-        "title",
-        "aria-label"
-      ],
+    // Remove SCRIPT tags
+    .replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, "")
 
-      a: ["href", "name", "target", "rel"],
+    // Remove STYLE tags completely
+    .replace(/<style[\s\S]*?>[\s\S]*?<\/style>/gi, "")
 
-      img: [
-        "src",
-        "srcset",
-        "alt",
-        "title",
-        "width",
-        "height",
-        "loading"
-      ],
+    // Remove standalone CSS blocks accidentally pasted into content
+    .replace(/\.[a-zA-Z0-9_-]+\s*\{[\s\S]*?\}/g, "")
 
-      iframe: [
-        "src",
-        "width",
-        "height",
-        "allow",
-        "allowfullscreen",
-        "frameborder",
-        "loading",
-        "referrerpolicy"
-      ],
+    // Remove inline JS handlers
+    .replace(/\son\w+="[^"]*"/gi, "")
 
-      table: ["class", "style"],
-      td: ["colspan", "rowspan", "style", "class"],
-      th: ["colspan", "rowspan", "style", "class"]
-    },
-
-    allowedSchemes: ["http", "https", "mailto", "tel"],
-
-    allowProtocolRelative: false,
-
-    transformTags: {
-      a: sanitizeHtml.simpleTransform("a", {
-        target: "_blank",
-        rel: "noopener noreferrer nofollow"
-      })
-    }
-  });
-
-  // =========================
-  // 3. RESTORE STYLE BLOCKS
-  // =========================
-  html = html.replace(
-    /___STYLE_BLOCK_(\d+)___/g,
-    (_, index) => styles[Number(index)] || ""
-  );
-
-  return html;
+    // Remove empty leftover lines
+    .replace(/\n\s*\n/g, "\n");
 }
 
 function getText(field) {
@@ -162,7 +91,6 @@ const LOCAL_DEFAULT_PATH = "_site/assets/og-default.jpg";
 
 /* CLEAN FULL BUILD */
 
-// Reset entire build directory
 fs.rmSync("_site", { recursive: true, force: true });
 fs.mkdirSync("_site", { recursive: true });
 
