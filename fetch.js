@@ -682,16 +682,46 @@ const comparisonPairs = new Set();
 
 /* BUILD ALL COMPARISON PAGES */
 posts.forEach((postA, i) => {
-  const related = topics[postA.category]
-    .filter(p => p.slug !== postA.slug)
-    .slice(0, 5); // Limit depth for stability
+
+  const related = posts
+    .filter(p =>
+      p.slug !== postA.slug &&
+      p.category === postA.category
+    )
+    .slice(0,3);
 
   related.forEach(postB => {
+
     const sorted = [postA.slug, postB.slug].sort();
     const pairKey = sorted.join("::");
+
     if(comparisonPairs.has(pairKey)) return;
-    
+
     comparisonPairs.add(pairKey);
+
+    const slug =
+      `${sorted[0]}-vs-${sorted[1]}`;
+
+    // SAVE FOR A
+    if(!generatedComparisons.has(postA.slug)){
+      generatedComparisons.set(postA.slug, []);
+    }
+
+    generatedComparisons.get(postA.slug).push({
+      slug,
+      title: `${postA.title} vs ${postB.title}`
+    });
+
+    // SAVE FOR B
+    if(!generatedComparisons.has(postB.slug)){
+      generatedComparisons.set(postB.slug, []);
+    }
+
+    generatedComparisons.get(postB.slug).push({
+      slug,
+      title: `${postB.title} vs ${postA.title}`
+    });
+
     generateComparison(postA, postB);
   });
 });
@@ -795,7 +825,6 @@ return slug.replace(/-/g," ").replace(/\b\w/g,l=>l.toUpperCase());
 }
 
 /* AUTHORITY HUB GENERATOR */
-
 const topics = {
   "ai-writing-tools": [],
   "ai-image-generators": [],
