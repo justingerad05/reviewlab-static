@@ -294,12 +294,13 @@ for(const entry of entries){
     continue;
   }
 
-  // ✅ NEW SURGICAL STYLE CLEANING
+ // ✅ NEW SURGICAL STYLE CLEANING
 rawHtml = decodeHTML(rawHtml);
 rawHtml = sanitizeHTML(rawHtml);
 
+// ✅ REMOVE HIDDEN SEO ENTITY BLOCKS
 rawHtml = rawHtml.replace(
-  /<div[^>]*data-seo-block=["']true["'][^>]*>[\s\S]*?<\/div>/gi,
+  /<div[^>]*style=["'][^"']*display\s*:\s*none[^"']*["'][^>]*>[\s\S]*?<\/div>/gi,
   ""
 );
   
@@ -417,7 +418,6 @@ schemas:JSON.stringify([articleSchema,productSchema])
 }
 
 /* APPLY LINKS */
-
 posts.forEach(p=>{
 
 p.html = injectInternalLinks(p.html,posts,p);
