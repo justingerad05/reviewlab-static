@@ -31,98 +31,92 @@ function decodeHTML(html) {
     .replace(/&nbsp;/g, " ");
 }
 
-function sanitizeHTML(html = "") {
+import sanitizeHtml from "sanitize-html";
+  // =========================
+  html = sanitizeHtml(html, {
+  nonTextTags: [
+    "style",
+    "script",
+    "textarea",
+    "option"
+  ],
+    
+    allowedTags: [
+      ...sanitizeHtml.defaults.allowedTags,
+      "img",
+      "iframe",
+      "table",
+      "thead",
+      "tbody",
+      "tfoot",
+      "tr",
+      "td",
+      "th",
+      "style",
+      "div",
+      "span",
+      "section",
+      "article",
+      "center",
+      "video",
+      "source"
+    ],
 
-  // Remove ONLY dangerous scripts
-  html = html.replace(
-    /<script[\s\S]*?>[\s\S]*?<\/script>/gi,
-    ""
-  );
+    allowedAttributes: {
+      "*": [
+        "class",
+        "id",
+        "style",
+        "title",
+        "aria-label"
+      ],
 
-  // Remove ONLY full standalone <style> blocks
-  html = html.replace(
-  /<style[\s\S]*?>[\s\S]*?<\/style>/gi,
-  (match) => {
+      a: ["href", "name", "target", "rel"],
 
-    // Remove dangerous imports/javascript only
-    if (
-      /expression\s*\(/i.test(match) ||
-      /javascript:/i.test(match) ||
-      /@import/i.test(match)
-    ) {
-      return "";
+      img: [
+        "src",
+        "srcset",
+        "alt",
+        "title",
+        "width",
+        "height",
+        "loading"
+      ],
+
+      iframe: [
+        "src",
+        "width",
+        "height",
+        "allow",
+        "allowfullscreen",
+        "frameborder",
+        "loading",
+        "referrerpolicy"
+      ],
+
+      table: ["class", "style"],
+      td: ["colspan", "rowspan", "style", "class"],
+      th: ["colspan", "rowspan", "style", "class"]
+    },
+
+    allowedSchemes: ["http", "https", "mailto", "tel"],
+
+    allowProtocolRelative: false,
+
+    transformTags: {
+      a: sanitizeHtml.simpleTransform("a", {
+        target: "_blank",
+        rel: "noopener noreferrer nofollow"
+      })
     }
+  });
 
-    return match;
-  }
-);
-
-  // Remove javascript: injections
+  // =========================
+  // 3. RESTORE STYLE BLOCKS
+  // =========================
   html = html.replace(
-    /\s(href|src)=["']javascript:[^"']*["']/gi,
-    ""
-  );
-
-  // Remove inline event handlers
-  html = html.replace(
-    /\son\w+=["'][^"']*["']/gi,
-    ""
-  );
-
-  // Clean excessive blank lines
-  html = html.replace(/\n{3,}/g, "\n\n");
-
-  return html.trim();
-}
-
-function normalizeResponsiveContent(html = "") {
-
-  // Remove iframe fixed dimensions
-  html = html.replace(/\swidth=["'][^"']*["']/gi, "");
-  html = html.replace(/\sheight=["'][^"']*["']/gi, "");
-
-  // Preserve styles while removing ONLY width constraints
-  html = html.replace(
-    /style=(["'])(.*?)\1/gi,
-    (match, quote, styles) => {
-
-      const cleaned = styles
-        .replace(/(?:^|;)\s*width\s*:[^;]+;?/gi, "")
-        .replace(/(?:^|;)\s*max-width\s*:[^;]+;?/gi, "")
-        .replace(/(?:^|;)\s*min-width\s*:[^;]+;?/gi, "")
-        .trim();
-
-      if (!cleaned) return "";
-
-      return `style=${quote}${cleaned}${quote}`;
-    }
-  );
-
-  // Safe iframe enhancement
-  html = html.replace(
-    /<iframe([^>]*)>/gi,
-    (match, attrs) => {
-
-      if (/class=/i.test(attrs)) {
-        return `<iframe${attrs.replace(
-          /class=["']([^"']*)["']/i,
-          `class="$1 responsive-embed"`
-        )}>`;
-      }
-
-      return `<iframe class="responsive-embed"${attrs}>`;
-    }
-  );
-
-  // Responsive tables
-  html = html.replace(
-    /<table/gi,
-    '<div class="table-scroll"><table'
-  );
-
-  html = html.replace(
-    /<\/table>/gi,
-    '</table></div>'
+    /___STYLE_BLOCK_(\d+)___/g,
+    (_, index) => styles[Number(index)] || ""
   );
 
   return html;
