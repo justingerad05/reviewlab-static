@@ -2,6 +2,7 @@ import fs from "fs";
 import { marked } from "marked";
 import { XMLParser } from "fast-xml-parser";
 import { upscaleToOG } from "./generate-og.js";
+import sanitizeHtml from "sanitize-html";
 
 /* 1. Improved JSON Escaping (Prevents Script Breaks) */
 function escapeJson(str) {
@@ -31,9 +32,7 @@ function decodeHTML(html) {
     .replace(/&nbsp;/g, " ");
 }
 
-import sanitizeHtml from "sanitize-html";
-  // =========================
-  html = sanitizeHtml(html, {
+function sanitizeHTML(html = "") {
   nonTextTags: [
     "style",
     "script",
@@ -391,7 +390,6 @@ for(const entry of entries){
   // ✅ NEW SURGICAL STYLE CLEANING
 rawHtml = decodeHTML(rawHtml);
 rawHtml = sanitizeHTML(rawHtml);
-rawHtml = normalizeResponsiveContent(rawHtml);
   
 /* SAFE LABEL EXTRACTION */
 let labels = [];
