@@ -33,12 +33,12 @@ function decodeHTML(html) {
 
 function sanitizeHTML(html = "") {
   return html
-    .replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, "") // Remove scripts
-    .replace(/<style[\s\S]*?>[\s\S]*?<\/style>/gi, "")  // Remove style tags
-    // FIXED: Only remove CSS if it's not part of a known functional class
-    .replace(/(?<!class=")\.[a-zA-Z0-9_-]+\s*\{[\s\S]*?\}/g, "") 
-    // FIXED: Allow specific data-attributes for buttons/video length
-    .replace(/\son(?!data-)\w+="[^"]*"/gi, "") 
+    .replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, "") // Keep scripts out
+    .replace(/<style[\s\S]*?>[\s\S]*?<\/style>/gi, "")  // Keep style tags out
+    // FIX: Only remove CSS if it is NOT inside a class or id attribute
+    // This prevents stripping styles like .buy-button { width: 100% }
+    .replace(/(?<!class="|id=")\.[a-zA-Z0-9_-]+\s*\{[\s\S]*?\}/g, "")
+    .replace(/\son(?!data-)\w+="[^"]*"/gi, "") // Remove JS handlers but keep data attributes
     .replace(/\n\s*\n/g, "\n");
 }
 
